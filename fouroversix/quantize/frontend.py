@@ -2,11 +2,20 @@ import torch
 from fouroversix.utils import QuantizeBackend
 
 from .config import QuantizationConfig
-from .cuda import CUDAQuantizeBackend
 from .pytorch import PyTorchQuantizeBackend
 from .quantized_tensor import QuantizedTensor
-from .transformer_engine import TransformerEngineQuantizeBackend
-from .triton import TritonQuantizeBackend
+try:
+    from .cuda import CUDAQuantizeBackend
+except ImportError:
+    CUDAQuantizeBackend = None
+try:
+    from .transformer_engine import TransformerEngineQuantizeBackend
+except ImportError:
+    TransformerEngineQuantizeBackend = None
+try:
+    from .triton import TritonQuantizeBackend
+except ImportError:
+    TritonQuantizeBackend = None
 
 AVAILABLE_BACKENDS = {
     QuantizeBackend.cuda: CUDAQuantizeBackend,
