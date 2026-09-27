@@ -1,0 +1,25 @@
+denoising_step_list: [1000, 750, 500, 250]
+warp_denoising_step: true
+num_frame_per_block: 1
+model_name: Wan2.1-T2V-1.3B
+model_kwargs:
+  local_attn_size: 6
+  sink_size: 0
+  memory_size: 1
+  recent_exclude: 0
+  use_latentmem: true
+  history_kv_storage: k_int8_v_fp8
+generator_ckpt: checkpoints/longlive_base.pt
+lora_ckpt: checkpoints/longlive_lora.pt
+adapter: {type: lora, rank: 256, alpha: 256, dropout: 0.0, dtype: bfloat16, verbose: false}
+data_path: results/anemoi_mixed_precision_smoke/prompt.txt
+output_folder: /home/zju/work/zxl/anemoi_native_draftattention_5090/results/persistent_kint8_vfp8_smoke
+metrics_dir: /home/zju/work/zxl/anemoi_native_draftattention_5090/results/persistent_kint8_vfp8_smoke/metrics
+inference_iter: 0
+num_output_frames: 120
+use_ema: false
+seed: 0
+num_samples: 1
+save_with_index: true
+global_sink: false
+context_noise: 0
