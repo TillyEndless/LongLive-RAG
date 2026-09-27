@@ -5,6 +5,7 @@ PY=/data/zxl/SolarWM_wan5b_direct/.conda-wan/bin/python
 CFG=$ROOT/configs/group11_15_reference
 LOG=$ROOT/results/group11_15_acceptance_logs
 mkdir -p "$LOG"
+cd "$ROOT"
 run_one() {
   local group="$1" gpu="$2"
   CUDA_VISIBLE_DEVICES="$gpu" PYTHONPATH="$ROOT" "$PY" -u "$ROOT/inference.py" \
