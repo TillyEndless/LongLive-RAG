@@ -10,10 +10,10 @@ model_kwargs:
   recent_exclude: 5
   use_latentmem: true
   compression_method: "ae"
-  ae_ckpt: "/data/zxl/LongLive-RAG/checkpoints/ae_latent_mem.pt"
+  ae_ckpt: "/data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/ae_latent_mem.pt"
   retrieval_backend: "draftmap_online"
-generator_ckpt: "/data/zxl/LongLive-RAG/checkpoints/longlive_base.pt"
-lora_ckpt: "/data/zxl/LongLive-RAG/checkpoints/longlive_lora.pt"
+generator_ckpt: "/data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_base.pt"
+lora_ckpt: "/data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_lora.pt"
 adapter:
   type: "lora"
   rank: 256
