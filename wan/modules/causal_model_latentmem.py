@@ -344,6 +344,9 @@ class CausalWanSelfAttention(nn.Module):
                 # --- CPU OFFLOAD DUMP LOGIC ---
                 evicted_k_frames = []
                 evicted_v_frames = []
+                ev_k_split = []
+                ev_v_split = []
+                num_evicted_frames = 0
                 if self.memory_size > 0 and num_evicted_tokens > 0:
                     num_evicted_frames = num_evicted_tokens // frame_seqlen
                     ev_k = temp_k[:, sink_tokens:sink_tokens + num_evicted_tokens]
@@ -352,8 +355,8 @@ class CausalWanSelfAttention(nn.Module):
                     ev_k_split = ev_k.view(b, num_evicted_frames, frame_seqlen, n, d).split(1, dim=1)
                     ev_v_split = ev_v.view(b, num_evicted_frames, frame_seqlen, n, d).split(1, dim=1)
                     
-                evicted_k_frames = [f.to("cpu", non_blocking=True) for f in ev_k_split]
-                evicted_v_frames = [f.to("cpu", non_blocking=True) for f in ev_v_split]
+                    evicted_k_frames = [f.to("cpu", non_blocking=True) for f in ev_k_split]
+                    evicted_v_frames = [f.to("cpu", non_blocking=True) for f in ev_v_split]
                 evicted_draft_k_frames = kv_cache.get("local_draft_k_frames", [])[sink_tokens // frame_seqlen:sink_tokens // frame_seqlen + num_evicted_frames]
 
                 # Apply rolling update to the temporary cache
