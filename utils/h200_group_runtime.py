@@ -63,7 +63,7 @@ def sparse_retain(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, ratio: floa
     vp = torch.nn.functional.pad(v, (0, 0, 0, 0, 0, pad))
     qp = q.float().mean(dim=1, keepdim=True)
     kb = kp.reshape(k.shape[0], blocks, block, k.shape[2], k.shape[3]).float().mean(dim=2)
-    scores = torch.einsum("bqhd,bkhd->bk", qp, kb).mean(dim=1)
+    scores = torch.einsum("bqhd,bkhd->bk", qp, kb)
     keep = max(1, math.ceil(blocks * (1.0 - ratio)))
     ids = torch.topk(scores, keep, dim=-1).indices.sort(dim=-1).values
     token_ids = (ids[..., None] * block + torch.arange(block, device=k.device)).reshape(k.shape[0], -1)
@@ -90,4 +90,3 @@ def prepare_attention_kv(q, k, v, mode="baseline", sparse_ratio=0.0):
     meta["FINAL_ATTENTION_DTYPE"] = str(k.dtype).replace("torch.", "")
     meta["NATIVE_LOWBIT_KERNEL_USED"] = "NO"
     return k, v, meta
-
