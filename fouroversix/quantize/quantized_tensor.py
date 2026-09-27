@@ -47,10 +47,15 @@ def unpack_packed_fp4(
     high = (x >> 4) & 0xF
     low = x & 0xF
 
+    # Some H200/PyTorch builds do not implement cat/stack directly for
+    # Float8.  Preserve the exact E4M3 bit patterns through uint8 and view
+    # back to Float8 after concatenation.
+    low_bits = convert_function(low).view(torch.uint8)
+    high_bits = convert_function(high).view(torch.uint8)
     return torch.stack(
-        [convert_function(low), convert_function(high)],
+        [low_bits, high_bits],
         dim=-1,
-    ).reshape(x.shape[0], x.shape[1] * 2)
+    ).reshape(x.shape[0], x.shape[1] * 2).view(torch.float8_e4m3fn)
 
 
 @dataclass
