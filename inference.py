@@ -20,6 +20,7 @@ from utils.dataset import TextDataset
 from utils.misc import set_seed
 
 from utils.memory import get_cuda_free_memory_gb, DynamicSwapInstaller
+from utils.runtime_memory_measurement import runtime_inference_memory
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config_path", type=str, help="Path to the config file")
@@ -272,6 +273,29 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             else:
                 output_path = os.path.join(config.output_folder, f'rank{rank}-{prompt[:100]}-{seed_idx}.mp4')
             write_video(output_path, video[seed_idx], fps=16)
+
+            # Corrected Group 11--15 machine-readable runtime contract.
+            import json
+            model_runtime = getattr(pipeline.generator.model, "group_runtime_trace", [])
+            runtime_meta = {
+                "GROUP": int(getattr(config, "group_id", 0)),
+                "GROUP_RUNTIME_MODE": str(getattr(config.model_kwargs, "group_runtime_mode", "baseline")),
+                "SPARSE_RATIO": float(getattr(config.model_kwargs, "group_sparse_ratio", 0.0)),
+                "FINAL_ATTENTION_DTYPE": "bfloat16",
+                "NATIVE_LOWBIT_KERNEL_USED": "NO",
+                "runtime_trace": model_runtime,
+            }
+            if model_runtime:
+                runtime_meta.update({k: model_runtime[-1][k] for k in model_runtime[-1] if k != "runtime_trace"})
+            with open(output_path.replace(".mp4", "_runtime.json"), "w") as f:
+                json.dump(runtime_meta, f, indent=2)
+            memory_meta = runtime_inference_memory(
+                getattr(pipeline, "kv_cache1", []),
+                pipeline.generator.model,
+                runtime_meta.get("PERSISTENT_STORAGE_MODE", "BF16_FAKE_QUANT"),
+            )
+            with open(output_path.replace(".mp4", "_memory_measurement.json"), "w") as f:
+                json.dump(memory_meta, f, indent=2)
 
             # Save memory selection log
             if hasattr(pipeline, 'memory_indices_log') and pipeline.memory_indices_log:

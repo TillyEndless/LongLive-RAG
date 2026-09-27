@@ -88,3 +88,44 @@ def persistent_cache_memory(caches):
 
 
 __all__ = ["persistent_cache_memory"]
+
+
+def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
+    """Measure the actual cache owners used by the H200 inference path."""
+    seen = set()
+    out = {
+        "GPU_KV_MEASURED_BYTES": 0, "CPU_KV_MEASURED_BYTES": 0,
+        "GPU_DRAFT_PERSISTENT_BYTES": 0, "CPU_DRAFT_PERSISTENT_BYTES": 0,
+        "DRAFT_H2D_BYTES": 0, "DRAFT_H2D_CALLS": 0,
+        "PERSISTENT_STORAGE_MODE": storage_mode,
+    }
+    def add(name, tensor):
+        if tensor is None or not hasattr(tensor, "untyped_storage"):
+            return
+        s = tensor.untyped_storage()
+        key = (tensor.device.type, int(s.data_ptr()), int(s.nbytes()))
+        if key in seen:
+            return
+        seen.add(key)
+        out[name] += int(s.nbytes())
+    for cache in caches or []:
+        if not isinstance(cache, dict):
+            continue
+        add("GPU_KV_MEASURED_BYTES", cache.get("k"))
+        add("GPU_KV_MEASURED_BYTES", cache.get("v"))
+        for tensor in cache.get("cpu_k_frames", []):
+            add("CPU_KV_MEASURED_BYTES", tensor)
+        for tensor in cache.get("cpu_v_frames", []):
+            add("CPU_KV_MEASURED_BYTES", tensor)
+        for tensor in cache.get("gpu_draft_k_frames", []):
+            add("GPU_DRAFT_PERSISTENT_BYTES", tensor)
+    for block in getattr(model, "blocks", []):
+        counters = getattr(getattr(block, "self_attn", None), "runtime_counters", {})
+        out["DRAFT_H2D_BYTES"] += int(counters.get("draft_h2d_bytes", 0))
+        out["DRAFT_H2D_CALLS"] += int(counters.get("draft_h2d_calls", 0))
+    out["GPU_KV_MEASURED_GiB"] = out["GPU_KV_MEASURED_BYTES"] / 2**30
+    out["CPU_KV_MEASURED_GiB"] = out["CPU_KV_MEASURED_BYTES"] / 2**30
+    out["GPU_DRAFT_PERSISTENT_GiB"] = out["GPU_DRAFT_PERSISTENT_BYTES"] / 2**30
+    out["CPU_DRAFT_PERSISTENT_GiB"] = 0.0
+    out["KV_COMPRESSION_RATIO"] = 1.0
+    return out

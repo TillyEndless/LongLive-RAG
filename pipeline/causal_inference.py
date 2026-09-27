@@ -49,7 +49,7 @@ class CausalInferencePipeline(torch.nn.Module):
         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
         # WanDiffusionWrapper init.
         model_args_clean = dict(getattr(args, "model_kwargs", {}))
-        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend"]:
+        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "group_runtime_mode", "group_sparse_ratio", "group_id"]:
             model_args_clean.pop(key, None)
 
         self.generator = WanDiffusionWrapper(
@@ -86,10 +86,16 @@ class CausalInferencePipeline(torch.nn.Module):
         self.generator.model.retrieval_backend = self.retrieval_backend
         self.generator.model.recent_exclude = int(getattr(args.model_kwargs, "recent_exclude", 0))
         self.generator.model.draftmap_trace = []
+        self.generator.model.group_runtime_trace = []
+        group_mode = str(getattr(args.model_kwargs, "group_runtime_mode", "baseline"))
+        sparse_ratio = float(getattr(args.model_kwargs, "group_sparse_ratio", 0.0))
         for block in getattr(self.generator.model, "blocks", []):
             block.self_attn.retrieval_backend = self.retrieval_backend
             block.self_attn.recent_exclude = self.generator.model.recent_exclude
             block.self_attn.draftmap_trace = self.generator.model.draftmap_trace
+            block.self_attn.group_runtime_mode = group_mode
+            block.self_attn.group_sparse_ratio = sparse_ratio
+            block.self_attn.group_runtime_trace = self.generator.model.group_runtime_trace
         self.ae_model = None
         if self.compression_method == "ae":
             ae_ckpt = getattr(args.model_kwargs, "ae_ckpt", None)

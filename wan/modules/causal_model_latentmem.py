@@ -22,6 +22,7 @@ import torch.distributed as dist
 from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, log_gpu_memory
 
 from utils.debug_option import DEBUG
+from utils.h200_group_runtime import prepare_attention_kv
 
 # wan 1.3B model has a weird channel / head configurations and require max-autotune to work with flexattention
 # see https://github.com/pytorch/pytorch/issues/133254
@@ -131,6 +132,9 @@ class CausalWanSelfAttention(nn.Module):
         }
         self.history_fetch_trace = []
         self.current_denoising_step = None
+        self.group_runtime_mode = "baseline"
+        self.group_sparse_ratio = 0.0
+        self.group_runtime_trace = []
         self.qk_norm = qk_norm
         self.eps = eps
         # Support list/tuple local_attn_size by converting to list first (handles OmegaConf ListConfig)
@@ -552,6 +556,10 @@ class CausalWanSelfAttention(nn.Module):
                     
                 k_cat = torch.cat(k_parts, dim=1)
                 v_cat = torch.cat(v_parts, dim=1)
+                k_cat, v_cat, runtime_meta = prepare_attention_kv(
+                    roped_query, k_cat, v_cat,
+                    self.group_runtime_mode, self.group_sparse_ratio)
+                self.group_runtime_trace.append(runtime_meta)
 
                 x = attention(
                     roped_query,
@@ -560,10 +568,15 @@ class CausalWanSelfAttention(nn.Module):
                 )
             else:
                 window_start = max(0, local_end_index - self.max_attention_size)
+                roped_temp_k, temp_v, runtime_meta = prepare_attention_kv(
+                    roped_query, roped_temp_k[:, window_start:local_end_index],
+                    temp_v[:, window_start:local_end_index],
+                    self.group_runtime_mode, self.group_sparse_ratio)
+                self.group_runtime_trace.append(runtime_meta)
                 x = attention(
                     roped_query,
-                    roped_temp_k[:, window_start:local_end_index],
-                    temp_v[:, window_start:local_end_index]
+                    roped_temp_k,
+                    temp_v
                 )
 
         # output
