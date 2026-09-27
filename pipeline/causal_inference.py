@@ -49,7 +49,7 @@ class CausalInferencePipeline(torch.nn.Module):
         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
         # WanDiffusionWrapper init.
         model_args_clean = dict(getattr(args, "model_kwargs", {}))
-        for key in ["compression_method", "ae_ckpt", "recent_exclude"]:
+        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend"]:
             model_args_clean.pop(key, None)
 
         self.generator = WanDiffusionWrapper(
@@ -76,6 +76,20 @@ class CausalInferencePipeline(torch.nn.Module):
 
         # Retrieval autoencoder (optional). compression_method ∈ {"avg_pool", "ae"}.
         self.compression_method = getattr(args.model_kwargs, "compression_method", "avg_pool")
+        self.retrieval_backend = getattr(args.model_kwargs, "retrieval_backend", "original")
+        if self.retrieval_backend not in {"original", "draftmap", "draftmap_online"}:
+            raise ValueError("retrieval_backend must be 'original', 'draftmap', or 'draftmap_online'")
+        self.draftmap_index = None
+        if self.retrieval_backend == "draftmap":
+            from utils.draftmap_retrieval import DraftMapChunkIndex
+            self.draftmap_index = DraftMapChunkIndex(block_tokens=64)
+        self.generator.model.retrieval_backend = self.retrieval_backend
+        self.generator.model.recent_exclude = int(getattr(args.model_kwargs, "recent_exclude", 0))
+        self.generator.model.draftmap_trace = []
+        for block in getattr(self.generator.model, "blocks", []):
+            block.self_attn.retrieval_backend = self.retrieval_backend
+            block.self_attn.recent_exclude = self.generator.model.recent_exclude
+            block.self_attn.draftmap_trace = self.generator.model.draftmap_trace
         self.ae_model = None
         if self.compression_method == "ae":
             ae_ckpt = getattr(args.model_kwargs, "ae_ckpt", None)
@@ -133,6 +147,9 @@ class CausalInferencePipeline(torch.nn.Module):
                 (batch_size, num_output_frames, num_channels, height, width).
                 It is normalized to be in the range [0, 1].
         """
+        if self.retrieval_backend == "draftmap_online":
+            # Block attention modules retain this same list object from init.
+            self.generator.model.draftmap_trace.clear()
         batch_size, num_output_frames, num_channels, height, width = noise.shape
         assert num_output_frames % self.num_frame_per_block == 0
         num_blocks = num_output_frames // self.num_frame_per_block
@@ -224,7 +241,7 @@ class CausalInferencePipeline(torch.nn.Module):
 
             # Step 2.0: Compute memory_indices from latent descriptors (shared across all layers)
             memory_indices = None
-            if memory_size_cfg > 0:
+            if memory_size_cfg > 0 and self.retrieval_backend == "original":
                 # Number of evicted frames in the CPU memory pool (same across all layers)
                 num_evicted = len(self.kv_cache1[0].get("cpu_k_frames", []))
                 # Exclude the `recent_exclude` most-recently-evicted frames from the
@@ -240,6 +257,11 @@ class CausalInferencePipeline(torch.nn.Module):
 
                     query_desc = self.latent_descriptors[-1].unsqueeze(1)  # [B, 1, C]
 
+                    if self.retrieval_backend == "draftmap":
+                        raise RuntimeError(
+                            "Group 11 is blocked: no authoritative block-to-chunk "
+                            "aggregation rule and no pre-attention current Draft-Q capture"
+                        )
                     q_norm = query_desc / (query_desc.norm(dim=-1, keepdim=True) + 1e-8)
                     k_norm = evicted_descs / (evicted_descs.norm(dim=-1, keepdim=True) + 1e-8)
                     sims = torch.bmm(k_norm, q_norm.transpose(1, 2)).squeeze(-1)  # [B, num_eligible]
@@ -259,6 +281,10 @@ class CausalInferencePipeline(torch.nn.Module):
             # Step 2.1: Spatial denoising loop
             for index, current_timestep in enumerate(self.denoising_step_list):
                 # print(f"current_timestep: {current_timestep}")
+
+                if self.retrieval_backend == "draftmap_online":
+                    for block in self.generator.model.blocks:
+                        block.self_attn.current_denoising_step = int(current_timestep.item())
 
                 # set current timestep
                 timestep = torch.ones(
@@ -309,6 +335,9 @@ class CausalInferencePipeline(torch.nn.Module):
 
             # Step 2.3: rerun with timestep zero to update KV cache using clean context
             context_timestep = torch.ones_like(timestep) * getattr(self.args, "context_noise", 0.0)
+            if self.retrieval_backend == "draftmap_online":
+                for block in self.generator.model.blocks:
+                    block.self_attn.current_denoising_step = int(context_timestep[0, 0].item())
             self.generator(
                 noisy_image_or_video=denoised_pred,
                 conditional_dict=conditional_dict,
@@ -398,7 +427,9 @@ class CausalInferencePipeline(torch.nn.Module):
                 "global_end_index": torch.tensor([0], dtype=torch.long, device=device),
                 "local_end_index": torch.tensor([0], dtype=torch.long, device=device),
                 "cpu_k_frames": [],
-                "cpu_v_frames": []
+                "cpu_v_frames": [],
+                "gpu_draft_k_frames": [],
+                "local_draft_k_frames": []
             })
 
         self.kv_cache1 = kv_cache1  # always store the clean cache

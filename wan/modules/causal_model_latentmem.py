@@ -17,6 +17,7 @@ from diffusers.models.modeling_utils import ModelMixin
 import torch.nn as nn
 import torch
 import math
+import time
 import torch.distributed as dist
 from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, log_gpu_memory
 
@@ -81,6 +82,25 @@ def causal_online_rope(x, grid_sizes, freqs, start_frame=0, relative_frame_indic
     return torch.stack(output).type_as(x)
 
 
+def _draft_frame_pools(tensor, frame_tokens, block_tokens=64):
+    """Mean-pool BF16 Q/K into Anemoi-compatible per-frame blocks."""
+    frames = tensor.size(1) // frame_tokens
+    outputs = []
+    for frame in range(frames):
+        value = tensor[:, frame * frame_tokens:(frame + 1) * frame_tokens]
+        blocks = math.ceil(frame_tokens / block_tokens)
+        padded = blocks * block_tokens - frame_tokens
+        if padded:
+            value = torch.cat((value, value.new_zeros(value.size(0), padded, value.size(2), value.size(3))), dim=1)
+        counts = torch.full((blocks,), block_tokens, device=value.device, dtype=torch.float32)
+        if padded:
+            counts[-1] = frame_tokens % block_tokens
+        pooled = value.view(value.size(0), blocks, block_tokens, value.size(2), value.size(3)).float().sum(dim=2)
+        pooled = pooled.div_(counts.view(1, blocks, 1, 1))
+        outputs.append(pooled.permute(0, 2, 1, 3).to(torch.bfloat16).contiguous())
+    return outputs
+
+
 
 class CausalWanSelfAttention(nn.Module):
 
@@ -100,6 +120,17 @@ class CausalWanSelfAttention(nn.Module):
         self.local_attn_size = local_attn_size
         self.sink_size = sink_size
         self.memory_size = memory_size
+        self.retrieval_backend = "original"
+        self.recent_exclude = 0
+        self.draftmap_trace = []
+        self.runtime_counters = {
+            "draft_h2d_bytes": 0,
+            "draft_h2d_calls": 0,
+            "full_kv_h2d_bytes": 0,
+            "full_kv_h2d_calls": 0,
+        }
+        self.history_fetch_trace = []
+        self.current_denoising_step = None
         self.qk_norm = qk_norm
         self.eps = eps
         # Support list/tuple local_attn_size by converting to list first (handles OmegaConf ListConfig)
@@ -118,6 +149,48 @@ class CausalWanSelfAttention(nn.Module):
         self.norm_q = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
         self.norm_k = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
 
+    def _online_memory_indices(self, query, kv_cache, layer_index, frame_seqlen):
+        if self.retrieval_backend != "draftmap_online" or self.memory_size <= 0:
+            return None
+        cpu_k = kv_cache.get("cpu_k_frames", [])
+        gpu_draft_k = kv_cache.get("gpu_draft_k_frames", [])
+        eligible = max(len(cpu_k) - self.recent_exclude, 0)
+        if eligible <= 0 or len(gpu_draft_k) < eligible:
+            return None
+        from utils.draftmap_retrieval import DraftChunkRecord, DraftMapChunkIndex
+        score_start = time.perf_counter()
+        records = [
+            DraftChunkRecord(str(i), gpu_draft_k[i], tuple(range(gpu_draft_k[i].size(2))))
+            for i in range(eligible)
+        ]
+        if len(records) != eligible:
+            return None
+        index = DraftMapChunkIndex(block_tokens=64)
+        if any(r.draft_k.device != query.device for r in records):
+            raise RuntimeError("persistent Draft-K must remain GPU-resident")
+        device_records = records
+        scores = index.score_history(query, device_records)
+        draft_ms = (time.perf_counter() - score_start) * 1000.0
+        topk_start = time.perf_counter()
+        topk_scores, selected = index.select_topk(scores, self.memory_size)
+        topk_ms = (time.perf_counter() - topk_start) * 1000.0
+        self.draftmap_trace.append({
+            "generation_unit": int(kv_cache.get("global_end_index", torch.zeros(1)).item() // frame_seqlen),
+            "layer": int(layer_index),
+            "candidate_count": int(eligible),
+            "candidate_history_ids": list(range(eligible)),
+            "selected_history_ids": selected[0].detach().cpu().tolist(),
+            "selected_scores": [float(v) for v in topk_scores[0].detach().cpu()],
+            "retrieval_budget": int(self.memory_size),
+            "recent_history_ids": list(range(eligible, len(cpu_k))),
+            "draft_score_ms": draft_ms,
+            "topk_ms": topk_ms,
+            "cpu_gather_ms": 0.0,
+            "h2d_ms": 0.0,
+            "denoising_step": self.current_denoising_step,
+        })
+        return selected
+
     def forward(
         self,
         x,
@@ -129,7 +202,8 @@ class CausalWanSelfAttention(nn.Module):
         current_start=0,
         cache_start=None,
         sink_recache_after_switch=False,
-        memory_indices=None
+        memory_indices=None,
+        layer_index=0
     ):
         r"""
         Args:
@@ -151,6 +225,11 @@ class CausalWanSelfAttention(nn.Module):
             return q, k, v
 
         q, k, v = qkv_fn(x)
+        frame_seqlen = int(grid_sizes[0, 1].item() * grid_sizes[0, 2].item())
+        online_memory_indices = self._online_memory_indices(q, kv_cache, layer_index, frame_seqlen)
+        if online_memory_indices is not None:
+            memory_indices = online_memory_indices
+        draft_k_frames = _draft_frame_pools(k, frame_seqlen)
 
         if kv_cache is None:
             # if it is teacher forcing training?
@@ -269,8 +348,9 @@ class CausalWanSelfAttention(nn.Module):
                     ev_k_split = ev_k.view(b, num_evicted_frames, frame_seqlen, n, d).split(1, dim=1)
                     ev_v_split = ev_v.view(b, num_evicted_frames, frame_seqlen, n, d).split(1, dim=1)
                     
-                    evicted_k_frames = [f.to("cpu", non_blocking=True) for f in ev_k_split]
-                    evicted_v_frames = [f.to("cpu", non_blocking=True) for f in ev_v_split]
+                evicted_k_frames = [f.to("cpu", non_blocking=True) for f in ev_k_split]
+                evicted_v_frames = [f.to("cpu", non_blocking=True) for f in ev_v_split]
+                evicted_draft_k_frames = kv_cache.get("local_draft_k_frames", [])[sink_tokens // frame_seqlen:sink_tokens // frame_seqlen + num_evicted_frames]
 
                 # Apply rolling update to the temporary cache
                 temp_k[:, sink_tokens:sink_tokens + num_rolled_tokens] = \
@@ -331,7 +411,9 @@ class CausalWanSelfAttention(nn.Module):
                     "current_end": current_end,
                     "is_recompute": is_recompute,
                     "evicted_k_frames": evicted_k_frames,
-                    "evicted_v_frames": evicted_v_frames
+                    "evicted_v_frames": evicted_v_frames,
+                    "evicted_draft_k_frames": evicted_draft_k_frames,
+                    "new_draft_k_frames": draft_k_frames,
                 }
             else:
                 # === DIRECT INSERT MODE ===
@@ -390,7 +472,8 @@ class CausalWanSelfAttention(nn.Module):
                     "new_k": k[:, roped_offset:roped_offset + write_len],  # UN-ROPED K!
                     "new_v": v[:, roped_offset:roped_offset + write_len],
                     "current_end": current_end,
-                    "is_recompute": is_recompute
+                    "is_recompute": is_recompute,
+                    "new_draft_k_frames": draft_k_frames,
                 }
 
             # Use roped K for attention computation
@@ -413,14 +496,32 @@ class CausalWanSelfAttention(nn.Module):
                     if len(cpu_k_list) > 0:
                         k_sel = memory_indices.shape[1]  # [B, k_sel]
                         device = q.device
+                        gather_start = time.perf_counter()
                         
                         k_mem_unroped_list = []
                         v_mem_list = []
                         for bi in range(b):
                             indices = memory_indices[bi]
                             for k_idx in indices:
-                                k_mem_unroped_list.append(cpu_k_list[k_idx][bi, 0].to(device, non_blocking=True))
-                                v_mem_list.append(cpu_v_list[k_idx][bi, 0].to(device, non_blocking=True))
+                                src_k = cpu_k_list[k_idx][bi, 0]
+                                src_v = cpu_v_list[k_idx][bi, 0]
+                                dst_k = src_k.to(device, non_blocking=True)
+                                dst_v = src_v.to(device, non_blocking=True)
+                                copied_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                self.runtime_counters["full_kv_h2d_bytes"] += copied_bytes
+                                self.runtime_counters["full_kv_h2d_calls"] += 2
+                                self.history_fetch_trace.append({
+                                    "history_id": int(k_idx), "batch": int(bi),
+                                    "source_k_device": str(src_k.device),
+                                    "source_v_device": str(src_v.device),
+                                    "source_k_ptr": int(src_k.untyped_storage().data_ptr()),
+                                    "source_v_ptr": int(src_v.untyped_storage().data_ptr()),
+                                    "destination_k_ptr": int(dst_k.untyped_storage().data_ptr()),
+                                    "destination_v_ptr": int(dst_v.untyped_storage().data_ptr()),
+                                    "copied_bytes": copied_bytes,
+                                })
+                                k_mem_unroped_list.append(dst_k)
+                                v_mem_list.append(dst_v)
                             
                         k_mem_unroped = torch.stack(k_mem_unroped_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
                         v_mem = torch.stack(v_mem_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
@@ -432,6 +533,9 @@ class CausalWanSelfAttention(nn.Module):
                             k_mem_unroped,
                             mem_grid_sizes, freqs, relative_frame_indices=torch.zeros(k_sel, dtype=torch.long, device=device)
                         ).type_as(v)
+                        if self.retrieval_backend == "draftmap_online" and self.draftmap_trace:
+                            self.draftmap_trace[-1]["cpu_gather_ms"] = (time.perf_counter() - gather_start) * 1000.0
+                            self.draftmap_trace[-1]["h2d_ms"] = 0.0
 
                 k_parts = [k_sink]
                 v_parts = [v_sink]
@@ -530,6 +634,7 @@ class CausalWanAttentionBlock(nn.Module):
         cache_start=None,
         sink_recache_after_switch=False,
         memory_indices=None,
+        layer_index=0,
     ):
         r"""
         Args:
@@ -550,7 +655,7 @@ class CausalWanAttentionBlock(nn.Module):
             (self.norm1(x).unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * (1 + e[1]) + e[0]).flatten(1, 2),
             seq_lens, grid_sizes,
             freqs, block_mask, kv_cache, current_start, cache_start, sink_recache_after_switch,
-            memory_indices=memory_indices)
+            memory_indices=memory_indices, layer_index=layer_index)
         
         if kv_cache is not None:
             y, cache_update_info = self_attn_result
@@ -964,6 +1069,7 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                     if "evicted_k_frames" in update_info and update_info["evicted_k_frames"]:
                         cache.setdefault("cpu_k_frames", []).extend(update_info["evicted_k_frames"])
                         cache.setdefault("cpu_v_frames", []).extend(update_info["evicted_v_frames"])
+                        cache.setdefault("gpu_draft_k_frames", []).extend(update_info.get("evicted_draft_k_frames", []))
                         
                 elif update_info["action"] == "direct_insert":
                     # Direct insert
@@ -978,6 +1084,22 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                     if write_end_index > write_start_index and new_k.shape[1] == (write_end_index - write_start_index):
                         cache["k"][:, write_start_index:write_end_index] = new_k
                         cache["v"][:, write_start_index:write_end_index] = new_v
+
+                new_k_frames = update_info.get("new_draft_k_frames", [])
+                if update_info["action"] == "roll_and_insert":
+                    sink_frames = update_info["sink_tokens"] // 1560
+                    evicted_frames = update_info["num_evicted_tokens"] // 1560
+                    rolled_frames = update_info["num_rolled_tokens"] // 1560
+                    old_k = cache.get("local_draft_k_frames", [])
+                    start = sink_frames + evicted_frames
+                    cache["local_draft_k_frames"] = old_k[:sink_frames] + old_k[start:start + rolled_frames] + list(new_k_frames)
+                else:
+                    start = update_info.get("write_start_index", 0) // 1560
+                    old_k = list(cache.get("local_draft_k_frames", []))
+                    while len(old_k) < start:
+                        old_k.append(None)
+                    old_k[start:start + len(new_k_frames)] = list(new_k_frames)
+                    cache["local_draft_k_frames"] = old_k
             
             # Update indices: do not roll back pointers during recomputation
             is_recompute = False if update_info is None else update_info.get("is_recompute", False)
@@ -1095,7 +1217,8 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                     {
                         "kv_cache": kv_cache[block_index],
                         "current_start": current_start,
-                        "cache_start": cache_start
+                        "cache_start": cache_start,
+                        "layer_index": block_index
                     }
                 )
                 result = torch.utils.checkpoint.checkpoint(
@@ -1117,7 +1240,8 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                         "kv_cache": kv_cache[block_index],
                         "crossattn_cache": crossattn_cache[block_index],
                         "current_start": current_start,
-                        "cache_start": cache_start
+                        "cache_start": cache_start,
+                        "layer_index": block_index
                     }
                 )
                 result = block(x, **kwargs)
