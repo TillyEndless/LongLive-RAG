@@ -230,11 +230,14 @@ def select_fouroversix(
         x_fake_quantized_4.reshape(x_scale_blocks.shape[0], -1),
         x_fake_quantized_6.reshape(x_scale_blocks.shape[0], -1),
     )
+    # torch.where does not implement Float8 tensors on all H200/PyTorch
+    # combinations.  Select in FP32, then restore the reference FP8 scale
+    # representation; this does not change the selected FourOverSix scale.
     scales = torch.where(
         select_4,
-        scales_4.reshape(-1, 1),
-        scales_6.reshape(-1, 1),
-    )
+        scales_4.float().reshape(-1, 1),
+        scales_6.float().reshape(-1, 1),
+    ).to(scales_4.dtype)
 
     return x_fake_quantized, scales
 
