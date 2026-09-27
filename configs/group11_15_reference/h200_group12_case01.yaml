@@ -19,7 +19,7 @@ data_path: /data/zxl/LongLive-RAG-profile/prompts10.txt
 output_folder: /data/zxl/LongLive-RAG-group11_15_h200/results/group12_case01
 inference_iter: 0
 skip_existing: false
-num_output_frames: 474
+num_output_frames: 120
 use_ema: false
 seed: 0
 num_samples: 1
