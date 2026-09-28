@@ -1,0 +1,31 @@
+{
+  "remote": "https://github.com/qiz1907/LongLive-RAG.git",
+  "branch": "group11-15-h200-audited-sync",
+  "commit_sha": "0e1da21350051b37f3cf74848efbffa21430d1a1",
+  "tag": null,
+  "push_status": "blocked_authentication",
+  "group11_1_mode": "group11_1_current_q",
+  "group11_2_mode": "separate_worktree_not_merged",
+  "group11_3_mode": "separate_worktree_not_merged",
+  "group11_4_mode": "separate_worktree_not_merged",
+  "group12_mode": "group12_k8_vfp8",
+  "group13_mode": "group13_nvfp4",
+  "group14_modes": ["group14_sparse30", "group14_sparse20", "group14_sparse10", "group14_sparse05"],
+  "group15_modes": ["group15_sparse30", "group15_sparse20", "group15_sparse10", "group15_sparse05"],
+  "group12_15_persistent_lowbit_valid": "STATIC_YES",
+  "latency_instrumentation_included": "YES_FOR_H200_AUTHORITATIVE_WORKTREE",
+  "evaluator_included": "PARTIAL_STATIC_SOURCES",
+  "gpu_inference_run": false,
+  "static_validation": {
+    "py_compile": "PASS",
+    "corrected_config_parse_count": 100,
+    "corrected_config_parse": "PASS"
+  },
+  "source_worktrees": {
+    "group11_1": "/data/zxl/LongLive-RAG-group11_15_h200",
+    "group11_2": "/data/zxl/LongLive-RAG-group11_qprev_h200",
+    "group11_3": "/data/zxl/LongLive-RAG-group11_flashfetch_h200",
+    "group11_4": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200"
+  },
+  "intentionally_excluded": ["checkpoints", "videos", "results", "traces", "tmux logs", "credentials", "tokens"]
+}

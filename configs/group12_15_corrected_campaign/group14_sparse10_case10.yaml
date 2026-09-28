@@ -1,0 +1,40 @@
+denoising_step_list: [1000, 750, 500, 250]
+warp_denoising_step: true
+num_frame_per_block: 3
+model_name: Wan2.1-T2V-1.3B
+group_id: 14
+model_kwargs:
+  local_attn_size: 12
+  timestep_shift: 5.0
+  sink_size: 1
+  memory_size: 6
+  recent_exclude: 5
+  use_latentmem: true
+  retrieval_backend: draftmap_online
+  group_runtime_mode: group14_corrected
+  group_sparse_ratio: 0.1
+generator_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_base.pt
+lora_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_lora.pt
+adapter: {type: lora, rank: 256, alpha: 256, dropout: 0.0, dtype: bfloat16, verbose: false}
+data_path: /data/zxl/LongLive-RAG-group11_15_h200/configs/group12_15_corrected_campaign/case10.txt
+output_folder: /data/zxl/LongLive-RAG-group11_15_h200/results/group12_15_corrected_campaign/group14_sparse10/case10
+inference_iter: 0
+skip_existing: true
+num_output_frames: 474
+use_ema: false
+seed: 0
+num_samples: 1
+save_with_index: true
+global_sink: true
+context_noise: 0
+cpu_historical_k_storage: bf16
+cpu_historical_v_storage: bf16
+gpu_k_storage: int8
+gpu_v_storage: fp8_e4m3
+h2d_source_dtype: bf16
+attention_compute: bf16
+persistent_storage_mode: lowbit_storage_bf16_compute
+historical_kv_archive: bf16_cpu_int8_fp8_gpu
+draft_rag: true
+persistent_gpu_draft_k: true
+ratio_semantics: retained_interaction_ratio

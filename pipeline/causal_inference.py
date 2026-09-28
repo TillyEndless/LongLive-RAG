@@ -3,12 +3,14 @@
 from typing import List, Optional
 import torch
 import os
+import time
 from tqdm import tqdm
 
 from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
 from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, move_model_to_device_with_memory_preservation, log_gpu_memory
 from utils.debug_option import DEBUG
+from utils.compressed_history_archive import CompressedHistoryArchive
 import torch.distributed as dist
 
 from ae.config import AEConfig
@@ -87,12 +89,36 @@ class CausalInferencePipeline(torch.nn.Module):
         self.generator.model.recent_exclude = int(getattr(args.model_kwargs, "recent_exclude", 0))
         self.generator.model.draftmap_trace = []
         self.generator.model.group_runtime_trace = []
+        self.generator.model.group11_profile = {
+            "NUM_ATTENTION_CALLS": 0, "NUM_DRAFTMAP_CALLS": 0,
+            "NUM_DRAFT_Q_POOL_CALLS": 0, "NUM_DRAFT_K_SCORE_CALLS": 0,
+            "NUM_TOPK_CALLS": 0, "NUM_CPU_KV_FETCH_CALLS": 0,
+            "NUM_H2D_COPY_CALLS": 0, "TOTAL_FULL_KV_H2D_BYTES": 0,
+            "draftmap_rows": [], "h2d_rows": [], "attention_rows": [], "fetch_phase_rows": [],
+            "model_phase_ms": {"QKV_projection": 0.0, "norm_rope": 0.0, "attention_wrapper": 0.0, "attention_output_projection": 0.0, "FFN_MLP_and_cross_attention": 0.0, "cache_update": 0.0, "scheduler_bookkeeping": 0.0, "other": 0.0},
+            "CACHE_HITS": 0, "CACHE_MISSES": 0, "CACHE_HIT_RATE": 0.0,
+            "AVOIDED_H2D_CALLS": 0, "AVOIDED_H2D_BYTES": 0,
+            "GPU_CACHE_PEAK_BYTES": 0,
+            "E2E_LATENCY_MS": 0.0,
+            "TRANSFORMER_LATENCY_MS": 0.0,
+            "WRAPPER_LATENCY_MS": 0.0,
+            "EXPOSED_H2D_MS": 0.0,
+            "EXPOSED_H2D_CALLS": 0,
+            "RUNTIME_INSTRUMENTATION_VERSION": "v1",
+        }
         group_mode = str(getattr(args.model_kwargs, "group_runtime_mode", "baseline"))
+        self.compressed_history_mode = {
+            "group12_corrected": "int8_fp8",
+            "group13_corrected": "nvfp4",
+            "group14_corrected": "int8_fp8",
+            "group15_corrected": "nvfp4",
+        }.get(group_mode)
         sparse_ratio = float(getattr(args.model_kwargs, "group_sparse_ratio", 0.0))
         for block in getattr(self.generator.model, "blocks", []):
             block.self_attn.retrieval_backend = self.retrieval_backend
             block.self_attn.recent_exclude = self.generator.model.recent_exclude
             block.self_attn.draftmap_trace = self.generator.model.draftmap_trace
+            block.self_attn.group11_profile = self.generator.model.group11_profile
             block.self_attn.group_runtime_mode = group_mode
             block.self_attn.group_sparse_ratio = sparse_ratio
             block.self_attn.group_runtime_trace = self.generator.model.group_runtime_trace
@@ -153,6 +179,10 @@ class CausalInferencePipeline(torch.nn.Module):
                 (batch_size, num_output_frames, num_channels, height, width).
                 It is normalized to be in the range [0, 1].
         """
+        e2e_start = time.perf_counter()
+        transformer_start = None
+        transformer_end = None
+
         if self.retrieval_backend == "draftmap_online":
             # Block attention modules retain this same list object from init.
             self.generator.model.draftmap_trace.clear()
@@ -236,6 +266,7 @@ class CausalInferencePipeline(torch.nn.Module):
             diffusion_start.record()
 
         # Step 2: Temporal denoising loop
+        transformer_start = time.perf_counter()
         all_num_frames = [self.num_frame_per_block] * num_blocks
         pbar_blocks = tqdm(all_num_frames, desc=f"Generating blocks", disable=(dist.is_initialized() and dist.get_rank() != 0))
         for current_num_frames in pbar_blocks:
@@ -363,6 +394,8 @@ class CausalInferencePipeline(torch.nn.Module):
             # Step 3.4: update the start and end frame indices
             current_start_frame += current_num_frames
 
+        transformer_end = time.perf_counter()
+
         if profile:
             # End diffusion timing and synchronize CUDA
             diffusion_end.record()
@@ -405,6 +438,15 @@ class CausalInferencePipeline(torch.nn.Module):
                 print(f"  - VAE decoding time: {vae_time:.2f} ms ({100 * vae_time / total_time:.2f}%)")
                 print(f"  - Total time: {total_time:.2f} ms")
 
+        e2e_end = time.perf_counter()
+        profile_state = getattr(self.generator.model, "group11_profile", None)
+        if isinstance(profile_state, dict):
+            e2e_ms = (e2e_end - e2e_start) * 1000.0
+            transformer_ms = ((transformer_end or e2e_end) - (transformer_start or e2e_start)) * 1000.0
+            profile_state["E2E_LATENCY_MS"] = float(e2e_ms)
+            profile_state["TRANSFORMER_LATENCY_MS"] = float(transformer_ms)
+            profile_state["WRAPPER_LATENCY_MS"] = float(max(e2e_ms - transformer_ms, 0.0))
+
         if return_latents:
             return video, output.to(noise.device)
         else:
@@ -435,7 +477,16 @@ class CausalInferencePipeline(torch.nn.Module):
                 "cpu_k_frames": [],
                 "cpu_v_frames": [],
                 "gpu_draft_k_frames": [],
-                "local_draft_k_frames": []
+                "local_draft_k_frames": [],
+                "compressed_history_archive": (
+                    CompressedHistoryArchive(self.compressed_history_mode)
+                    if self.compressed_history_mode is not None else None
+                ),
+                "compressed_history_entries": [],
+                "evicted_compressed_entries": 0,
+                "retrieved_archived_entries": 0,
+                "transient_dequant_gpu_bytes": 0,
+                "transient_dequant_gpu_peak_bytes": 0,
             })
 
         self.kv_cache1 = kv_cache1  # always store the clean cache

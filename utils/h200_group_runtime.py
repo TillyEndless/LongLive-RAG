@@ -11,12 +11,47 @@ import torch
 
 from utils.persistent_kv_storage import PersistentHistoryQuantizer
 from utils.quant import quantize_kv
+from utils.persistent_draftmap import route_draftmap
 from fouroversix.quantize import QuantizationConfig
 
 
 def fake_quantize_kv(k: torch.Tensor, v: torch.Tensor, mode: str):
     if k.dtype != torch.bfloat16 or v.dtype != torch.bfloat16:
         raise TypeError("fake-quant input must be BF16")
+    if mode in {"group12_corrected", "group14_corrected"}:
+        # CPU history has already crossed H2D as BF16.  Quantize only the GPU
+        # working operands, then dequantize for the unchanged BF16 attention.
+        quantizer = PersistentHistoryQuantizer()
+        qk, sk = quantizer.quantize_k(k)
+        qv, sv = quantizer.quantize_v(v)
+        return quantizer.dequantize_k(qk, sk), quantizer.dequantize_v(qv, sv), {
+            "K_FAKE_QUANT_ACTIVE": "YES",
+            "V_FAKE_QUANT_ACTIVE": "YES",
+            "K_STORAGE_DTYPE": "int8_gpu_working_set",
+            "V_STORAGE_DTYPE": "fp8_e4m3_gpu_working_set",
+            "CPU_HISTORY_STORAGE_DTYPE": "bf16",
+            "H2D_SOURCE_DTYPE": "bf16",
+            "PERSISTENT_STORAGE_MODE": "LOWBIT_STORAGE_BF16_COMPUTE",
+            "ARCHIVE_DEQUANT_BEFORE_BF16_ATTENTION": "YES",
+            "FINAL_ATTENTION_DTYPE": "bfloat16",
+        }
+    if mode in {"group13_corrected", "group15_corrected"}:
+        cfg = QuantizationConfig()
+        def one(x):
+            shape = x.shape
+            packed = quantize_kv(x.reshape(-1, shape[-1]), cfg)
+            return packed.dequantize(dtype=torch.bfloat16).reshape(shape)
+        return one(k), one(v), {
+            "K_FAKE_QUANT_ACTIVE": "YES",
+            "V_FAKE_QUANT_ACTIVE": "YES",
+            "K_STORAGE_DTYPE": "nvfp4_gpu_working_set",
+            "V_STORAGE_DTYPE": "nvfp4_gpu_working_set",
+            "CPU_HISTORY_STORAGE_DTYPE": "bf16",
+            "H2D_SOURCE_DTYPE": "bf16",
+            "PERSISTENT_STORAGE_MODE": "LOWBIT_STORAGE_BF16_COMPUTE",
+            "ARCHIVE_DEQUANT_BEFORE_BF16_ATTENTION": "YES",
+            "FINAL_ATTENTION_DTYPE": "bfloat16",
+        }
     if mode == "group12_fake8":
         quantizer = PersistentHistoryQuantizer()
         qk, sk = quantizer.quantize_k(k)
@@ -82,10 +117,45 @@ def sparse_retain(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, ratio: floa
     }
 
 
-def prepare_attention_kv(q, k, v, mode="baseline", sparse_ratio=0.0):
-    k, v, meta = fake_quantize_kv(k, v, mode)
+def prepare_attention_kv(q, k, v, mode="baseline", sparse_ratio=0.0,
+                         persistent_owner_already_dequantized=False,
+                         apply_storage_quant=True):
+    # Local/sink/current tensors are transient attention operands, not
+    # persistent historical KV.  The low-bit contract applies only to the
+    # archive-backed GPU owner; keep these operands BF16 and do not introduce
+    # an accidental quantize->dequantize round trip here.
+    if not apply_storage_quant and not persistent_owner_already_dequantized:
+        k, v, meta = k, v, {
+            "K_FAKE_QUANT_ACTIVE": "NO",
+            "V_FAKE_QUANT_ACTIVE": "NO",
+            "GPU_PERSISTENT_LOWBIT_OWNER": "NO",
+            "CPU_HISTORY_STORAGE_DTYPE": "bf16",
+            "FINAL_ATTENTION_DTYPE": "bfloat16",
+            "TRANSIENT_BF16_DEQUANT": "NO",
+            "PERSISTENT_STORAGE_MODE": "LOWBIT_STORAGE_BF16_COMPUTE"
+            if mode in {"group12_corrected", "group13_corrected", "group14_corrected", "group15_corrected"}
+            else "BF16_FAKE_QUANT",
+        }
+    elif persistent_owner_already_dequantized:
+        if k.dtype != torch.bfloat16 or v.dtype != torch.bfloat16:
+            raise TypeError("persistent low-bit owner must materialize BF16 operands")
+        k, v, meta = k, v, {
+            "K_FAKE_QUANT_ACTIVE": "YES",
+            "V_FAKE_QUANT_ACTIVE": "YES",
+            "GPU_PERSISTENT_LOWBIT_OWNER": "YES",
+            "CPU_HISTORY_STORAGE_DTYPE": "bf16",
+            "H2D_SOURCE_DTYPE": "bf16",
+            "FINAL_ATTENTION_DTYPE": "bfloat16",
+            "TRANSIENT_BF16_DEQUANT": "YES",
+            "PERSISTENT_STORAGE_MODE": "LOWBIT_STORAGE_BF16_COMPUTE",
+        }
+    else:
+        k, v, meta = fake_quantize_kv(k, v, mode)
     if sparse_ratio:
-        k, v, sparse = sparse_retain(q, k, v, sparse_ratio)
+        if mode in {"group14_corrected", "group15_corrected"}:
+            k, v, sparse = route_draftmap(q, k, v, sparse_ratio)
+        else:
+            k, v, sparse = sparse_retain(q, k, v, sparse_ratio)
         meta.update(sparse)
     meta["FINAL_ATTENTION_DTYPE"] = str(k.dtype).replace("torch.", "")
     meta["NATIVE_LOWBIT_KERNEL_USED"] = "NO"

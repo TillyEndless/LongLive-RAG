@@ -164,8 +164,10 @@ def quantize_to_nvfp4(
         )
         / x_amax
     )
+    # H200/PyTorch portability: do comparisons in the real scale dtype;
+    # Float8 comparison/fill kernels are not implemented on this path.
     x_block_scaled = torch.where(
-        x_scales.unsqueeze(1) != 0,
+        x_scales.to(x_amax.dtype).unsqueeze(1) != 0,
         x_scale_blocks * (1 / (decode_scale * x_scales.to(x_amax.dtype).unsqueeze(1))),
         0,
     )

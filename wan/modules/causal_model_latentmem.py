@@ -16,9 +16,16 @@ from torch.nn.attention.flex_attention import BlockMask
 from diffusers.models.modeling_utils import ModelMixin
 import torch.nn as nn
 import torch
+from utils.compressed_history_archive import CompressedHistoryArchive
 import math
 import time
+import os
 import torch.distributed as dist
+from contextlib import nullcontext
+try:
+    from torch.profiler import record_function
+except Exception:
+    record_function = None
 from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, log_gpu_memory
 
 from utils.debug_option import DEBUG
@@ -135,6 +142,8 @@ class CausalWanSelfAttention(nn.Module):
         self.group_runtime_mode = "baseline"
         self.group_sparse_ratio = 0.0
         self.group_runtime_trace = []
+        self.group11_profile = None
+        self._group11_reuse_cache = {}
         self.qk_norm = qk_norm
         self.eps = eps
         # Support list/tuple local_attn_size by converting to list first (handles OmegaConf ListConfig)
@@ -156,17 +165,20 @@ class CausalWanSelfAttention(nn.Module):
     def _online_memory_indices(self, query, kv_cache, layer_index, frame_seqlen):
         if self.retrieval_backend != "draftmap_online" or self.memory_size <= 0:
             return None
-        cpu_k = kv_cache.get("cpu_k_frames", [])
+        compressed_entries = kv_cache.get("compressed_history_entries", [])
+        cpu_k = compressed_entries if compressed_entries else kv_cache.get("cpu_k_frames", [])
         gpu_draft_k = kv_cache.get("gpu_draft_k_frames", [])
         eligible = max(len(cpu_k) - self.recent_exclude, 0)
         if eligible <= 0 or len(gpu_draft_k) < eligible:
             return None
         from utils.draftmap_retrieval import DraftChunkRecord, DraftMapChunkIndex
         score_start = time.perf_counter()
+        pool_start = time.perf_counter()
         records = [
             DraftChunkRecord(str(i), gpu_draft_k[i], tuple(range(gpu_draft_k[i].size(2))))
             for i in range(eligible)
         ]
+        pool_ms = (time.perf_counter() - pool_start) * 1000.0
         if len(records) != eligible:
             return None
         index = DraftMapChunkIndex(block_tokens=64)
@@ -178,6 +190,21 @@ class CausalWanSelfAttention(nn.Module):
         topk_start = time.perf_counter()
         topk_scores, selected = index.select_topk(scores, self.memory_size)
         topk_ms = (time.perf_counter() - topk_start) * 1000.0
+        if self.group11_profile is not None:
+            p = self.group11_profile
+            p["NUM_DRAFTMAP_CALLS"] += 1
+            p["NUM_DRAFT_Q_POOL_CALLS"] += 1
+            p["NUM_DRAFT_K_SCORE_CALLS"] += 1
+            p["NUM_TOPK_CALLS"] += 1
+            p["draftmap_rows"].append({
+                "layer": int(layer_index), "denoising_step": self.current_denoising_step,
+                "current_chunk_id": int(kv_cache.get("global_end_index", torch.zeros(1)).item() // frame_seqlen),
+                "num_historical_chunks": int(len(cpu_k)), "num_candidate_chunks": int(eligible),
+                "num_selected_chunks": int(selected.shape[-1]),
+                "draft_q_shape": list(query.shape), "draft_k_shape": list(gpu_draft_k[0].shape) if gpu_draft_k else [],
+                "draft_score_elements": int(scores.numel()), "time_draft_q_pool_ms": pool_ms,
+                "time_score_ms": draft_ms, "time_aggregate_ms": 0.0, "time_topk_ms": topk_ms,
+            })
         self.draftmap_trace.append({
             "generation_unit": int(kv_cache.get("global_end_index", torch.zeros(1)).item() // frame_seqlen),
             "layer": int(layer_index),
@@ -217,18 +244,33 @@ class CausalWanSelfAttention(nn.Module):
             freqs(Tensor): Rope freqs, shape [1024, C / num_heads / 2]
             block_mask (BlockMask)
         """
+        self._current_layer_index = int(layer_index)
         b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
+        v5_active = False
+        if os.environ.get("GROUP11_V5_PROFILE", "0") == "1":
+            try:
+                block_frames = int(os.environ.get("GROUP11_V5_BLOCK_FRAMES", "3"))
+                block_index = int(current_start) // max(1, block_frames * int(grid_sizes[0, 1].item() * grid_sizes[0, 2].item()))
+                v5_active = (int(os.environ.get("GROUP11_V5_START_BLOCK", "6")) <= block_index < int(os.environ.get("GROUP11_V5_END_BLOCK", "8")))
+            except Exception:
+                v5_active = False
+        self._v5_active = v5_active
         if cache_start is None:
             cache_start = current_start
 
         # query, key, value function
+        qkv_start = time.perf_counter()
         def qkv_fn(x):
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
             return q, k, v
 
-        q, k, v = qkv_fn(x)
+        qkv_ctx = record_function("G11_QKV_PROJECTION") if (v5_active and record_function is not None) else nullcontext()
+        with qkv_ctx:
+            q, k, v = qkv_fn(x)
+        if self.group11_profile is not None:
+            self.group11_profile["model_phase_ms"]["QKV_projection"] += (time.perf_counter() - qkv_start) * 1000.0
         frame_seqlen = int(grid_sizes[0, 1].item() * grid_sizes[0, 2].item())
         online_memory_indices = self._online_memory_indices(q, kv_cache, layer_index, frame_seqlen)
         if online_memory_indices is not None:
@@ -383,9 +425,12 @@ class CausalWanSelfAttention(nn.Module):
                     self.local_attn_size, 
                     device=q.device
                 )
+                rope_start = time.perf_counter()
                 roped_query = causal_online_rope(
                     q, grid_sizes, freqs, relative_frame_indices=query_relative_indices
                 ).type_as(v)
+                if self.group11_profile is not None:
+                    self.group11_profile["model_phase_ms"]["norm_rope"] += (time.perf_counter() - rope_start) * 1000.0
                 
                 # For cached K: apply RoPE dynamically based on current position in window
                 # Sink frames: [0, 1, ..., sink_size - 1]
@@ -497,8 +542,13 @@ class CausalWanSelfAttention(nn.Module):
                 v_mem = None
                 
                 if self.memory_size > 0 and memory_indices is not None:
-                    cpu_k_list = kv_cache.get("cpu_k_frames", [])
+                    fetch_start = time.perf_counter()
+                    lookup_start = time.perf_counter()
+                    compressed_entries = kv_cache.get("compressed_history_entries", [])
+                    cpu_k_list = compressed_entries if compressed_entries else kv_cache.get("cpu_k_frames", [])
                     cpu_v_list = kv_cache.get("cpu_v_frames", [])
+                    archive = kv_cache.get("compressed_history_archive")
+                    lookup_ms = (time.perf_counter() - lookup_start) * 1000.0
                     
                     if len(cpu_k_list) > 0:
                         k_sel = memory_indices.shape[1]  # [B, k_sel]
@@ -507,13 +557,59 @@ class CausalWanSelfAttention(nn.Module):
                         
                         k_mem_unroped_list = []
                         v_mem_list = []
+                        k_host_ms = 0.0
+                        v_host_ms = 0.0
                         for bi in range(b):
                             indices = memory_indices[bi]
                             for k_idx in indices:
-                                src_k = cpu_k_list[k_idx][bi, 0]
-                                src_v = cpu_v_list[k_idx][bi, 0]
-                                dst_k = src_k.to(device, non_blocking=True)
-                                dst_v = src_v.to(device, non_blocking=True)
+                                if archive is not None:
+                                    rec = compressed_entries[int(k_idx)]
+                                    src_k, src_v = archive.fetch(rec, device)
+                                    if self.group11_profile is not None:
+                                        self.group11_profile["EXPOSED_H2D_MS"] = float(self.group11_profile.get("EXPOSED_H2D_MS", 0.0)) + float(getattr(archive, "last_h2d_ms", 0.0))
+                                        self.group11_profile["EXPOSED_H2D_CALLS"] = int(self.group11_profile.get("EXPOSED_H2D_CALLS", 0)) + int(getattr(archive, "last_h2d_calls", 0))
+                                    src_k = src_k[bi]
+                                    src_v = src_v[bi]
+                                    kv_cache["retrieved_archived_entries"] = int(kv_cache.get("retrieved_archived_entries", 0)) + 1
+                                    deq_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                    kv_cache["transient_dequant_gpu_bytes"] = int(kv_cache.get("transient_dequant_gpu_bytes", 0)) + deq_bytes
+                                    kv_cache["transient_dequant_gpu_peak_bytes"] = max(int(kv_cache.get("transient_dequant_gpu_peak_bytes", 0)), deq_bytes)
+                                    cache_key = None
+                                else:
+                                    src_k = cpu_k_list[k_idx][bi, 0]
+                                    src_v = cpu_v_list[k_idx][bi, 0]
+                                    cache_key = (int(getattr(self, "_current_layer_index", -1)), int(k_idx), int(bi))
+                                reuse = os.environ.get("GROUP11_REUSE_CACHE", "0") == "1"
+                                cache_hit = bool(reuse and cache_key in getattr(self, "_group11_reuse_cache", {}))
+                                if archive is not None:
+                                    dst_k, dst_v = src_k, src_v
+                                    k_ms = 0.0
+                                    v_ms = 0.0
+                                elif cache_hit:
+                                    dst_k, dst_v = self._group11_reuse_cache[cache_key]
+                                    k_ms = 0.0
+                                    v_ms = 0.0
+                                    if self.group11_profile is not None:
+                                        self.group11_profile["CACHE_HITS"] += 1
+                                        self.group11_profile["AVOIDED_H2D_CALLS"] += 2
+                                        self.group11_profile["AVOIDED_H2D_BYTES"] += int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                else:
+                                    k_start = time.perf_counter()
+                                    dst_k = src_k.to(device, non_blocking=True)
+                                    k_ms = (time.perf_counter() - k_start) * 1000.0
+                                    v_start = time.perf_counter()
+                                    dst_v = src_v.to(device, non_blocking=True)
+                                    v_ms = (time.perf_counter() - v_start) * 1000.0
+                                    if reuse:
+                                        self._group11_reuse_cache[cache_key] = (dst_k, dst_v)
+                                    if self.group11_profile is not None:
+                                        self.group11_profile["CACHE_MISSES"] += 1
+                                        if reuse:
+                                            cache_bytes = sum(int(k.numel() * k.element_size() + vv.numel() * vv.element_size()) for k, vv in self._group11_reuse_cache.values())
+                                            self.group11_profile["GPU_CACHE_PEAK_BYTES"] = max(int(self.group11_profile.get("GPU_CACHE_PEAK_BYTES", 0)), cache_bytes)
+                                copy_ms = k_ms + v_ms
+                                k_host_ms += k_ms
+                                v_host_ms += v_ms
                                 copied_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
                                 self.runtime_counters["full_kv_h2d_bytes"] += copied_bytes
                                 self.runtime_counters["full_kv_h2d_calls"] += 2
@@ -526,12 +622,26 @@ class CausalWanSelfAttention(nn.Module):
                                     "destination_k_ptr": int(dst_k.untyped_storage().data_ptr()),
                                     "destination_v_ptr": int(dst_v.untyped_storage().data_ptr()),
                                     "copied_bytes": copied_bytes,
+                                    "layer": int(getattr(self, "_current_layer_index", -1)),
+                                    "copy_time_ms": copy_ms,
+                                    "source_pinned_memory": bool(src_k.is_pinned() and src_v.is_pinned()),
+                                    "non_blocking": True,
+                                    "cache_hit": cache_hit,
                                 })
+                                if self.group11_profile is not None:
+                                    self.group11_profile["NUM_CPU_KV_FETCH_CALLS"] += 1
+                                    self.group11_profile["NUM_H2D_COPY_CALLS"] += 2
+                                    self.group11_profile["TOTAL_FULL_KV_H2D_BYTES"] += copied_bytes
+                                    self.group11_profile["EXPOSED_H2D_MS"] = float(self.group11_profile.get("EXPOSED_H2D_MS", 0.0)) + float(copy_ms)
+                                    self.group11_profile["EXPOSED_H2D_CALLS"] = int(self.group11_profile.get("EXPOSED_H2D_CALLS", 0)) + 2
+                                    self.group11_profile["h2d_rows"].append({"source_chunk_id": int(k_idx), "layer": int(getattr(self, "_current_layer_index", -1)), "bytes_K": int(src_k.numel()*src_k.element_size()), "bytes_V": int(src_v.numel()*src_v.element_size()), "total_bytes": copied_bytes, "copy_time_ms": copy_ms, "k_host_ms": k_ms, "v_host_ms": v_ms, "source_pinned_memory": bool(src_k.is_pinned() and src_v.is_pinned()), "non_blocking": True, "copy_stream": "default", "cache_hit": cache_hit})
                                 k_mem_unroped_list.append(dst_k)
                                 v_mem_list.append(dst_v)
                             
+                        gather_start = time.perf_counter()
                         k_mem_unroped = torch.stack(k_mem_unroped_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
                         v_mem = torch.stack(v_mem_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
+                        gather_ms = (time.perf_counter() - gather_start) * 1000.0
                         
                         mem_grid_sizes = grid_sizes.clone()
                         mem_grid_sizes[:, 0] = k_sel
@@ -540,6 +650,9 @@ class CausalWanSelfAttention(nn.Module):
                             k_mem_unroped,
                             mem_grid_sizes, freqs, relative_frame_indices=torch.zeros(k_sel, dtype=torch.long, device=device)
                         ).type_as(v)
+                        fetch_end_to_end_ms = (time.perf_counter() - fetch_start) * 1000.0
+                        if self.group11_profile is not None:
+                            self.group11_profile["fetch_phase_rows"].append({"layer": int(layer_index), "lookup_ms": lookup_ms, "k_to_device_ms": k_host_ms, "v_to_device_ms": v_host_ms, "gather_ms": gather_ms, "cat_ms": 0.0, "end_to_end_ms": fetch_end_to_end_ms, "selected_chunks": int(k_sel), "selected_ids": [int(x) for x in memory_indices[0].detach().cpu().tolist()]})
                         if self.retrieval_backend == "draftmap_online" and self.draftmap_trace:
                             self.draftmap_trace[-1]["cpu_gather_ms"] = (time.perf_counter() - gather_start) * 1000.0
                             self.draftmap_trace[-1]["h2d_ms"] = 0.0
@@ -557,34 +670,60 @@ class CausalWanSelfAttention(nn.Module):
                     k_parts.append(k_local)
                     v_parts.append(v_local)
                     
+                cat_start = time.perf_counter()
                 k_cat = torch.cat(k_parts, dim=1)
                 v_cat = torch.cat(v_parts, dim=1)
+                cat_ms = (time.perf_counter() - cat_start) * 1000.0
+                if self.group11_profile is not None and self.group11_profile["fetch_phase_rows"]:
+                    self.group11_profile["fetch_phase_rows"][-1]["cat_ms"] += cat_ms
+                persistent_owner = (
+                    kv_cache.get("compressed_history_archive") is not None
+                    and self.group_runtime_mode in {
+                        "group12_corrected", "group13_corrected",
+                        "group14_corrected", "group15_corrected",
+                    }
+                )
                 k_cat, v_cat, runtime_meta = prepare_attention_kv(
                     roped_query, k_cat, v_cat,
-                    self.group_runtime_mode, self.group_sparse_ratio)
+                    self.group_runtime_mode, self.group_sparse_ratio,
+                    persistent_owner_already_dequantized=persistent_owner)
+                runtime_meta["TRACE_LAYER"] = int(layer_index)
+                runtime_meta["TRACE_DENOISING_STEP"] = self.current_denoising_step
                 self.group_runtime_trace.append(runtime_meta)
 
-                x = attention(
-                    roped_query,
-                    k_cat,
-                    v_cat
-                )
+                attn_start = time.perf_counter()
+                attn_ctx = record_function("G11_BF16_ATTN") if (v5_active and record_function is not None) else nullcontext()
+                with attn_ctx:
+                    x = attention(roped_query, k_cat, v_cat)
+                if self.group11_profile is not None:
+                    self.group11_profile["NUM_ATTENTION_CALLS"] += 1
+                    self.group11_profile["attention_rows"].append({"layer": int(layer_index), "q_tokens": int(roped_query.shape[1]), "kv_tokens": int(k_cat.shape[1]), "heads": int(k_cat.shape[2]), "dtype": str(k_cat.dtype), "cpu_wall_ms": (time.perf_counter()-attn_start)*1000.0})
             else:
                 window_start = max(0, local_end_index - self.max_attention_size)
                 roped_temp_k, temp_v, runtime_meta = prepare_attention_kv(
                     roped_query, roped_temp_k[:, window_start:local_end_index],
                     temp_v[:, window_start:local_end_index],
-                    self.group_runtime_mode, self.group_sparse_ratio)
+                    self.group_runtime_mode, self.group_sparse_ratio,
+                    apply_storage_quant=False)
+                runtime_meta["TRACE_LAYER"] = int(layer_index)
+                runtime_meta["TRACE_DENOISING_STEP"] = self.current_denoising_step
                 self.group_runtime_trace.append(runtime_meta)
-                x = attention(
-                    roped_query,
-                    roped_temp_k,
-                    temp_v
-                )
+                attn_start = time.perf_counter()
+                attn_ctx = record_function("G11_BF16_ATTN") if (v5_active and record_function is not None) else nullcontext()
+                with attn_ctx:
+                    x = attention(roped_query, roped_temp_k, temp_v)
+                if self.group11_profile is not None:
+                    self.group11_profile["NUM_ATTENTION_CALLS"] += 1
+                    self.group11_profile["attention_rows"].append({"layer": int(layer_index), "q_tokens": int(roped_query.shape[1]), "kv_tokens": int(roped_temp_k.shape[1]), "heads": int(roped_temp_k.shape[2]), "dtype": str(roped_temp_k.dtype), "cpu_wall_ms": (time.perf_counter()-attn_start)*1000.0})
 
         # output
+        output_start = time.perf_counter()
         x = x.flatten(2)
-        x = self.o(x)
+        output_ctx = record_function("G11_ATTN_OUTPUT_PROJECTION") if (v5_active and record_function is not None) else nullcontext()
+        with output_ctx:
+            x = self.o(x)
+        if self.group11_profile is not None:
+            self.group11_profile["model_phase_ms"]["attention_output_projection"] += (time.perf_counter() - output_start) * 1000.0
         
         # Return both output and cache update info
         if kv_cache is not None:
@@ -667,17 +806,21 @@ class CausalWanAttentionBlock(nn.Module):
         # assert e[0].dtype == torch.float32
 
         # self-attention
-        self_attn_result = self.self_attn(
-            (self.norm1(x).unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * (1 + e[1]) + e[0]).flatten(1, 2),
-            seq_lens, grid_sizes,
-            freqs, block_mask, kv_cache, current_start, cache_start, sink_recache_after_switch,
-            memory_indices=memory_indices, layer_index=layer_index)
+        block_attn_start = time.perf_counter()
+        wrapper_ctx = record_function("G11_WRAPPER") if (getattr(self.self_attn, "_v5_active", False) and record_function is not None) else nullcontext()
+        with wrapper_ctx:
+            self_attn_result = self.self_attn(
+                (self.norm1(x).unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * (1 + e[1]) + e[0]).flatten(1, 2),
+                seq_lens, grid_sizes, freqs, block_mask, kv_cache, current_start, cache_start, sink_recache_after_switch,
+                memory_indices=memory_indices, layer_index=layer_index)
         
         if kv_cache is not None:
             y, cache_update_info = self_attn_result
         else:
             y = self_attn_result
             cache_update_info = None
+        if self.self_attn.group11_profile is not None:
+            self.self_attn.group11_profile["model_phase_ms"]["attention_wrapper"] += (time.perf_counter() - block_attn_start) * 1000.0
 
         # with amp.autocast(dtype=torch.float32):
         x = x + (y.unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * e[2]).flatten(1, 2)
@@ -695,7 +838,10 @@ class CausalWanAttentionBlock(nn.Module):
                      frame_seqlen)) * e[5]).flatten(1, 2)
             return x
 
+        ffn_start = time.perf_counter()
         x = cross_attn_ffn(x, context, context_lens, e, crossattn_cache)
+        if self.self_attn.group11_profile is not None:
+            self.self_attn.group11_profile["model_phase_ms"]["FFN_MLP_and_cross_attention"] += (time.perf_counter() - ffn_start) * 1000.0
         
         if cache_update_info is not None:
             # cache_update_info is already in the format (current_end, local_end_index, cache_update_info)
@@ -1083,8 +1229,15 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                         cache["v"][:, write_start_index:write_end_index] = new_v
                     
                     if "evicted_k_frames" in update_info and update_info["evicted_k_frames"]:
-                        cache.setdefault("cpu_k_frames", []).extend(update_info["evicted_k_frames"])
-                        cache.setdefault("cpu_v_frames", []).extend(update_info["evicted_v_frames"])
+                        archive = cache.get("compressed_history_archive")
+                        if archive is not None:
+                            for kf, vf in zip(update_info["evicted_k_frames"], update_info["evicted_v_frames"]):
+                                rec = archive.append(kf[:, 0].to(torch.bfloat16), vf[:, 0].to(torch.bfloat16), layer_id=int(block_index), chunk_id=len(cache.get("compressed_history_entries", [])), history_id=len(cache.get("compressed_history_entries", [])), valid_tokens=int(kf.shape[2]))
+                                cache.setdefault("compressed_history_entries", []).append(rec)
+                                cache["evicted_compressed_entries"] = int(cache.get("evicted_compressed_entries", 0)) + 1
+                        else:
+                            cache.setdefault("cpu_k_frames", []).extend(update_info["evicted_k_frames"])
+                            cache.setdefault("cpu_v_frames", []).extend(update_info["evicted_v_frames"])
                         cache.setdefault("gpu_draft_k_frames", []).extend(update_info.get("evicted_draft_k_frames", []))
                         
                 elif update_info["action"] == "direct_insert":
