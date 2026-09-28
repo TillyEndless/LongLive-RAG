@@ -19,6 +19,11 @@ import torch
 import math
 import torch.distributed as dist
 from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, log_gpu_memory
+from utils.anemoi_mpa import (
+    persistent_anemoi_int8_attention,
+    persistent_anemoi_mixed_high_attention,
+    persistent_anemoi_nvfp4_attention,
+)
 
 from utils.debug_option import DEBUG
 
@@ -212,6 +217,79 @@ class CausalWanSelfAttention(nn.Module):
 
             current_end = current_start + roped_query.shape[1]
             sink_tokens = self.sink_size * frame_seqlen
+            if kv_cache.get("persistent_anemoi_mixed", False):
+                if self.sink_size or roped_query.shape[1] != frame_seqlen:
+                    raise NotImplementedError("persistent Anemoi mixed cache requires one frame and sink_size=0")
+                owner = kv_cache["anemoi_8bit_cache"]
+                if owner.chunks and current_start < owner.chunks[0].start_token:
+                    raise RuntimeError("persistent Anemoi cache cannot rewind before its oldest chunk")
+                history = [chunk for chunk in owner.history_chunks if chunk.start_token < current_start]
+                x, prepared_current = persistent_anemoi_mixed_high_attention(
+                    roped_query, roped_key, v, history,
+                    frame_shape=tuple(grid_sizes[0][1:].tolist()),
+                )
+                replacing = bool(owner.chunks and owner.chunks[-1].start_token == current_start)
+                update_info = {
+                    "action": "persistent_replace" if replacing else "persistent_append",
+                    "prepared": prepared_current,
+                    "start_token": current_start,
+                    "current_end": current_end,
+                    "is_recompute": False,
+                }
+                local_end_index = min(
+                    int(kv_cache["max_blocks"]) * frame_seqlen,
+                    int(kv_cache["local_end_index"].item()) if replacing else int(kv_cache["local_end_index"].item()) + frame_seqlen,
+                )
+                x = self.o(x.flatten(2))
+                return x, (current_end, local_end_index, update_info)
+            if kv_cache.get("persistent_anemoi_8bit", False):
+                if self.sink_size or roped_query.shape[1] != frame_seqlen:
+                    raise NotImplementedError("persistent Anemoi 8-bit cache requires one frame and sink_size=0")
+                owner = kv_cache["anemoi_8bit_cache"]
+                if owner.chunks and current_start < owner.chunks[0].start_token:
+                    raise RuntimeError("persistent Anemoi cache cannot rewind before its oldest chunk")
+                history = [chunk for chunk in owner.history_chunks if chunk.start_token < current_start]
+                x, prepared_current = persistent_anemoi_int8_attention(
+                    roped_query, roped_key, v, history,
+                    frame_shape=tuple(grid_sizes[0][1:].tolist()),
+                )
+                replacing = bool(owner.chunks and owner.chunks[-1].start_token == current_start)
+                update_info = {
+                    "action": "persistent_replace" if replacing else "persistent_append",
+                    "prepared": prepared_current,
+                    "start_token": current_start,
+                    "current_end": current_end,
+                    "is_recompute": False,
+                }
+                local_end_index = min(
+                    int(kv_cache["max_blocks"]) * frame_seqlen,
+                    int(kv_cache["local_end_index"].item()) if replacing else int(kv_cache["local_end_index"].item()) + frame_seqlen,
+                )
+                x = self.o(x.flatten(2))
+                return x, (current_end, local_end_index, update_info)
+            if kv_cache.get("persistent_anemoi_4bit", False):
+                if self.sink_size or roped_query.shape[1] != frame_seqlen:
+                    raise NotImplementedError("persistent Anemoi 4-bit cache requires one frame and sink_size=0")
+                owner = kv_cache["anemoi_4bit_cache"]
+                history = [chunk for chunk in owner.history_chunks if chunk.start_token < current_start]
+                x, prepared_current = persistent_anemoi_nvfp4_attention(
+                    roped_query, roped_key, v, history,
+                    frame_shape=tuple(grid_sizes[0][1:].tolist()),
+                )
+                replacing = bool(owner.chunks and owner.chunks[-1].start_token == current_start)
+                update_info = {
+                    "action": "persistent_replace" if replacing else "persistent_append",
+                    "prepared": prepared_current,
+                    "start_token": current_start,
+                    "current_end": current_end,
+                    "is_recompute": False,
+                }
+                local_end_index = min(
+                    int(kv_cache["max_blocks"]) * frame_seqlen,
+                    int(kv_cache["local_end_index"].item()) if replacing else int(kv_cache["local_end_index"].item()) + frame_seqlen,
+                )
+                x = self.o(x.flatten(2))
+                return x, (current_end, local_end_index, update_info)
             # If we are using local attention and the current KV cache size is larger than the local attention size, we need to truncate the KV cache
             kv_cache_size = kv_cache["k"].shape[1]
             num_new_tokens = roped_query.shape[1]
@@ -791,6 +869,48 @@ class CausalWanModel(ModelMixin, ConfigMixin):
         for block_index, (current_end, local_end_index, update_info) in cache_update_infos:
             if update_info is not None:
                 cache = kv_cache[block_index]
+                if cache.get("persistent_anemoi_8bit", False):
+                    prepared = update_info["prepared"]
+                    owner = cache["anemoi_8bit_cache"]
+                    append_args = (
+                        prepared["k8"], prepared["k_scale"],
+                        prepared["v8"], prepared["v_scale"],
+                    )
+                    common = {
+                        "valid_tokens": int(prepared["valid_tokens"]),
+                        "start_token": int(update_info["start_token"]),
+                        "valid_counts": prepared["valid_counts"].detach(),
+                        "draft_k": prepared["draft_k"].detach(),
+                        "draft_valid": prepared["draft_valid"].detach(),
+                    }
+                    if update_info["action"] == "persistent_replace":
+                        owner.replace_last(*append_args, **common)
+                    else:
+                        owner.append(*append_args, **common)
+                    cache["global_end_index"].fill_(current_end)
+                    cache["local_end_index"].fill_(local_end_index)
+                    continue
+                if cache.get("persistent_anemoi_4bit", False):
+                    prepared = update_info["prepared"]
+                    owner = cache["anemoi_4bit_cache"]
+                    from utils.persistent_anemoi_4bit_cache import Anemoi4BitChunk
+                    chunk = Anemoi4BitChunk(
+                        chunk_id=owner.next_chunk_id,
+                        k4=prepared["k4"], k_scale=prepared["k_scale"],
+                        v4=prepared["v4"], v_scale=prepared["v_scale"],
+                        valid_counts=prepared["valid_counts"].detach(),
+                        valid_tokens=int(prepared["valid_tokens"]),
+                        start_token=int(update_info["start_token"]),
+                        draft_k=prepared["draft_k"].detach(),
+                        draft_valid=prepared["draft_valid"].detach(),
+                    )
+                    if update_info["action"] == "persistent_replace":
+                        owner.replace_last(chunk)
+                    else:
+                        owner.append(chunk)
+                    cache["global_end_index"].fill_(current_end)
+                    cache["local_end_index"].fill_(local_end_index)
+                    continue
                 
                 if update_info["action"] == "roll_and_insert":
                     # Apply rolling update

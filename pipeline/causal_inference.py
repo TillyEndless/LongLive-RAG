@@ -52,7 +52,7 @@ class CausalInferencePipeline(torch.nn.Module):
         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
         # WanDiffusionWrapper init.
         model_args_clean = dict(getattr(args, "model_kwargs", {}))
-        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id", "group11_fetch_mode"]:
+        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id", "group11_fetch_mode", "persistent_anemoi_8bit", "persistent_anemoi_4bit", "persistent_anemoi_mixed"]:
             model_args_clean.pop(key, None)
 
         self.generator = WanDiffusionWrapper(
@@ -76,6 +76,13 @@ class CausalInferencePipeline(torch.nn.Module):
         self.args = args
         self.num_frame_per_block = getattr(args, "num_frame_per_block", 1)
         self.local_attn_size = args.model_kwargs.local_attn_size
+        self.persistent_anemoi_8bit = bool(getattr(args.model_kwargs, "persistent_anemoi_8bit", False))
+        self.persistent_anemoi_mixed = bool(getattr(args.model_kwargs, "persistent_anemoi_mixed", False))
+        self.persistent_anemoi_4bit = bool(getattr(args.model_kwargs, "persistent_anemoi_4bit", False))
+        if self.persistent_anemoi_mixed and not self.persistent_anemoi_8bit:
+            raise ValueError("persistent_anemoi_mixed requires persistent_anemoi_8bit")
+        if sum((self.persistent_anemoi_8bit, self.persistent_anemoi_4bit)) > 1:
+            raise ValueError("native persistent Anemoi cache modes are mutually exclusive")
 
         # Retrieval autoencoder (optional). compression_method ∈ {"avg_pool", "ae"}.
         self.compression_method = getattr(args.model_kwargs, "compression_method", "avg_pool")
@@ -488,9 +495,7 @@ class CausalInferencePipeline(torch.nn.Module):
                 kv_cache_size = 32760
 
         for _ in range(self.num_transformer_blocks):
-            kv_cache1.append({
-                "k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                "v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+            cache = {
                 "global_end_index": torch.tensor([0], dtype=torch.long, device=device),
                 "local_end_index": torch.tensor([0], dtype=torch.long, device=device),
                 "cpu_k_frames": [],
@@ -521,7 +526,30 @@ class CausalInferencePipeline(torch.nn.Module):
                 "draft_q_history_meta": None,
                 "draft_q_pending": None,
                 "draft_q_retrieval_started": False,
-            })
+            }
+            if self.persistent_anemoi_8bit:
+                from utils.persistent_anemoi_8bit_cache import PersistentAnemoi8BitCache
+                max_chunks = max(1, kv_cache_size // int(self.frame_seq_length))
+                cache.update({
+                    "persistent_anemoi_8bit": True,
+                    "persistent_anemoi_mixed": self.persistent_anemoi_mixed,
+                    "anemoi_8bit_cache": PersistentAnemoi8BitCache(max_chunks),
+                    "max_blocks": max_chunks,
+                })
+            elif self.persistent_anemoi_4bit:
+                from utils.persistent_anemoi_4bit_cache import PersistentAnemoi4BitCache
+                max_chunks = max(1, kv_cache_size // int(self.frame_seq_length))
+                cache.update({
+                    "persistent_anemoi_4bit": True,
+                    "anemoi_4bit_cache": PersistentAnemoi4BitCache(max_chunks),
+                    "max_blocks": max_chunks,
+                })
+            else:
+                cache.update({
+                    "k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                    "v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                })
+            kv_cache1.append(cache)
 
         self.kv_cache1 = kv_cache1  # always store the clean cache
         if str(getattr(self, "group11_fetch_mode", "serial_full")) == "next_layer_prefetch":

@@ -1,0 +1,5 @@
+# DISABLED: Group19 full HIGH/INT8/NVFP4/ZERO contract is unresolved.
+# This marker is intentionally not a runnable inference configuration.
+enabled: false
+status: incomplete
+reason: "The preserved implementation does not define a validated mixed 8/4/zero owner and route contract."
