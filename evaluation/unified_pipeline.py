@@ -111,11 +111,13 @@ def report(s):
 def audit_report(rows):
     lines = ['# Group11–19 static evaluation coverage', '',
              'Read-only metadata coverage; no inference, quality evaluation, or GPU work.', '',
-             '| Experiment | Group | Window | Action | Quality | Latency | Memory | Provenance |',
-             '|---|---:|---:|---|---|---|---|---|']
+             '| Experiment | Group | Window | Config | Quality valid/reusable | Memory valid/reusable | Latency valid/reusable | RAG | Provenance | Final valid | Next action |',
+             '|---|---:|---:|---|---|---|---|---|---|---|---|']
     for row in rows:
         e, a = row['experiment'], row['artifacts']
-        lines.append(f"| {e['experiment_id']} | {e['group']} | {e['window']} | {row['action']} | {a['quality']['reusable']} | {a['latency']['reusable']} | {a['memory']['reusable']} | {a['provenance']['reusable']} |")
+        config_found = Path(e['inference_config_path']).exists()
+        final = all(a[key]['reusable'] for key in ('quality', 'memory', 'latency', 'provenance'))
+        lines.append(f"| {e['experiment_id']} | {e['group']} | {e['window']} | {config_found} | {a['quality']['valid']}/{a['quality']['reusable']} | {a['memory']['valid']}/{a['memory']['reusable']} | {a['latency']['valid']}/{a['latency']['reusable']} | {a['rag_strategy']['reusable']} | {a['provenance']['reusable']} | {final} | {row['action']} |")
     return '\n'.join(lines) + '\n'
 
 def run_static_audit(group_filter, hardware=None):
@@ -128,13 +130,18 @@ def run_static_audit(group_filter, hardware=None):
         'reports/group11_19_evaluation_static_coverage.md'))
     json_path.parent.mkdir(parents=True, exist_ok=True); md_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(json.dumps(rows, indent=2, sort_keys=True) + '\n')
-    fields = ['experiment_id', 'group', 'window', 'method', 'action', 'quality_reusable', 'latency_reusable', 'memory_reusable', 'provenance_reusable']
+    fields = ['experiment_id', 'group', 'window', 'method', 'config_found', 'action', 'quality_valid', 'quality_reusable', 'memory_valid', 'memory_reusable', 'latency_valid', 'latency_reusable', 'rag_reusable', 'provenance_reusable', 'final_valid']
     with csv_path.open('w', newline='') as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, lineterminator='\n'); writer.writeheader()
         for row in rows:
             e, a = row['experiment'], row['artifacts']
-            writer.writerow({'experiment_id': e['experiment_id'], 'group': e['group'], 'window': e['window'], 'method': e['method'], 'action': row['action'],
-                             'quality_reusable': a['quality']['reusable'], 'latency_reusable': a['latency']['reusable'], 'memory_reusable': a['memory']['reusable'], 'provenance_reusable': a['provenance']['reusable']})
+            final = all(a[key]['reusable'] for key in ('quality', 'memory', 'latency', 'provenance'))
+            writer.writerow({'experiment_id': e['experiment_id'], 'group': e['group'], 'window': e['window'], 'method': e['method'],
+                             'config_found': Path(e['inference_config_path']).exists(), 'action': row['action'],
+                             'quality_valid': a['quality']['valid'], 'quality_reusable': a['quality']['reusable'],
+                             'memory_valid': a['memory']['valid'], 'memory_reusable': a['memory']['reusable'],
+                             'latency_valid': a['latency']['valid'], 'latency_reusable': a['latency']['reusable'],
+                             'rag_reusable': a['rag_strategy']['reusable'], 'provenance_reusable': a['provenance']['reusable'], 'final_valid': final})
     md_path.write_text(audit_report(rows))
     print(json.dumps({'rows': len(rows), 'json': str(json_path), 'csv': str(csv_path), 'markdown': str(md_path)}, indent=2))
     return rows

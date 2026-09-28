@@ -5,24 +5,37 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": [
           "json"
         ],
         "found": true,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke/memory_measurement.json",
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke_video/memory_measurement.json",
@@ -42,31 +55,52 @@
         ],
         "provenance_status": "RTX5090",
         "reason": "explicit GPU/CPU KV fields",
-        "reusable": true
+        "reusable": true,
+        "valid": true
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -123,24 +157,37 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": [
           "json"
         ],
         "found": true,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke/memory_measurement.json",
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke_video/memory_measurement.json",
@@ -160,31 +207,52 @@
         ],
         "provenance_status": "RTX5090",
         "reason": "explicit GPU/CPU KV fields",
-        "reusable": true
+        "reusable": true,
+        "valid": true
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -241,24 +309,37 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": [
           "json"
         ],
         "found": true,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke/memory_measurement.json",
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke_video/memory_measurement.json",
@@ -278,31 +359,52 @@
         ],
         "provenance_status": "RTX5090",
         "reason": "explicit GPU/CPU KV fields",
-        "reusable": true
+        "reusable": true,
+        "valid": true
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -359,24 +461,37 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": [
           "json"
         ],
         "found": true,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke/memory_measurement.json",
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke_video/memory_measurement.json",
@@ -396,31 +511,52 @@
         ],
         "provenance_status": "RTX5090",
         "reason": "explicit GPU/CPU KV fields",
-        "reusable": true
+        "reusable": true,
+        "valid": true
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -477,54 +613,87 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": [
           "csv"
         ],
         "found": true,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/smoke/summary.csv",
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/summary.csv",
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12_memory_remeasure/summary.csv"
         ],
         "provenance_status": "RTX5090",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": [
           "json"
         ],
         "found": true,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/smoke/metrics/case_01/routing.json",
           "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_01/routing.json",
@@ -541,7 +710,8 @@
         ],
         "provenance_status": "RTX5090",
         "reason": "routing artifact found",
-        "reusable": true
+        "reusable": true,
+        "valid": true
       }
     },
     "experiment": {
@@ -600,50 +770,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -702,50 +906,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -804,50 +1042,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -906,50 +1178,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -1008,50 +1314,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -1110,50 +1450,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -1212,50 +1586,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -1314,50 +1722,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -1416,50 +1858,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -1518,58 +1994,92 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": [
           "json"
         ],
         "found": true,
+        "normalized": {},
         "paths": [
           "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results/group16_tierA_D_profile.json"
         ],
         "provenance_status": "RTX5090",
         "reason": "legacy or unversioned timer boundary; discoverable but not reusable",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": [
           "json"
         ],
         "found": true,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [
           "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results/group16_tierA_D_profile.json"
         ],
         "provenance_status": "RTX5090",
         "reason": "explicit GPU/CPU KV fields",
-        "reusable": true
+        "reusable": true,
+        "valid": true
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -1627,50 +2137,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -1728,50 +2272,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {
@@ -1829,50 +2407,84 @@
       "correctness": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no correctness artifact discovered",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "latency": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "not found",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "memory": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "CPU_KV_GIB": "NOT_AVAILABLE",
+          "DRAFT_GPU_GIB": "NOT_AVAILABLE",
+          "GPU_KV_GIB": "NOT_AVAILABLE",
+          "KV_COMPRESSION_RATIO": "NOT_AVAILABLE",
+          "PEAK_GPU_ALLOCATED_GIB": "NOT_AVAILABLE",
+          "PEAK_GPU_RESERVED_GIB": "NOT_AVAILABLE",
+          "TRANSIENT_GPU_GIB": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "explicit persistent GPU and CPU KV fields missing",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "provenance": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {},
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no manifest/provenance artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       },
       "quality": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "DINO": "NOT_AVAILABLE",
+          "LPIPS": "NOT_AVAILABLE",
+          "PSNR": "NOT_AVAILABLE",
+          "SSIM": "NOT_AVAILABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
-        "reason": "quality metrics/canonical case provenance incomplete",
-        "reusable": false
+        "reason": "quality metrics/canonical case or evaluator provenance incomplete",
+        "reusable": false,
+        "valid": false
       },
       "rag_strategy": {
         "format": "NOT_AVAILABLE",
         "found": false,
+        "normalized": {
+          "EXACT_SET_RATE": "NOT_APPLICABLE",
+          "FETCH_BYTES": "NOT_APPLICABLE",
+          "FETCH_EVENT_COUNT": "NOT_APPLICABLE",
+          "FETCH_REUSE_RATE": "NOT_APPLICABLE",
+          "PREFETCH_PRECISION": "NOT_APPLICABLE",
+          "PREFETCH_RECALL": "NOT_APPLICABLE",
+          "RETRIEVAL_EXPOSED_S": "NOT_APPLICABLE",
+          "RETRIEVAL_WORK_S": "NOT_APPLICABLE"
+        },
         "paths": [],
         "provenance_status": "NOT_FOUND",
         "reason": "no routing artifact",
-        "reusable": false
+        "reusable": false,
+        "valid": false
       }
     },
     "experiment": {

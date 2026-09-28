@@ -50,13 +50,33 @@ def _relevant(path, experiment, explicit_root):
         return ratio in text or "group14" not in text and "group15" not in text
     return True
 
-def _record(paths, category, reusable=False, reason="not found"):
+def _record(paths, category, reusable=False, reason="not found", valid=None, normalized=None):
     if not paths:
-        return {"found": False, "paths": [], "format": "NOT_AVAILABLE", "provenance_status": "NOT_FOUND", "reusable": False, "reason": reason}
+        return {"found": False, "paths": [], "format": "NOT_AVAILABLE", "provenance_status": "NOT_FOUND", "valid": False, "reusable": False, "reason": reason, "normalized": normalized or {}}
     hardware = sorted({_hardware(p) for p in paths})
     return {"found": True, "paths": [str(p) for p in paths], "format": sorted({_format(p) for p in paths}),
             "provenance_status": "MIXED_HARDWARE" if len(hardware) > 1 else hardware[0],
-            "reusable": bool(reusable), "reason": reason}
+            "valid": bool(reusable if valid is None else valid), "reusable": bool(reusable), "reason": reason, "normalized": normalized or {}}
+
+def _data(paths):
+    for path in paths:
+        value = _read_json(path)
+        if value:
+            return value
+    return {}
+
+def normalize_quality(data):
+    return {key: data.get(key, "NOT_AVAILABLE") for key in ("DINO", "SSIM", "PSNR", "LPIPS")}
+
+def normalize_memory(data):
+    return {key: data.get(key, "NOT_AVAILABLE") for key in ("GPU_KV_GIB", "CPU_KV_GIB", "DRAFT_GPU_GIB", "TRANSIENT_GPU_GIB", "PEAK_GPU_ALLOCATED_GIB", "PEAK_GPU_RESERVED_GIB", "KV_COMPRESSION_RATIO")}
+
+def normalize_latency(data):
+    return {key: data.get(key, "NOT_AVAILABLE") for key in ("E2E_INFERENCE_S", "TRANSFORMER_S", "SELF_ATTN_WRAPPER_S", "ATTENTION_KERNEL_S", "NON_TRANSFORMER_E2E_S", "FETCH_WORK_S", "FETCH_EXPOSED_S", "FETCH_HIDDEN_S", "VAE_DECODE_S", "VIDEO_ENCODE_S", "PROCESS_WALL_S")}
+
+def normalize_rag_strategy(data):
+    keys = ("RETRIEVAL_WORK_S", "RETRIEVAL_EXPOSED_S", "FETCH_EVENT_COUNT", "FETCH_BYTES", "FETCH_REUSE_RATE", "EXACT_SET_RATE", "PREFETCH_PRECISION", "PREFETCH_RECALL")
+    return {key: data.get(key, "NOT_APPLICABLE") for key in keys}
 
 def _latency(paths):
     if not paths:
@@ -73,16 +93,19 @@ def _latency(paths):
         else:
             compatible.append(path)
     if compatible:
-        return _record(compatible, "latency", True, "explicit timer boundary version")
-    return _record(legacy, "latency", False, "legacy or unversioned timer boundary; discoverable but not reusable")
+        data = _data(compatible)
+        return _record(paths, "latency", True, "explicit timer boundary version", valid=True, normalized=normalize_latency(data))
+    return _record(paths, "latency", False, "legacy or unversioned timer boundary; discoverable but not reusable", valid=False)
 
 def _quality(paths):
-    valid = []
+    valid, reusable = [], []
     for path in paths:
         data = _read_json(path)
         if all(isinstance(data.get(k), (int, float)) for k in ("DINO", "SSIM", "PSNR")) and (data.get("case_count", 10) >= 10):
             valid.append(path)
-    return _record(paths, "quality", bool(valid), "canonical quality metrics with case count" if valid else "quality metrics/canonical case provenance incomplete")
+            if any(data.get(k) for k in ("manifest_sha256", "manifest_path")) and any(data.get(k) for k in ("evaluator_version", "reference_evaluator")) and data.get("frame_protocol"):
+                reusable.append(path)
+    return _record(paths, "quality", bool(reusable), "canonical metrics and evaluator provenance" if reusable else "quality metrics/canonical case or evaluator provenance incomplete", valid=bool(valid), normalized=normalize_quality(_data(paths)))
 
 def _memory(paths):
     valid = []
@@ -90,7 +113,7 @@ def _memory(paths):
         data = _read_json(path)
         if any(k in data for k in ("persistent_gpu_kv_bytes", "GPU_KV_MEASURED_GiB", "GPU_KV_GiB")) and any(k in data for k in ("persistent_cpu_kv_bytes", "CPU_KV_MEASURED_GiB", "CPU_KV_GiB")):
             valid.append(path)
-    return _record(paths, "memory", bool(valid), "explicit GPU/CPU KV fields" if valid else "explicit persistent GPU and CPU KV fields missing")
+    return _record(paths, "memory", bool(valid), "explicit GPU/CPU KV fields" if valid else "explicit persistent GPU and CPU KV fields missing", valid=bool(valid), normalized=normalize_memory(_data(paths)))
 
 def discover_artifacts(experiment, roots=None):
     roots = [Path(p) for p in (roots or experiment.get("expected_artifact_roots", KNOWN_ROOTS))]
@@ -107,7 +130,7 @@ def discover_artifacts(experiment, roots=None):
     rag = [p for p in all_files if "routing" in p.name.lower()]
     provenance = [p for p in all_files if p.name in ("manifest.json", "provenance.json")]
     return {"quality": _quality(quality), "memory": _memory(memory), "latency": _latency(latency),
-            "rag_strategy": _record(rag, "rag_strategy", bool(rag), "routing artifact found" if rag else "no routing artifact"),
+            "rag_strategy": _record(rag, "rag_strategy", bool(rag), "routing artifact found" if rag else "no routing artifact", normalized=normalize_rag_strategy(_data(rag))),
             "correctness": _record([], "correctness", False, "no correctness artifact discovered"),
             "provenance": _record(provenance, "provenance", bool(provenance), "manifest/provenance artifact found" if provenance else "no manifest/provenance artifact")}
 
