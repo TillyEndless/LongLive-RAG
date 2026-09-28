@@ -51,7 +51,7 @@ class CausalInferencePipeline(torch.nn.Module):
         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
         # WanDiffusionWrapper init.
         model_args_clean = dict(getattr(args, "model_kwargs", {}))
-        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id"]:
+        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id", "group11_fetch_mode"]:
             model_args_clean.pop(key, None)
 
         self.generator = WanDiffusionWrapper(
@@ -118,6 +118,7 @@ class CausalInferencePipeline(torch.nn.Module):
             "group15_corrected": "nvfp4",
         }.get(group_mode)
         sparse_ratio = float(getattr(args.model_kwargs, "group_sparse_ratio", 0.0))
+        fetch_mode = str(getattr(args.model_kwargs, "group11_fetch_mode", "serial_full"))
         for block in getattr(self.generator.model, "blocks", []):
             block.self_attn.retrieval_backend = self.retrieval_backend
             block.self_attn.retrieval_query_mode = self.retrieval_query_mode
@@ -126,6 +127,7 @@ class CausalInferencePipeline(torch.nn.Module):
             block.self_attn.group11_profile = self.generator.model.group11_profile
             block.self_attn.group_runtime_mode = group_mode
             block.self_attn.group_sparse_ratio = sparse_ratio
+            block.self_attn.group11_fetch_mode = fetch_mode
             block.self_attn.group_runtime_trace = self.generator.model.group_runtime_trace
         self.ae_model = None
         if self.compression_method == "ae":

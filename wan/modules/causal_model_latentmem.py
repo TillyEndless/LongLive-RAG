@@ -143,6 +143,8 @@ class CausalWanSelfAttention(nn.Module):
         self.group_runtime_mode = "baseline"
         self.group_sparse_ratio = 0.0
         self.group_runtime_trace = []
+        self.group11_fetch_mode = "serial_full"
+        self.group11_flash_trace = []
         self.group11_profile = None
         self._group11_reuse_cache = {}
         self.qk_norm = qk_norm
@@ -266,6 +268,91 @@ class CausalWanSelfAttention(nn.Module):
             kv_cache["draft_q_history"], kv_cache["draft_q_history_meta"] = pending
             if self.group11_profile is not None:
                 self.group11_profile["Q_HISTORY_PERSISTED_CALLS"] += 1
+
+    def _flashfetch_online_attention(self, query, sink_k, sink_v, local_k, local_v,
+                                     kv_cache, memory_indices, grid_sizes, freqs,
+                                     layer_index):
+        """Serial full-chunk Flash Fetch correctness path.
+
+        Each selected history chunk is one 1560-token partition.  The online
+        softmax merge is mathematically equivalent to one dense unmasked
+        attention over resident + selected history tokens.  This first phase
+        intentionally uses blocking H2D; async double buffering is enabled
+        only after this path passes the numerical gate.
+        """
+        if query.size(0) != 1:
+            raise RuntimeError("flashfetch prototype currently requires batch_size=1")
+        if memory_indices is None:
+            return attention(query, torch.cat([sink_k, local_k], dim=1),
+                             torch.cat([sink_v, local_v], dim=1)), {"mode": "no_history"}
+        cpu_k = kv_cache.get("cpu_k_frames", [])
+        cpu_v = kv_cache.get("cpu_v_frames", [])
+        ids = [int(v) for v in memory_indices[0].detach().cpu().tolist()]
+        frame_seq = int(grid_sizes[0, 1].item() * grid_sizes[0, 2].item())
+        h, w = int(grid_sizes[0, 1].item()), int(grid_sizes[0, 2].item())
+        one_frame_grid = grid_sizes.new_tensor([[1, h, w]])
+        scale = query.shape[-1] ** -0.5
+        M = None
+        L = None
+        O = None
+        timeline = []
+
+        def merge(k_part, v_part, partition_name, history_id=None):
+            nonlocal M, L, O
+            start = time.perf_counter()
+            scores = torch.einsum("bqhd,bkhd->bqhk", query.float(), k_part.float()) * scale
+            m = scores.amax(dim=-1)
+            exp_scores = torch.exp(scores - m.unsqueeze(-1))
+            l = exp_scores.sum(dim=-1)
+            o = torch.einsum("bqhk,bkhd->bqhd", exp_scores, v_part.float())
+            if M is None:
+                M, L, O = m, l, o
+            else:
+                new_m = torch.maximum(M, m)
+                alpha = torch.exp(M - new_m)
+                beta = torch.exp(m - new_m)
+                O = alpha.unsqueeze(-1) * O + beta.unsqueeze(-1) * o
+                L = alpha * L + beta * l
+                M = new_m
+            end = time.perf_counter()
+            timeline.append({"partition": partition_name, "history_id": history_id,
+                             "compute_ms": (end - start) * 1000.0,
+                             "tokens": int(k_part.shape[1])})
+
+        resident_k = torch.cat([sink_k, local_k], dim=1)
+        resident_v = torch.cat([sink_v, local_v], dim=1)
+        merge(resident_k, resident_v, "resident", None)
+        total_h2d = 0.0
+        for rank, history_id in enumerate(ids):
+            if history_id >= len(cpu_k) or history_id >= len(cpu_v):
+                raise IndexError(f"history id {history_id} unavailable")
+            h2d_start = time.perf_counter()
+            src_k = cpu_k[history_id][0, 0].to(query.device, non_blocking=True)
+            src_v = cpu_v[history_id][0, 0].to(query.device, non_blocking=True)
+            h2d_ms = (time.perf_counter() - h2d_start) * 1000.0
+            total_h2d += h2d_ms
+            rope_start = time.perf_counter()
+            k_part = causal_online_rope(src_k.unsqueeze(0), one_frame_grid, freqs,
+                                        relative_frame_indices=torch.zeros(1, dtype=torch.long, device=query.device))
+            k_part = k_part[0:1].type_as(query)
+            v_part = src_v.unsqueeze(0).type_as(query)
+            rope_ms = (time.perf_counter() - rope_start) * 1000.0
+            compute_start = time.perf_counter()
+            merge(k_part, v_part, "history", history_id)
+            compute_ms = (time.perf_counter() - compute_start) * 1000.0
+            timeline[-1].update({"chunk_rank": rank, "h2d_ms": h2d_ms,
+                                 "rope_ms": rope_ms, "compute_start_ms": compute_start,
+                                 "compute_end_ms": time.perf_counter(), "bytes": int(src_k.numel() * src_k.element_size() * 2)})
+        output = (O / L.unsqueeze(-1)).type_as(query)
+        self.group11_flash_trace.append({
+            "layer_id": int(layer_index), "history_ids": ids,
+            "tile_tokens": frame_seq, "h2d_ms": total_h2d,
+            "timeline": timeline,
+            "cpu_pinned": bool(all(x.is_pinned() for x in cpu_k[:len(ids)])) if ids else True,
+            "async_overlap": False,
+        })
+        return output, {"mode": "flashfetch_serial", "history_ids": ids,
+                        "h2d_ms": total_h2d, "tile_tokens": frame_seq}
 
     def forward(
         self,
@@ -582,6 +669,28 @@ class CausalWanSelfAttention(nn.Module):
                 v_sink = temp_v[:, :sink_tokens]
                 
                 local_start_for_window = max(sink_tokens, local_end_index - local_budget)
+                
+                if self.group11_fetch_mode in {"flashfetch_serial", "flashfetch_chunk"}:
+                    if local_budget > 0 and local_start_for_window < local_end_index:
+                        flash_local_k = roped_temp_k[:, local_start_for_window:local_end_index]
+                        flash_local_v = temp_v[:, local_start_for_window:local_end_index]
+                    else:
+                        flash_local_k = roped_temp_k[:, :0]
+                        flash_local_v = temp_v[:, :0]
+                    x, flash_meta = self._flashfetch_online_attention(
+                        roped_query, k_sink, v_sink, flash_local_k, flash_local_v,
+                        kv_cache, memory_indices, grid_sizes, freqs, layer_index)
+                    self.group_runtime_trace.append({
+                        "FLASH_FETCH_ACTIVE": "YES",
+                        "FLASH_FETCH_TILE_TOKENS": int(frame_seqlen),
+                        "FINAL_ATTENTION_DTYPE": str(x.dtype).replace("torch.", ""),
+                        **flash_meta,
+                    })
+                    x = x.flatten(2)
+                    x = self.o(x)
+                    if kv_cache is not None:
+                        return x, (current_end, local_end_index, cache_update_info)
+                    return x
                 
                 # --- MEMORY TOKEN RETRIEVAL (using pre-computed indices) ---
                 k_mem = None

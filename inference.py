@@ -376,6 +376,9 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             # Corrected Group 11--15 machine-readable runtime contract.
             import json
             model_runtime = getattr(pipeline.generator.model, "group_runtime_trace", [])
+            flash_trace = []
+            for block in getattr(pipeline.generator.model, "blocks", []):
+                flash_trace.extend(getattr(getattr(block, "self_attn", None), "group11_flash_trace", []))
             group_runtime_mode = str(getattr(config.model_kwargs, "group_runtime_mode", "baseline"))
             corrected_group12 = group_runtime_mode == "group12_corrected"
             corrected_group13 = group_runtime_mode == "group13_corrected"
@@ -412,6 +415,7 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 "EXPECTED_DECODED_FRAMES": 474,
                 "CANONICAL_EVAL_PROTOCOL": "474 frames; 16 FPS; 832x480; frame 0 vs 237; seed 0",
                 "runtime_trace": model_runtime,
+                "flash_fetch_trace": flash_trace,
                 "group11_profile": getattr(pipeline.generator.model, "group11_profile", None),
             }
             profile = runtime_meta.get("group11_profile")
