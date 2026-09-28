@@ -154,7 +154,13 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
         "GPU_KV_BF16_EQUIVALENT_BYTES": 0,
         "GPU_KV_ACTUAL_PERSISTENT_BYTES": 0,
         "PERSISTENT_STORAGE_MODE": storage_mode,
+        "NATIVE_HISTORY_CHUNKS": 0,
+        "NATIVE_ARCHIVED_CHUNKS": 0,
+        "NATIVE_GPU_PACKED_KV_BYTES": 0,
+        "NATIVE_CPU_ARCHIVED_KV_BYTES": 0,
+        "NATIVE_GPU_DRAFT_BYTES": 0,
     }
+    native_owner_seen = False
     def add(name, tensor):
         if tensor is None or not hasattr(tensor, "untyped_storage"):
             return
@@ -166,6 +172,34 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
         out[name] += int(s.nbytes())
     for cache in caches or []:
         if not isinstance(cache, dict):
+            continue
+        native_owner = cache.get("anemoi_8bit_cache") or cache.get("anemoi_4bit_cache")
+        if native_owner is not None and hasattr(native_owner, "history_chunks"):
+            native_owner_seen = True
+            history = list(native_owner.history_chunks)
+            archived_ids = set(getattr(native_owner, "archived_chunk_ids", []))
+            out["NATIVE_HISTORY_CHUNKS"] += len(history)
+            out["NATIVE_ARCHIVED_CHUNKS"] += len(archived_ids)
+            for chunk in history:
+                names = ("k8", "k_scale", "v8", "v_scale") if hasattr(chunk, "k8") else ("k4", "k_scale", "v4", "v_scale")
+                packed_bytes = 0
+                for name in (*names, "valid_counts"):
+                    tensor = getattr(chunk, name, None)
+                    if tensor is None:
+                        continue
+                    size = int(tensor.untyped_storage().nbytes()) if hasattr(tensor, "untyped_storage") else 0
+                    packed_bytes += size
+                    add("GPU_KV_MEASURED_BYTES" if tensor.device.type == "cuda" else "CPU_KV_MEASURED_BYTES", tensor)
+                if chunk.chunk_id in archived_ids:
+                    out["NATIVE_CPU_ARCHIVED_KV_BYTES"] += packed_bytes
+                else:
+                    out["NATIVE_GPU_PACKED_KV_BYTES"] += packed_bytes
+                for tensor in (getattr(chunk, "draft_k", None), getattr(chunk, "draft_valid", None)):
+                    add("GPU_DRAFT_PERSISTENT_BYTES" if tensor is not None and tensor.device.type == "cuda" else "CPU_DRAFT_PERSISTENT_BYTES", tensor)
+                    if tensor is not None and tensor.device.type == "cuda":
+                        out["NATIVE_GPU_DRAFT_BYTES"] += int(tensor.untyped_storage().nbytes())
+            for tensor in (cache.get("global_end_index"), cache.get("local_end_index")):
+                add("GPU_KV_MEASURED_BYTES" if tensor is not None and tensor.device.type == "cuda" else "CPU_KV_MEASURED_BYTES", tensor)
             continue
         add("GPU_KV_MEASURED_BYTES", cache.get("k"))
         add("GPU_KV_MEASURED_BYTES", cache.get("v"))
@@ -228,7 +262,10 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
     out["CPU_KV_MEASURED_GiB"] = out["CPU_KV_MEASURED_BYTES"] / 2**30
     out["GPU_DRAFT_PERSISTENT_GiB"] = out["GPU_DRAFT_PERSISTENT_BYTES"] / 2**30
     out["CPU_DRAFT_PERSISTENT_GiB"] = 0.0
-    out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] = out["GPU_KV_MEASURED_BYTES"] + out["GPU_PACKED_K_BYTES"] + out["GPU_PACKED_V_BYTES"] + out["GPU_PACKED_SCALE_BYTES"] + out["GPU_PACKED_METADATA_BYTES"]
+    out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] = (
+        out["GPU_KV_MEASURED_BYTES"] if native_owner_seen else
+        out["GPU_KV_MEASURED_BYTES"] + out["GPU_PACKED_K_BYTES"] + out["GPU_PACKED_V_BYTES"] + out["GPU_PACKED_SCALE_BYTES"] + out["GPU_PACKED_METADATA_BYTES"]
+    )
     out["GPU_KV_BF16_EQUIVALENT_BYTES"] += out["GPU_LOCAL_BF16_KV_BYTES"]
     out["GPU_KV_COMPRESSION_RATIO"] = (out["GPU_KV_BF16_EQUIVALENT_BYTES"] / out["GPU_KV_ACTUAL_PERSISTENT_BYTES"]) if out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] else 1.0
     out["KV_COMPRESSION_RATIO"] = out["GPU_KV_COMPRESSION_RATIO"]

@@ -22,6 +22,7 @@ from utils.misc import set_seed
 
 from utils.memory import get_cuda_free_memory_gb, DynamicSwapInstaller
 from utils.runtime_memory_measurement import runtime_inference_memory
+from utils.anemoi_mpa import collect_metrics, reset_metrics
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config_path", type=str, help="Path to the config file")
@@ -306,6 +307,12 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
 
     print("sampled_noise.device", sampled_noise.device)
     print("prompts", prompts)
+    native_mode = bool(
+        getattr(config.model_kwargs, "persistent_anemoi_8bit", False)
+        or getattr(config.model_kwargs, "persistent_anemoi_4bit", False)
+    )
+    if native_mode:
+        reset_metrics()
 
 
     if args.v5_profiler_output:
@@ -376,6 +383,7 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             # Corrected Group 11--15 machine-readable runtime contract.
             import json
             model_runtime = getattr(pipeline.generator.model, "group_runtime_trace", [])
+            native_metrics = collect_metrics() if native_mode else {}
             flash_trace = []
             for block in getattr(pipeline.generator.model, "blocks", []):
                 flash_trace.extend(getattr(getattr(block, "self_attn", None), "group11_flash_trace", []))
@@ -418,6 +426,17 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 "flash_fetch_trace": flash_trace,
                 "group11_profile": getattr(pipeline.generator.model, "group11_profile", None),
             }
+            if native_mode:
+                runtime_meta.update({
+                    "NATIVE_ROUTE": native_metrics.get("route"),
+                    "NATIVE_ROUTE_SAMPLES": native_metrics.get("route_samples", []),
+                    "NATIVE_ATTENTION_CALLS": int(native_metrics.get("attention_calls", 0)),
+                    "NATIVE_KERNEL_MS": float(native_metrics.get("anemoi_kernel_ms", 0.0)),
+                    "NATIVE_MIXED_CALLS": int(native_metrics.get("native_mixed_calls", 0)),
+                    "NATIVE_HIGH_ROUTE_INTERACTIONS": int(native_metrics.get("high_route_interactions", 0)),
+                    "NATIVE_EIGHT_ROUTE_INTERACTIONS": int(native_metrics.get("eight_route_interactions", 0)),
+                    "NATIVE_ZERO_ROUTE_INTERACTIONS": int(native_metrics.get("zero_route_interactions", 0)),
+                })
             profile = runtime_meta.get("group11_profile")
             if isinstance(profile, dict):
                 hits = int(profile.get("CACHE_HITS", 0))
@@ -453,6 +472,8 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 pipeline.generator.model,
                 runtime_meta.get("PERSISTENT_STORAGE_MODE", "BF16_FAKE_QUANT"),
             )
+            if native_mode:
+                runtime_meta.update({key: value for key, value in memory_meta.items() if key.startswith("NATIVE_")})
             if getattr(pipeline, "kv_cache1", None):
                 c0 = pipeline.kv_cache1[0]
                 runtime_meta.update({
