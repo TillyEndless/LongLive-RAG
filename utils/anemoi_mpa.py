@@ -73,6 +73,11 @@ def _ratio(name: str, default: float) -> float:
     return value
 
 
+def _chunk_value(chunk, name: str):
+    """Read both owner chunks and the dict returned by chunk preparation."""
+    return getattr(chunk, name) if hasattr(chunk, name) else chunk[name]
+
+
 def _capture_route(executor):
     """Install a bounded observer around the native route op for validation."""
     original = executor.sm120_h3_route_precision
@@ -626,18 +631,18 @@ def persistent_anemoi_nvfp4_attention(
         query, current_key, current_value, frame_shape=frame_shape,
     )
     all_chunks = [*chunks, current]
-    draft_k = torch.cat([c.draft_k for c in all_chunks], dim=2)
+    draft_k = torch.cat([_chunk_value(c, "draft_k") for c in all_chunks], dim=2)
     route = route_draftmap_codes(query, draft_k, four_ratio=1.0)
     if not torch.all(route == 2):
         raise RuntimeError("persistent native Group 13 requires an all-4 DraftMap route")
     device = query.device
     # Archived payloads are CPU-owned; only the selected route's packed source
     # blocks are materialized on GPU. Draft-K remains GPU-resident in the cache.
-    k4 = torch.cat([c.k4.to(device) for c in all_chunks], dim=2).contiguous()
-    k4_scale = torch.cat([c.k_scale.to(device) for c in all_chunks], dim=2).contiguous()
-    v4 = torch.cat([c.v4.to(device) for c in all_chunks], dim=3).contiguous()
-    v4_scale = torch.cat([c.v_scale.to(device) for c in all_chunks], dim=2).contiguous()
-    valid_counts = torch.cat([c.valid_counts.to(device) for c in all_chunks], dim=1).contiguous()
+    k4 = torch.cat([_chunk_value(c, "k4").to(device) for c in all_chunks], dim=2).contiguous()
+    k4_scale = torch.cat([_chunk_value(c, "k_scale").to(device) for c in all_chunks], dim=2).contiguous()
+    v4 = torch.cat([_chunk_value(c, "v4").to(device) for c in all_chunks], dim=3).contiguous()
+    v4_scale = torch.cat([_chunk_value(c, "v_scale").to(device) for c in all_chunks], dim=2).contiguous()
+    valid_counts = torch.cat([_chunk_value(c, "valid_counts").to(device) for c in all_chunks], dim=1).contiguous()
     q4 = current["q4"]
     q4_scale = current["q4_scale"]
     q_fp16 = current["q_fp16"]
