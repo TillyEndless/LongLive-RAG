@@ -632,7 +632,10 @@ def persistent_anemoi_nvfp4_attention(
     )
     all_chunks = [*chunks, current]
     draft_k = torch.cat([_chunk_value(c, "draft_k") for c in all_chunks], dim=2)
-    route = route_draftmap_codes(query, draft_k, four_ratio=1.0)
+    route = route_draftmap_codes(
+        query, draft_k,
+        high_ratio=0.0, eight_ratio=0.0, four_ratio=1.0, zero_ratio=0.0,
+    )
     if not torch.all(route == 2):
         raise RuntimeError("persistent native Group 13 requires an all-4 DraftMap route")
     device = query.device
