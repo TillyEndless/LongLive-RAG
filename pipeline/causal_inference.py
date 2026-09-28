@@ -51,7 +51,7 @@ class CausalInferencePipeline(torch.nn.Module):
         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
         # WanDiffusionWrapper init.
         model_args_clean = dict(getattr(args, "model_kwargs", {}))
-        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "group_runtime_mode", "group_sparse_ratio", "group_id"]:
+        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id"]:
             model_args_clean.pop(key, None)
 
         self.generator = WanDiffusionWrapper(
@@ -79,6 +79,9 @@ class CausalInferencePipeline(torch.nn.Module):
         # Retrieval autoencoder (optional). compression_method ∈ {"avg_pool", "ae"}.
         self.compression_method = getattr(args.model_kwargs, "compression_method", "avg_pool")
         self.retrieval_backend = getattr(args.model_kwargs, "retrieval_backend", "original")
+        self.retrieval_query_mode = str(getattr(args.model_kwargs, "retrieval_query_mode", "current_q"))
+        if self.retrieval_query_mode not in {"current_q", "previous_q"}:
+            raise ValueError("retrieval_query_mode must be current_q or previous_q")
         if self.retrieval_backend not in {"original", "draftmap", "draftmap_online"}:
             raise ValueError("retrieval_backend must be 'original', 'draftmap', or 'draftmap_online'")
         self.draftmap_index = None
@@ -86,6 +89,7 @@ class CausalInferencePipeline(torch.nn.Module):
             from utils.draftmap_retrieval import DraftMapChunkIndex
             self.draftmap_index = DraftMapChunkIndex(block_tokens=64)
         self.generator.model.retrieval_backend = self.retrieval_backend
+        self.generator.model.retrieval_query_mode = self.retrieval_query_mode
         self.generator.model.recent_exclude = int(getattr(args.model_kwargs, "recent_exclude", 0))
         self.generator.model.draftmap_trace = []
         self.generator.model.group_runtime_trace = []
@@ -116,6 +120,7 @@ class CausalInferencePipeline(torch.nn.Module):
         sparse_ratio = float(getattr(args.model_kwargs, "group_sparse_ratio", 0.0))
         for block in getattr(self.generator.model, "blocks", []):
             block.self_attn.retrieval_backend = self.retrieval_backend
+            block.self_attn.retrieval_query_mode = self.retrieval_query_mode
             block.self_attn.recent_exclude = self.generator.model.recent_exclude
             block.self_attn.draftmap_trace = self.generator.model.draftmap_trace
             block.self_attn.group11_profile = self.generator.model.group11_profile
@@ -487,6 +492,10 @@ class CausalInferencePipeline(torch.nn.Module):
                 "retrieved_archived_entries": 0,
                 "transient_dequant_gpu_bytes": 0,
                 "transient_dequant_gpu_peak_bytes": 0,
+                "draft_q_history": None,
+                "draft_q_history_meta": None,
+                "draft_q_pending": None,
+                "draft_q_retrieval_started": False,
             })
 
         self.kv_cache1 = kv_cache1  # always store the clean cache

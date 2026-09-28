@@ -402,7 +402,7 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 "PERSISTENT_STORAGE_MODE": "LOWBIT_STORAGE_BF16_COMPUTE" if corrected_storage else "BF16_FAKE_QUANT",
                 "GPU_PERSISTENT_KV_OWNER": "INT8/FP8_E4M3" if corrected_group12 or corrected_group14 else ("NVFP4/NVFP4" if corrected_group13 or corrected_group15 else "BF16"),
                 "TRANSIENT_BF16_DEQUANT_ALLOWED": "YES" if corrected_storage else "NO",
-                "RETRIEVAL_QUERY_MODE": "current_q" if draft_rag_active else "none",
+                "RETRIEVAL_QUERY_MODE": str(getattr(config.model_kwargs, "retrieval_query_mode", "current_q")) if draft_rag_active else "none",
                 "Q_PREV": "NO",
                 "FLASH_FETCH": "NO",
                 "NEXT_LAYER_PREFETCH": "NO",

@@ -129,6 +129,7 @@ class CausalWanSelfAttention(nn.Module):
         self.sink_size = sink_size
         self.memory_size = memory_size
         self.retrieval_backend = "original"
+        self.retrieval_query_mode = "current_q"
         self.recent_exclude = 0
         self.draftmap_trace = []
         self.runtime_counters = {
@@ -162,7 +163,7 @@ class CausalWanSelfAttention(nn.Module):
         self.norm_q = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
         self.norm_k = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
 
-    def _online_memory_indices(self, query, kv_cache, layer_index, frame_seqlen):
+    def _online_memory_indices(self, query, kv_cache, layer_index, frame_seqlen, current_start=0):
         if self.retrieval_backend != "draftmap_online" or self.memory_size <= 0:
             return None
         compressed_entries = kv_cache.get("compressed_history_entries", [])
@@ -171,6 +172,27 @@ class CausalWanSelfAttention(nn.Module):
         eligible = max(len(cpu_k) - self.recent_exclude, 0)
         if eligible <= 0 or len(gpu_draft_k) < eligible:
             return None
+        if self.retrieval_query_mode == "previous_q":
+            kv_cache["draft_q_retrieval_started"] = True
+        retrieval_query = query
+        retrieval_query_source = "CURRENT_Q"
+        q_prev_age_steps = None
+        previous_meta = kv_cache.get("draft_q_history_meta")
+        if self.retrieval_query_mode == "previous_q":
+            previous = kv_cache.get("draft_q_history")
+            if previous is None:
+                retrieval_query_source = "BOOTSTRAP_CURRENT_Q"
+                if self.group11_profile is not None:
+                    self.group11_profile["BOOTSTRAP_CALLS"] += 1
+            else:
+                if previous_meta is None or int(previous_meta.get("layer", layer_index)) != int(layer_index):
+                    raise RuntimeError("q_history layer mismatch in previous_q retrieval")
+                retrieval_query = previous
+                retrieval_query_source = "PREVIOUS_Q"
+                if previous_meta.get("denoising_step") is not None and self.current_denoising_step is not None:
+                    q_prev_age_steps = 1
+                if self.group11_profile is not None:
+                    self.group11_profile["PREVIOUS_Q_RETRIEVAL_CALLS"] += 1
         from utils.draftmap_retrieval import DraftChunkRecord, DraftMapChunkIndex
         score_start = time.perf_counter()
         pool_start = time.perf_counter()
@@ -182,10 +204,10 @@ class CausalWanSelfAttention(nn.Module):
         if len(records) != eligible:
             return None
         index = DraftMapChunkIndex(block_tokens=64)
-        if any(r.draft_k.device != query.device for r in records):
+        if any(r.draft_k.device != retrieval_query.device for r in records):
             raise RuntimeError("persistent Draft-K must remain GPU-resident")
         device_records = records
-        scores = index.score_history(query, device_records)
+        scores = index.score_history(retrieval_query, device_records)
         draft_ms = (time.perf_counter() - score_start) * 1000.0
         topk_start = time.perf_counter()
         topk_scores, selected = index.select_topk(scores, self.memory_size)
@@ -213,6 +235,12 @@ class CausalWanSelfAttention(nn.Module):
             "selected_history_ids": selected[0].detach().cpu().tolist(),
             "selected_scores": [float(v) for v in topk_scores[0].detach().cpu()],
             "retrieval_budget": int(self.memory_size),
+            "retrieval_query_mode": self.retrieval_query_mode,
+            "wrapper_impl": "original_group11_custom",
+            "current_q_logical_id": {"layer": int(layer_index), "chunk": int(current_start // frame_seqlen), "denoise_step": self.current_denoising_step},
+            "retrieval_q_logical_id": ({"layer": int(layer_index), "chunk": int(previous_meta.get("chunk", -1)), "denoise_step": previous_meta.get("denoising_step")} if retrieval_query_source == "PREVIOUS_Q" and previous_meta is not None else {"layer": int(layer_index), "chunk": int(current_start // frame_seqlen), "denoise_step": self.current_denoising_step}),
+            "retrieval_query_source": retrieval_query_source,
+            "q_prev_age_steps": q_prev_age_steps,
             "recent_history_ids": list(range(eligible, len(cpu_k))),
             "draft_score_ms": draft_ms,
             "topk_ms": topk_ms,
@@ -221,6 +249,23 @@ class CausalWanSelfAttention(nn.Module):
             "denoising_step": self.current_denoising_step,
         })
         return selected
+
+    def _queue_draft_q_history(self, query, kv_cache, layer_index, current_start, frame_seqlen):
+        if self.retrieval_query_mode != "previous_q" or kv_cache is None:
+            return
+        kv_cache["draft_q_pending"] = (
+            query.detach().clone(),
+            {"layer": int(layer_index), "chunk": int(current_start // frame_seqlen), "denoising_step": self.current_denoising_step},
+        )
+
+    def _commit_draft_q_history(self, kv_cache):
+        if self.retrieval_query_mode != "previous_q" or kv_cache is None:
+            return
+        pending = kv_cache.pop("draft_q_pending", None)
+        if pending is not None and kv_cache.get("draft_q_retrieval_started", False):
+            kv_cache["draft_q_history"], kv_cache["draft_q_history_meta"] = pending
+            if self.group11_profile is not None:
+                self.group11_profile["Q_HISTORY_PERSISTED_CALLS"] += 1
 
     def forward(
         self,
@@ -272,7 +317,8 @@ class CausalWanSelfAttention(nn.Module):
         if self.group11_profile is not None:
             self.group11_profile["model_phase_ms"]["QKV_projection"] += (time.perf_counter() - qkv_start) * 1000.0
         frame_seqlen = int(grid_sizes[0, 1].item() * grid_sizes[0, 2].item())
-        online_memory_indices = self._online_memory_indices(q, kv_cache, layer_index, frame_seqlen)
+        self._queue_draft_q_history(q, kv_cache, layer_index, current_start, frame_seqlen)
+        online_memory_indices = self._online_memory_indices(q, kv_cache, layer_index, frame_seqlen, current_start=current_start)
         if online_memory_indices is not None:
             memory_indices = online_memory_indices
         draft_k_frames = _draft_frame_pools(k, frame_seqlen)
@@ -717,6 +763,7 @@ class CausalWanSelfAttention(nn.Module):
                     self.group11_profile["attention_rows"].append({"layer": int(layer_index), "q_tokens": int(roped_query.shape[1]), "kv_tokens": int(roped_temp_k.shape[1]), "heads": int(roped_temp_k.shape[2]), "dtype": str(roped_temp_k.dtype), "cpu_wall_ms": (time.perf_counter()-attn_start)*1000.0})
 
         # output
+        self._commit_draft_q_history(kv_cache)
         output_start = time.perf_counter()
         x = x.flatten(2)
         output_ctx = record_function("G11_ATTN_OUTPUT_PROJECTION") if (v5_active and record_function is not None) else nullcontext()
