@@ -4,7 +4,7 @@ Reuse mode consumes existing artifacts only. Full mode optionally executes an
 explicit command from the config, then consumes the resulting artifacts. This
 module never changes inference/profiler semantics.
 """
-import argparse, json, subprocess, sys
+import argparse, csv, json, subprocess, sys
 from pathlib import Path
 from unified_evaluation_schema import (LATENCY_FIELDS, MEMORY_FIELDS, QUALITY_FIELDS,
     as_csv_row, load_json, number, sha256, val, write_csv)
@@ -108,8 +108,46 @@ def report(s):
     p, v = s['provenance'], s['validity']; q, m, l = s['quality'], s['memory'], s['latency']
     return f'''# Unified evaluation: {p.get("experiment_id")}\n\n| Section | Source | Valid |\n|---|---|---|\n| Quality | {p.get("quality_source")} | {v["QUALITY_VALID"]} |\n| Latency | {p.get("latency_source")} | {v["LATENCY_VALID"]} |\n| Memory | {p.get("memory_source")} | {v["MEMORY_VALID"]} |\n| Provenance | {p.get("manifest_sha256")} | {v["PROVENANCE_VALID"]} |\n| Final row | mixed-source aggregate | {v["FINAL_ROW_VALID"]} |\n\n## Metrics\n\n- DINO/SSIM/PSNR/LPIPS: {q}\n- Latency: {l}\n- Memory: {m}\n\n`NON_TRANSFORMER_E2E_S` is derived as `E2E_INFERENCE_S - TRANSFORMER_S`; it is not Self-Attention Wrapper time.\n'''
 
+def audit_report(rows):
+    lines = ['# Group11–19 static evaluation coverage', '',
+             'Read-only metadata coverage; no inference, quality evaluation, or GPU work.', '',
+             '| Experiment | Group | Window | Action | Quality | Latency | Memory | Provenance |',
+             '|---|---:|---:|---|---|---|---|---|']
+    for row in rows:
+        e, a = row['experiment'], row['artifacts']
+        lines.append(f"| {e['experiment_id']} | {e['group']} | {e['window']} | {row['action']} | {a['quality']['reusable']} | {a['latency']['reusable']} | {a['memory']['reusable']} | {a['provenance']['reusable']} |")
+    return '\n'.join(lines) + '\n'
+
+def run_static_audit(group_filter, hardware=None):
+    from .static_audit import audit_all, parse_group_filter
+    rows = audit_all(parse_group_filter(group_filter), hardware)
+    root = Path(__file__).resolve().parent.parent
+    json_path, csv_path, md_path = (root / x for x in (
+        'results/group11_19_evaluation_static_coverage.json',
+        'results/group11_19_evaluation_static_coverage.csv',
+        'reports/group11_19_evaluation_static_coverage.md'))
+    json_path.parent.mkdir(parents=True, exist_ok=True); md_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(json.dumps(rows, indent=2, sort_keys=True) + '\n')
+    fields = ['experiment_id', 'group', 'window', 'method', 'action', 'quality_reusable', 'latency_reusable', 'memory_reusable', 'provenance_reusable']
+    with csv_path.open('w', newline='') as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator='\n'); writer.writeheader()
+        for row in rows:
+            e, a = row['experiment'], row['artifacts']
+            writer.writerow({'experiment_id': e['experiment_id'], 'group': e['group'], 'window': e['window'], 'method': e['method'], 'action': row['action'],
+                             'quality_reusable': a['quality']['reusable'], 'latency_reusable': a['latency']['reusable'], 'memory_reusable': a['memory']['reusable'], 'provenance_reusable': a['provenance']['reusable']})
+    md_path.write_text(audit_report(rows))
+    print(json.dumps({'rows': len(rows), 'json': str(json_path), 'csv': str(csv_path), 'markdown': str(md_path)}, indent=2))
+    return rows
+
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('--config', required=True); ap.add_argument('--mode', choices=['full','reuse'], required=True)
+    ap = argparse.ArgumentParser(); ap.add_argument('--config'); ap.add_argument('--mode', choices=['full','reuse'])
+    ap.add_argument('--audit-groups'); ap.add_argument('--hardware')
     ap.add_argument('--quality-only', action='store_true'); ap.add_argument('--profile-only', action='store_true')
-    a = ap.parse_args(); run(a.config, a.mode)
+    a = ap.parse_args()
+    if a.audit_groups:
+        run_static_audit(a.audit_groups, a.hardware)
+    elif a.config and a.mode:
+        run(a.config, a.mode)
+    else:
+        ap.error('--config and --mode are required unless --audit-groups is used')
 if __name__ == '__main__': main()

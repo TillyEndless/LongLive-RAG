@@ -1,0 +1,19 @@
+experiment_id,group,window,method,action,quality_reusable,latency_reusable,memory_reusable,provenance_reusable
+group11.1,11,12,LongLive-RAG + Draft Attention,QUALITY_AND_PROFILE_REQUIRED,False,False,True,False
+group11.2,11,12,Group11 previous-Q retrieval,QUALITY_AND_PROFILE_REQUIRED,False,False,True,False
+group11.3,11,12,Group11 serial FlashFetch,QUALITY_AND_PROFILE_REQUIRED,False,False,True,False
+group11.4,11,12,Group11 next-layer prefetch,QUALITY_AND_PROFILE_REQUIRED,False,False,True,False
+group12,12,12,Group12 corrected INT8/FP8 storage,QUALITY_AND_PROFILE_REQUIRED,False,False,False,False
+group13,13,12,Group13 corrected NVFP4 storage,FULL_INFERENCE_REQUIRED,False,False,False,False
+group14.1,14,12,Group14 sparse05 retained interaction,FULL_INFERENCE_REQUIRED,False,False,False,False
+group14.2,14,12,Group14 sparse10 retained interaction,FULL_INFERENCE_REQUIRED,False,False,False,False
+group14.3,14,12,Group14 sparse20 retained interaction,FULL_INFERENCE_REQUIRED,False,False,False,False
+group14.4,14,12,Group14 sparse30 retained interaction,FULL_INFERENCE_REQUIRED,False,False,False,False
+group15.1,15,12,Group15 sparse05 retained interaction,FULL_INFERENCE_REQUIRED,False,False,False,False
+group15.2,15,12,Group15 sparse10 retained interaction,FULL_INFERENCE_REQUIRED,False,False,False,False
+group15.3,15,12,Group15 sparse20 retained interaction,FULL_INFERENCE_REQUIRED,False,False,False,False
+group15.4,15,12,Group15 sparse30 retained interaction,FULL_INFERENCE_REQUIRED,False,False,False,False
+group16,16,12,Group16 native mixed HIGH/INT8/ZERO,QUALITY_AND_PROFILE_REQUIRED,False,False,True,False
+group17,17,12,Group17 native NVFP4,FULL_INFERENCE_REQUIRED,False,False,False,False
+group18,18,12,Group18 native INT8/FP8,FULL_INFERENCE_REQUIRED,False,False,False,False
+group19,19,12,Group19 unresolved disabled,PROVENANCE_AUDIT_REQUIRED,False,False,False,False

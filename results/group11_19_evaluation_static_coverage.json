@@ -1,0 +1,1920 @@
+[
+  {
+    "action": "QUALITY_AND_PROFILE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": [
+          "json"
+        ],
+        "found": true,
+        "paths": [
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke_video/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_10_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_1_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_2_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_3_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_4_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_5_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_6_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_7_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_8_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_9_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_cpu_kv_audit/w12_case01/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_memory_remeasure/w12_case01/memory_measurement.json"
+        ],
+        "provenance_status": "RTX5090",
+        "reason": "explicit GPU/CPU KV fields",
+        "reusable": true
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DENSE_RETAINED",
+      "attention_precision": "BF16",
+      "cache_strategy": "BF16_CPU_HISTORY_BF16_GPU_KV",
+      "config_files": [
+        "configs/final_group11_bounded.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "NOT_IDENTIFIABLE",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group11.1",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "BF16",
+      "gpu_v_precision": "BF16",
+      "group": 11,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/final_group11_bounded.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "DRAFT_ATTENTION",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "LongLive-RAG + Draft Attention",
+      "mixed_precision_policy": "NOT_IDENTIFIABLE",
+      "notes": "Static metadata only; no measured values are stored.",
+      "persistent_storage_policy": "BF16_GPU_KV",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "wan/modules/causal_model_latentmem.py"
+      ],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "NOT_APPLICABLE",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": 16,
+      "storage_v_bit": 16,
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "QUALITY_AND_PROFILE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": [
+          "json"
+        ],
+        "found": true,
+        "paths": [
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke_video/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_10_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_1_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_2_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_3_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_4_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_5_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_6_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_7_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_8_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_9_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_cpu_kv_audit/w12_case01/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_memory_remeasure/w12_case01/memory_measurement.json"
+        ],
+        "provenance_status": "RTX5090",
+        "reason": "explicit GPU/CPU KV fields",
+        "reusable": true
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DENSE_RETAINED",
+      "attention_precision": "BF16",
+      "cache_strategy": "BF16_CPU_HISTORY_BF16_GPU_KV",
+      "config_files": [
+        "configs/qprev_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "NOT_IDENTIFIABLE",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group11.2",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "BF16",
+      "gpu_v_precision": "BF16",
+      "group": 11,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/qprev_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "DRAFT_ATTENTION",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group11 previous-Q retrieval",
+      "mixed_precision_policy": "NOT_IDENTIFIABLE",
+      "notes": "Static metadata only; no measured values are stored.",
+      "persistent_storage_policy": "BF16_GPU_KV",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "PREVIOUS_Q_DIRECT_RETRIEVAL",
+      "source_files": [
+        "wan/modules/causal_model_latentmem.py"
+      ],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "NOT_APPLICABLE",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": 16,
+      "storage_v_bit": 16,
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "QUALITY_AND_PROFILE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": [
+          "json"
+        ],
+        "found": true,
+        "paths": [
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke_video/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_10_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_1_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_2_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_3_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_4_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_5_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_6_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_7_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_8_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_9_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_cpu_kv_audit/w12_case01/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_memory_remeasure/w12_case01/memory_measurement.json"
+        ],
+        "provenance_status": "RTX5090",
+        "reason": "explicit GPU/CPU KV fields",
+        "reusable": true
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DENSE_RETAINED",
+      "attention_precision": "BF16",
+      "cache_strategy": "BF16_CPU_HISTORY_BF16_GPU_KV",
+      "config_files": [
+        "configs/flashfetch_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "NOT_IDENTIFIABLE",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group11.3",
+      "fetch_strategy": "FLASHFETCH_SERIAL",
+      "flash_fetch_execution_class": "SERIAL",
+      "gpu_k_precision": "BF16",
+      "gpu_v_precision": "BF16",
+      "group": 11,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/flashfetch_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "DRAFT_ATTENTION",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group11 serial FlashFetch",
+      "mixed_precision_policy": "NOT_IDENTIFIABLE",
+      "notes": "FlashFetch correctness path is blocking; async_overlap is false.",
+      "persistent_storage_policy": "BF16_GPU_KV",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "wan/modules/causal_model_latentmem.py"
+      ],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "NOT_APPLICABLE",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": 16,
+      "storage_v_bit": 16,
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "QUALITY_AND_PROFILE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": [
+          "json"
+        ],
+        "found": true,
+        "paths": [
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/smoke_video/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_10_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_1_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_2_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_3_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_4_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_5_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_6_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_7_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_8_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/case_9_memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_all_gpu_draft/w12/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_cpu_kv_audit/w12_case01/memory_measurement.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group11_memory_remeasure/w12_case01/memory_measurement.json"
+        ],
+        "provenance_status": "RTX5090",
+        "reason": "explicit GPU/CPU KV fields",
+        "reusable": true
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DENSE_RETAINED",
+      "attention_precision": "BF16",
+      "cache_strategy": "BF16_CPU_HISTORY_BF16_GPU_KV",
+      "config_files": [
+        "configs/group11_4_next_layer_prefetch_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "NOT_IDENTIFIABLE",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group11.4",
+      "fetch_strategy": "NEXT_LAYER_PREFETCH",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "BF16",
+      "gpu_v_precision": "BF16",
+      "group": 11,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group11_4_next_layer_prefetch_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "DRAFT_ATTENTION",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group11 next-layer prefetch",
+      "mixed_precision_policy": "NOT_IDENTIFIABLE",
+      "notes": "Selected set is reconciled against I_(l+1) before use.",
+      "persistent_storage_policy": "BF16_GPU_KV",
+      "prefetch_strategy": "TRUE_ASYNC_OVERLAP",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "wan/modules/causal_model_latentmem.py"
+      ],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "NOT_APPLICABLE",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": 16,
+      "storage_v_bit": 16,
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "QUALITY_AND_PROFILE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": [
+          "csv"
+        ],
+        "found": true,
+        "paths": [
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/smoke/summary.csv",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/summary.csv",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12_memory_remeasure/summary.csv"
+        ],
+        "provenance_status": "RTX5090",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": [
+          "json"
+        ],
+        "found": true,
+        "paths": [
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/smoke/metrics/case_01/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_01/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_02/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_03/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_04/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_05/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_06/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_07/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_08/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_09/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12/metrics/case_10/routing.json",
+          "/home/zju/work/zxl/anemoi_native_draftattention_5090/results/group12_19_corrected/group12/w12_memory_remeasure/metrics/case_01/routing.json"
+        ],
+        "provenance_status": "RTX5090",
+        "reason": "routing artifact found",
+        "reusable": true
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group12_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group12",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": 8,
+      "gpu_v_precision": "FP8_E4M3",
+      "group": 12,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group12_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group12 corrected INT8/FP8 storage",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Static metadata only; no measured values are stored.",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "DENSE_RETAINED",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": 8,
+      "storage_v_bit": "FP8_E4M3",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group13_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group13",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "NVFP4",
+      "gpu_v_precision": "NVFP4",
+      "group": 13,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group13_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group13 corrected NVFP4 storage",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Static metadata only; no measured values are stored.",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "DENSE_RETAINED",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": "NVFP4",
+      "storage_v_bit": "NVFP4",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group14_sparse05_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group14.1",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": 8,
+      "gpu_v_precision": "FP8_E4M3",
+      "group": 14,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group14_sparse05_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group14 sparse05 retained interaction",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Persistent storage policy is separate from retained interaction sparsity; source route retains ceil(ratio*K).",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": 0.95,
+      "sparse_policy": "RETAINED_INTERACTION_RATIO",
+      "sparse_retained_ratio": 0.05,
+      "storage_k_bit": 8,
+      "storage_v_bit": "FP8_E4M3",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group14_sparse10_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group14.2",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": 8,
+      "gpu_v_precision": "FP8_E4M3",
+      "group": 14,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group14_sparse10_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group14 sparse10 retained interaction",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Persistent storage policy is separate from retained interaction sparsity; source route retains ceil(ratio*K).",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": 0.9,
+      "sparse_policy": "RETAINED_INTERACTION_RATIO",
+      "sparse_retained_ratio": 0.1,
+      "storage_k_bit": 8,
+      "storage_v_bit": "FP8_E4M3",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group14_sparse20_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group14.3",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": 8,
+      "gpu_v_precision": "FP8_E4M3",
+      "group": 14,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group14_sparse20_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group14 sparse20 retained interaction",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Persistent storage policy is separate from retained interaction sparsity; source route retains ceil(ratio*K).",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": 0.8,
+      "sparse_policy": "RETAINED_INTERACTION_RATIO",
+      "sparse_retained_ratio": 0.2,
+      "storage_k_bit": 8,
+      "storage_v_bit": "FP8_E4M3",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group14_sparse30_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group14.4",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": 8,
+      "gpu_v_precision": "FP8_E4M3",
+      "group": 14,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group14_sparse30_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group14 sparse30 retained interaction",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Persistent storage policy is separate from retained interaction sparsity; source route retains ceil(ratio*K).",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": 0.7,
+      "sparse_policy": "RETAINED_INTERACTION_RATIO",
+      "sparse_retained_ratio": 0.3,
+      "storage_k_bit": 8,
+      "storage_v_bit": "FP8_E4M3",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group15_sparse05_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group15.1",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "NVFP4",
+      "gpu_v_precision": "NVFP4",
+      "group": 15,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group15_sparse05_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group15 sparse05 retained interaction",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Persistent storage policy is separate from retained interaction sparsity; source route retains ceil(ratio*K).",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": 0.95,
+      "sparse_policy": "RETAINED_INTERACTION_RATIO",
+      "sparse_retained_ratio": 0.05,
+      "storage_k_bit": "NVFP4",
+      "storage_v_bit": "NVFP4",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group15_sparse10_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group15.2",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "NVFP4",
+      "gpu_v_precision": "NVFP4",
+      "group": 15,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group15_sparse10_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group15 sparse10 retained interaction",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Persistent storage policy is separate from retained interaction sparsity; source route retains ceil(ratio*K).",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": 0.9,
+      "sparse_policy": "RETAINED_INTERACTION_RATIO",
+      "sparse_retained_ratio": 0.1,
+      "storage_k_bit": "NVFP4",
+      "storage_v_bit": "NVFP4",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group15_sparse20_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group15.3",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "NVFP4",
+      "gpu_v_precision": "NVFP4",
+      "group": 15,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group15_sparse20_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group15 sparse20 retained interaction",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Persistent storage policy is separate from retained interaction sparsity; source route retains ceil(ratio*K).",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": 0.8,
+      "sparse_policy": "RETAINED_INTERACTION_RATIO",
+      "sparse_retained_ratio": 0.2,
+      "storage_k_bit": "NVFP4",
+      "storage_v_bit": "NVFP4",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "DRAFTMAP_RETAINED_BLOCKS",
+      "attention_precision": "BF16",
+      "cache_strategy": "CPU_BF16_ARCHIVE_GPU_PERSISTENT_LOWBITS",
+      "config_files": [
+        "configs/group12_15_corrected_campaign/group15_sparse30_case01.yaml"
+      ],
+      "cpu_kv_precision": "BF16",
+      "dequant_before_attention": "YES",
+      "direct_lowbit_attention": "NO",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group15.4",
+      "fetch_strategy": "SYNCHRONOUS_H2D",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "NVFP4",
+      "gpu_v_precision": "NVFP4",
+      "group": 15,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group12_15_corrected_campaign/group15_sparse30_case01.yaml",
+      "is_real_lowbit_kernel": "NO",
+      "kernel_backend": "H200_GROUP_RUNTIME_FAKE_QUANT",
+      "kernel_precision": "BF16",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group15 sparse30 retained interaction",
+      "mixed_precision_policy": "BF16_COMPUTE",
+      "notes": "Persistent storage policy is separate from retained interaction sparsity; source route retains ceil(ratio*K).",
+      "persistent_storage_policy": "GPU_PERSISTENT_LOWBITS_CPU_BF16_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "inference.py",
+        "utils/h200_group_runtime.py",
+        "utils/persistent_draftmap.py"
+      ],
+      "sparse_dropped_ratio": 0.7,
+      "sparse_policy": "RETAINED_INTERACTION_RATIO",
+      "sparse_retained_ratio": 0.3,
+      "storage_k_bit": "NVFP4",
+      "storage_v_bit": "NVFP4",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "QUALITY_AND_PROFILE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": [
+          "json"
+        ],
+        "found": true,
+        "paths": [
+          "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results/group16_tierA_D_profile.json"
+        ],
+        "provenance_status": "RTX5090",
+        "reason": "legacy or unversioned timer boundary; discoverable but not reusable",
+        "reusable": false
+      },
+      "memory": {
+        "format": [
+          "json"
+        ],
+        "found": true,
+        "paths": [
+          "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results/group16_tierA_D_profile.json"
+        ],
+        "provenance_status": "RTX5090",
+        "reason": "explicit GPU/CPU KV fields",
+        "reusable": true
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "NATIVE_ROUTE",
+      "attention_precision": "FP16",
+      "cache_strategy": "INT8_K_FP8_V",
+      "config_files": [
+        "configs/group16_19_native/group16_native_w12.yaml"
+      ],
+      "cpu_kv_precision": "COMPRESSED_ARCHIVE",
+      "dequant_before_attention": "NOT_IDENTIFIABLE",
+      "direct_lowbit_attention": "YES",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group16",
+      "fetch_strategy": "CPU_ARCHIVE_TO_TEMP_GPU",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "NOT_IDENTIFIABLE",
+      "gpu_v_precision": "NOT_IDENTIFIABLE",
+      "group": 16,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group16_19_native/group16_native_w12.yaml",
+      "is_real_lowbit_kernel": "YES",
+      "kernel_backend": "sm120_q64_int8_perchunk_vscale_compact_high_attention",
+      "kernel_precision": "SM120_NATIVE",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group16 native mixed HIGH/INT8/ZERO",
+      "mixed_precision_policy": "HIGH_FP16_PLUS_INT8_PLUS_ZERO",
+      "notes": "Route ratios are runtime defaults/overrides; registry does not store measurements.",
+      "persistent_storage_policy": "GPU_CURRENT_WINDOW_CPU_COMPRESSED_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "wan/modules/causal_model.py",
+        "utils/anemoi_mpa.py"
+      ],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "NOT_APPLICABLE",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": "NOT_IDENTIFIABLE",
+      "storage_v_bit": "NOT_IDENTIFIABLE",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "NATIVE_ROUTE",
+      "attention_precision": "FP16",
+      "cache_strategy": "NVFP4_KV",
+      "config_files": [
+        "configs/group16_19_native/group17_native_w12.yaml"
+      ],
+      "cpu_kv_precision": "COMPRESSED_ARCHIVE",
+      "dequant_before_attention": "NOT_IDENTIFIABLE",
+      "direct_lowbit_attention": "YES",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group17",
+      "fetch_strategy": "CPU_ARCHIVE_TO_TEMP_GPU",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "NOT_IDENTIFIABLE",
+      "gpu_v_precision": "NOT_IDENTIFIABLE",
+      "group": 17,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group16_19_native/group17_native_w12.yaml",
+      "is_real_lowbit_kernel": "YES",
+      "kernel_backend": "sm120_q64_nvfp4_fp16_attention",
+      "kernel_precision": "SM120_NATIVE",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group17 native NVFP4",
+      "mixed_precision_policy": "NVFP4_ONLY",
+      "notes": "Native all-4-bit route; archived compressed payload is materialized per call.",
+      "persistent_storage_policy": "GPU_CURRENT_WINDOW_CPU_COMPRESSED_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "wan/modules/causal_model.py",
+        "utils/anemoi_mpa.py"
+      ],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "NOT_APPLICABLE",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": "NOT_IDENTIFIABLE",
+      "storage_v_bit": "NOT_IDENTIFIABLE",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "FULL_INFERENCE_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "NATIVE_ROUTE",
+      "attention_precision": "FP16",
+      "cache_strategy": "INT8_K_FP8_V",
+      "config_files": [
+        "configs/group16_19_native/group18_native_w12.yaml"
+      ],
+      "cpu_kv_precision": "COMPRESSED_ARCHIVE",
+      "dequant_before_attention": "NOT_IDENTIFIABLE",
+      "direct_lowbit_attention": "YES",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [
+        "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results",
+        "/home/zju/work/zxl/anemoi_native_draftattention_5090/results",
+        "/data/zxl/LongLive-RAG-group11_15_h200/results"
+      ],
+      "experiment_id": "group18",
+      "fetch_strategy": "CPU_ARCHIVE_TO_TEMP_GPU",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "NOT_IDENTIFIABLE",
+      "gpu_v_precision": "NOT_IDENTIFIABLE",
+      "group": 18,
+      "implementation_semantics_confirmed": "YES",
+      "inference_config_path": "configs/group16_19_native/group18_native_w12.yaml",
+      "is_real_lowbit_kernel": "YES",
+      "kernel_backend": "sm120_q64_int8_perchunk_vscale_attention",
+      "kernel_precision": "SM120_NATIVE",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group18 native INT8/FP8",
+      "mixed_precision_policy": "INT8_FP8_PLUS_ZERO",
+      "notes": "Source confirms direct low-bit native attention; HIGH/4-bit routes are rejected.",
+      "persistent_storage_policy": "GPU_CURRENT_WINDOW_CPU_COMPRESSED_ARCHIVE",
+      "prefetch_strategy": "NONE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "CURRENT_Q_DRAFTMAP",
+      "source_files": [
+        "wan/modules/causal_model.py",
+        "utils/anemoi_mpa.py"
+      ],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "NOT_APPLICABLE",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": "NOT_IDENTIFIABLE",
+      "storage_v_bit": "NOT_IDENTIFIABLE",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  },
+  {
+    "action": "PROVENANCE_AUDIT_REQUIRED",
+    "artifacts": {
+      "correctness": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no correctness artifact discovered",
+        "reusable": false
+      },
+      "latency": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "not found",
+        "reusable": false
+      },
+      "memory": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "explicit persistent GPU and CPU KV fields missing",
+        "reusable": false
+      },
+      "provenance": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no manifest/provenance artifact",
+        "reusable": false
+      },
+      "quality": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "quality metrics/canonical case provenance incomplete",
+        "reusable": false
+      },
+      "rag_strategy": {
+        "format": "NOT_AVAILABLE",
+        "found": false,
+        "paths": [],
+        "provenance_status": "NOT_FOUND",
+        "reason": "no routing artifact",
+        "reusable": false
+      }
+    },
+    "experiment": {
+      "attention_interaction_policy": "NOT_IDENTIFIABLE",
+      "attention_precision": "NOT_IDENTIFIABLE",
+      "cache_strategy": "NOT_IDENTIFIABLE",
+      "config_files": [
+        "configs/group16_19_native/group19_unresolved_disabled.yaml"
+      ],
+      "cpu_kv_precision": "NOT_IDENTIFIABLE",
+      "dequant_before_attention": "NOT_IDENTIFIABLE",
+      "direct_lowbit_attention": "NOT_IDENTIFIABLE",
+      "entrypoint": "inference.py",
+      "expected_artifact_roots": [],
+      "experiment_id": "group19",
+      "fetch_strategy": "NOT_IDENTIFIABLE",
+      "flash_fetch_execution_class": "NOT_APPLICABLE",
+      "gpu_k_precision": "NOT_IDENTIFIABLE",
+      "gpu_v_precision": "NOT_IDENTIFIABLE",
+      "group": 19,
+      "implementation_semantics_confirmed": "NO",
+      "inference_config_path": "configs/group16_19_native/group19_unresolved_disabled.yaml",
+      "is_real_lowbit_kernel": "UNVERIFIED",
+      "kernel_backend": "NOT_IDENTIFIABLE",
+      "kernel_precision": "NOT_IDENTIFIABLE",
+      "key_compute_bit": "NOT_IDENTIFIABLE",
+      "method": "Group19 unresolved disabled",
+      "mixed_precision_policy": "NOT_IDENTIFIABLE",
+      "notes": "Disabled and unresolved mixed 8/4/zero owner/route contract; do not run.",
+      "persistent_storage_policy": "NOT_IDENTIFIABLE",
+      "prefetch_strategy": "NOT_APPLICABLE",
+      "quality_protocol": "canonical10",
+      "query_compute_bit": "NOT_IDENTIFIABLE",
+      "retrieval_strategy": "NOT_IDENTIFIABLE",
+      "source_files": [],
+      "sparse_dropped_ratio": "NOT_APPLICABLE",
+      "sparse_policy": "NOT_APPLICABLE",
+      "sparse_retained_ratio": "NOT_APPLICABLE",
+      "storage_k_bit": "NOT_IDENTIFIABLE",
+      "storage_v_bit": "NOT_IDENTIFIABLE",
+      "value_compute_bit": "NOT_IDENTIFIABLE",
+      "window": 12
+    }
+  }
+]

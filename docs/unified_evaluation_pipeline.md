@@ -34,3 +34,24 @@ Aggregate multiple summaries with:
 python -m evaluation.aggregate_table results/evaluation/*/evaluation_summary.json \
   --output results/evaluation/baseline_table.csv
 ```
+
+## Group11–19 static coverage
+
+The 5090 integration branch also contains a read-only registry and artifact
+adapter for Group11.1–11.4, 12, 13, 14.1–14.4, 15.1–15.4, 16, 17, 18, and
+19. Run:
+
+```bash
+python -m evaluation.unified_pipeline --audit-groups 11-19 --hardware RTX5090
+```
+
+This discovers existing JSON/CSV artifacts, records their format and
+hardware provenance, rejects legacy or unversioned latency as reusable, and
+returns the minimum action (`COMPLETE`, `QUALITY_ONLY_REQUIRED`,
+`PROFILE_ONLY_REQUIRED`, `MEMORY_ONLY_REQUIRED`,
+`QUALITY_AND_PROFILE_REQUIRED`, `FULL_INFERENCE_REQUIRED`, or
+`PROVENANCE_AUDIT_REQUIRED`). The registry stores source/config semantics
+only; it never stores measured results. The planner does not execute the
+recommended action. Group12/13 retain the CPU-BF16 archive plus persistent
+GPU-low-bit semantics, Group14/15 separate persistent storage from retained
+interaction sparsity, and Group19 remains disabled/unresolved.
