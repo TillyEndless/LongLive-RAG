@@ -30,6 +30,7 @@ from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, log
 
 from utils.debug_option import DEBUG
 from utils.h200_group_runtime import prepare_attention_kv
+from utils.unified_latency_profiler import UnifiedLatencyProfiler
 
 # wan 1.3B model has a weird channel / head configurations and require max-autotune to work with flexattention
 # see https://github.com/pytorch/pytorch/issues/133254
@@ -148,6 +149,7 @@ class CausalWanSelfAttention(nn.Module):
         # Group11.4-only transient prefetch pointer. Group12-15 do not use it.
         self.prefetch_kv_cache = None
         self.group11_profile = None
+        self.unified_latency_profiler = None
         self._group11_reuse_cache = {}
         self.qk_norm = qk_norm
         self.eps = eps
@@ -941,10 +943,31 @@ class CausalWanSelfAttention(nn.Module):
                 runtime_meta["TRACE_DENOISING_STEP"] = self.current_denoising_step
                 self.group_runtime_trace.append(runtime_meta)
 
+                original_k_tokens = int(k_cat.shape[1])
                 attn_start = time.perf_counter()
                 attn_ctx = record_function("G11_BF16_ATTN") if (v5_active and record_function is not None) else nullcontext()
+                cuda_attn_token = None
+                if self.unified_latency_profiler is not None:
+                    cuda_attn_token = self.unified_latency_profiler.begin_cuda("ATTENTION_KERNEL")
                 with attn_ctx:
                     x = attention(roped_query, k_cat, v_cat)
+                if self.unified_latency_profiler is not None:
+                    self.unified_latency_profiler.end_cuda(cuda_attn_token, {
+                        "call_id": len(self.unified_latency_profiler._events),
+                        "generation_unit": int(current_start // max(1, 3 * frame_seqlen)),
+                        "denoising_step": self.current_denoising_step,
+                        "layer_id": int(layer_index),
+                        "q_shape": list(roped_query.shape),
+                        "k_shape": list(k_cat.shape),
+                        "v_shape": list(v_cat.shape),
+                        "dtype": str(k_cat.dtype),
+                        "q_len": int(roped_query.shape[1]),
+                        "original_k_len": original_k_tokens,
+                        "actual_k_len": int(k_cat.shape[1]),
+                        "qk_elements_original": int(roped_query.shape[1] * original_k_tokens * k_cat.shape[2]),
+                        "qk_elements_actual": int(roped_query.shape[1] * k_cat.shape[1] * k_cat.shape[2]),
+                        "retained_ratio": float(k_cat.shape[1] / max(1, original_k_tokens)),
+                    })
                 if self.group11_profile is not None:
                     self.group11_profile["NUM_ATTENTION_CALLS"] += 1
                     self.group11_profile["attention_rows"].append({"layer": int(layer_index), "q_tokens": int(roped_query.shape[1]), "kv_tokens": int(k_cat.shape[1]), "heads": int(k_cat.shape[2]), "dtype": str(k_cat.dtype), "cpu_wall_ms": (time.perf_counter()-attn_start)*1000.0})
@@ -960,8 +983,28 @@ class CausalWanSelfAttention(nn.Module):
                 self.group_runtime_trace.append(runtime_meta)
                 attn_start = time.perf_counter()
                 attn_ctx = record_function("G11_BF16_ATTN") if (v5_active and record_function is not None) else nullcontext()
+                cuda_attn_token = None
+                if self.unified_latency_profiler is not None:
+                    cuda_attn_token = self.unified_latency_profiler.begin_cuda("ATTENTION_KERNEL")
                 with attn_ctx:
                     x = attention(roped_query, roped_temp_k, temp_v)
+                if self.unified_latency_profiler is not None:
+                    self.unified_latency_profiler.end_cuda(cuda_attn_token, {
+                        "call_id": len(self.unified_latency_profiler._events),
+                        "generation_unit": int(current_start // max(1, 3 * frame_seqlen)),
+                        "denoising_step": self.current_denoising_step,
+                        "layer_id": int(layer_index),
+                        "q_shape": list(roped_query.shape),
+                        "k_shape": list(roped_temp_k.shape),
+                        "v_shape": list(temp_v.shape),
+                        "dtype": str(roped_temp_k.dtype),
+                        "q_len": int(roped_query.shape[1]),
+                        "original_k_len": int(roped_temp_k.shape[1]),
+                        "actual_k_len": int(roped_temp_k.shape[1]),
+                        "qk_elements_original": int(roped_query.shape[1] * roped_temp_k.shape[1] * roped_temp_k.shape[2]),
+                        "qk_elements_actual": int(roped_query.shape[1] * roped_temp_k.shape[1] * roped_temp_k.shape[2]),
+                        "retained_ratio": 1.0,
+                    })
                 if self.group11_profile is not None:
                     self.group11_profile["NUM_ATTENTION_CALLS"] += 1
                     self.group11_profile["attention_rows"].append({"layer": int(layer_index), "q_tokens": int(roped_query.shape[1]), "kv_tokens": int(roped_temp_k.shape[1]), "heads": int(roped_temp_k.shape[2]), "dtype": str(roped_temp_k.dtype), "cpu_wall_ms": (time.perf_counter()-attn_start)*1000.0})

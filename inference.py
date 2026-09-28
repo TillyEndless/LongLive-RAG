@@ -437,6 +437,9 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                     "TRANSFORMER_LATENCY_S": float(profile.get("TRANSFORMER_LATENCY_MS", 0.0)) / 1000.0,
                     "WRAPPER_LATENCY_S": float(profile.get("WRAPPER_LATENCY_MS", 0.0)) / 1000.0,
                     "EXPOSED_H2D_S": float(profile.get("EXPOSED_H2D_MS", 0.0)) / 1000.0,
+                    "UNIFIED_LATENCY_PROFILE": profile.get("UNIFIED_LATENCY_PROFILE", {
+                        "enabled": False, "records": [], "synchronization": "none"
+                    }),
                 })
             # Re-assert corrected storage contract after per-step trace merge.
             if corrected_storage:

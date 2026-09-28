@@ -15,6 +15,7 @@ import torch.distributed as dist
 
 from ae.config import AEConfig
 from ae.model import LatentAE
+from utils.unified_latency_profiler import UnifiedLatencyProfiler
 
 
 def avg_pool(latent_frame: torch.Tensor) -> torch.Tensor:
@@ -110,6 +111,10 @@ class CausalInferencePipeline(torch.nn.Module):
             "EXPOSED_H2D_CALLS": 0,
             "RUNTIME_INSTRUMENTATION_VERSION": "v1",
         }
+        self.unified_latency_profiler = UnifiedLatencyProfiler(
+            enabled=bool(getattr(args, "unified_latency_profile", False))
+        )
+        self.generator.model.unified_latency_profiler = self.unified_latency_profiler
         group_mode = str(getattr(args.model_kwargs, "group_runtime_mode", "baseline"))
         self.compressed_history_mode = {
             "group12_corrected": "int8_fp8",
@@ -126,6 +131,7 @@ class CausalInferencePipeline(torch.nn.Module):
             block.self_attn.recent_exclude = self.generator.model.recent_exclude
             block.self_attn.draftmap_trace = self.generator.model.draftmap_trace
             block.self_attn.group11_profile = self.generator.model.group11_profile
+            block.self_attn.unified_latency_profiler = self.unified_latency_profiler
             block.self_attn.group_runtime_mode = group_mode
             block.self_attn.group_sparse_ratio = sparse_ratio
             block.self_attn.group11_fetch_mode = fetch_mode
@@ -188,6 +194,7 @@ class CausalInferencePipeline(torch.nn.Module):
                 It is normalized to be in the range [0, 1].
         """
         e2e_start = time.perf_counter()
+        self.unified_latency_profiler.reset()
         transformer_start = None
         transformer_end = None
 
@@ -447,6 +454,10 @@ class CausalInferencePipeline(torch.nn.Module):
                 print(f"  - Total time: {total_time:.2f} ms")
 
         e2e_end = time.perf_counter()
+        if self.unified_latency_profiler.enabled:
+            profile_state = getattr(self.generator.model, "group11_profile", None)
+            if isinstance(profile_state, dict):
+                profile_state["UNIFIED_LATENCY_PROFILE"] = self.unified_latency_profiler.finalize()
         profile_state = getattr(self.generator.model, "group11_profile", None)
         if isinstance(profile_state, dict):
             e2e_ms = (e2e_end - e2e_start) * 1000.0
