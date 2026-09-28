@@ -1,0 +1,31 @@
+{
+  "status": "validated_without_inference",
+  "active_worktree": "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2",
+  "active_branch": "integration/group16-19-common-v2",
+  "active_head": "0cdf3ea3bf3292730a3867e9c6e3c169f1d8a44e",
+  "integration_branch": "eval-pipeline-5090-integration",
+  "base_commit": "0cdf3ea3bf3292730a3867e9c6e3c169f1d8a44e",
+  "h200_source_commit": "410948eb7e328513e7751ac2d44193115363cee4",
+  "cherry_pick_commit": "df1b403",
+  "h200_results_imported_as_5090": false,
+  "inference_started": false,
+  "active_worktree_modified": false,
+  "reuse_smoke": {
+    "input": "/home/zju/work/zxl/LongLive-RAG-common-group16_19-v2/results/group16_tierA_D_profile.json",
+    "output_dir": "/tmp/longlive-rag-5090-eval-reuse-20260928",
+    "quality_valid": false,
+    "memory_valid": true,
+    "latency_valid": true,
+    "provenance_valid": true,
+    "inference_valid": true,
+    "final_row_valid": false,
+    "non_transformer_e2e_s": 5.31840850399749
+  },
+  "group19": "disabled",
+  "result_paths_imported": false,
+  "notes": [
+    "Missing quality and other unavailable fields remain NOT_AVAILABLE.",
+    "Existing 5090 algorithm configs were not changed.",
+    "Do not merge this branch into the active 5090 worktree yet."
+  ]
+}

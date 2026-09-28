@@ -13,6 +13,20 @@ def _source(config, key, default=None):
     p = config.get(key)
     return Path(p) if p else default
 
+def _seconds(data, *keys, default='NOT_AVAILABLE'):
+    value = val(data, *keys, default=None)
+    if value is None:
+        return default
+    return value
+
+def _milliseconds_as_seconds(data, key, default='NOT_AVAILABLE'):
+    value = number(data.get(key))
+    return value / 1000.0 if value is not None else default
+
+def _bytes_as_gib(data, key, default='NOT_AVAILABLE'):
+    value = number(data.get(key))
+    return value / (1024.0 ** 3) if value is not None else default
+
 def build_summary(cfg):
     profile = load_json(_source(cfg, 'profile_json')) if cfg.get('profile_json') else {}
     runtime = load_json(_source(cfg, 'runtime_json')) if cfg.get('runtime_json') else {}
@@ -20,25 +34,25 @@ def build_summary(cfg):
     quality = dict(cfg.get('quality', {}))
     for k in QUALITY_FIELDS:
         quality.setdefault(k, 'NOT_AVAILABLE')
-    e2e = val(profile, 'e2e_s', default=val(runtime, 'E2E_LATENCY_S', 'e2e_latency_s'))
-    transformer = val(profile, 'transformer_s', default=val(runtime, 'TRANSFORMER_LATENCY_S', 'transformer_latency_s'))
-    wrapper = val(profile, 'self_attention_wrapper_s', default='NOT_AVAILABLE')
+    e2e = _seconds(profile, 'e2e_s', 'e2e_latency_s', default=val(runtime, 'E2E_LATENCY_S', 'e2e_latency_s'))
+    transformer = _seconds(profile, 'transformer_s', 'transformer_latency_s', default=val(runtime, 'TRANSFORMER_LATENCY_S', 'transformer_latency_s'))
+    wrapper = _seconds(profile, 'self_attention_wrapper_s', 'wrapper_latency_s', default='NOT_AVAILABLE')
     latency = {
         'E2E_INFERENCE_S': e2e, 'TRANSFORMER_S': transformer,
         'SELF_ATTN_WRAPPER_S': wrapper,
-        'ATTENTION_KERNEL_S': val(profile, 'attention_kernel_s', default='NOT_AVAILABLE'),
+        'ATTENTION_KERNEL_S': _seconds(profile, 'attention_kernel_s', default=_milliseconds_as_seconds(profile, 'native_kernel_ms')),
         'NON_TRANSFORMER_E2E_S': (number(e2e) - number(transformer)) if number(e2e) is not None and number(transformer) is not None else 'NOT_AVAILABLE',
-        'FETCH_WORK_S': val(profile, 'fetch_work_s', default=0.0),
-        'FETCH_EXPOSED_S': val(profile, 'fetch_exposed_s', default=0.0),
-        'FETCH_HIDDEN_S': val(profile, 'fetch_hidden_s', default=0.0),
+        'FETCH_WORK_S': _seconds(profile, 'fetch_work_s', default=_milliseconds_as_seconds(profile, 'h2d_ms', default=0.0)),
+        'FETCH_EXPOSED_S': _seconds(profile, 'fetch_exposed_s', 'exposed_h2d_s', default=_milliseconds_as_seconds(profile, 'h2d_ms', default=0.0)),
+        'FETCH_HIDDEN_S': _seconds(profile, 'fetch_hidden_s', default=0.0),
         'VAE_DECODE_S': val(profile, 'vae_decode_s', default='NOT_AVAILABLE'),
         'VIDEO_ENCODE_S': val(profile, 'video_encode_s', default='NOT_AVAILABLE'),
-        'PROCESS_WALL_S': val(profile, 'process_wall_s', default='NOT_AVAILABLE'),
+        'PROCESS_WALL_S': _seconds(profile, 'process_wall_s', default='NOT_AVAILABLE'),
     }
     memory_out = {
-        'GPU_KV_GIB': val(profile, 'gpu_kv_gib', default=val(memory, 'GPU_KV_MEASURED_GiB', 'GPU_KV_GiB')),
-        'CPU_KV_GIB': val(profile, 'cpu_kv_gib', default=val(memory, 'CPU_KV_MEASURED_GiB', 'CPU_KV_GiB', default=0.0)),
-        'DRAFT_GPU_GIB': val(profile, 'draft_gpu_gib', default=val(memory, 'GPU_DRAFT_PERSISTENT_GiB', default=0.0)),
+        'GPU_KV_GIB': val(profile, 'gpu_kv_gib', default=_bytes_as_gib(profile, 'persistent_gpu_kv_bytes', default=val(memory, 'GPU_KV_MEASURED_GiB', 'GPU_KV_GiB'))),
+        'CPU_KV_GIB': val(profile, 'cpu_kv_gib', default=_bytes_as_gib(profile, 'persistent_cpu_kv_bytes', default=val(memory, 'CPU_KV_MEASURED_GiB', 'CPU_KV_GiB', default=0.0))),
+        'DRAFT_GPU_GIB': val(profile, 'draft_gpu_gib', default=_bytes_as_gib(profile, 'persistent_gpu_draft_k_bytes', default=val(memory, 'GPU_DRAFT_PERSISTENT_GiB', default=0.0))),
         'TRANSIENT_GPU_GIB': val(profile, 'transient_fetch_gpu_gib', default=val(memory, 'TRANSIENT_PREFETCH_GPU_PEAK_GiB', default=0.0)),
         'PEAK_GPU_ALLOCATED_GIB': val(profile, 'peak_gpu_allocated_gib', default='NOT_AVAILABLE'),
         'PEAK_GPU_RESERVED_GIB': val(profile, 'peak_gpu_reserved_gib', default='NOT_AVAILABLE'),
