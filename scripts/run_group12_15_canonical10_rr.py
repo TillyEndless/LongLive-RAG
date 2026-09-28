@@ -50,9 +50,9 @@ def save_state(pending, active, completed, failed, stage='RUNNING', extra=None):
 
 def ordered_jobs(manifest):
     jobs = {(j['label'], j['case']): j for j in manifest['jobs']}
-    labels = ['group12', 'group13', 'group14_sparse30', 'group14_sparse20',
-              'group14_sparse10', 'group14_sparse05', 'group15_sparse30',
-              'group15_sparse20', 'group15_sparse10', 'group15_sparse05']
+    labels = ['group12', 'group13', 'group14_sparse30', 'group14_sparse50',
+              'group14_sparse70', 'group14_sparse40', 'group15_sparse30',
+              'group15_sparse50', 'group15_sparse70', 'group15_sparse40']
     missing=[]
     for label in labels:
         cases={case for (lab, case) in jobs if lab == label}

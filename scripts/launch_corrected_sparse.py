@@ -13,9 +13,10 @@ def make_jobs():
     manifest=json.loads((BASE/'campaign_manifest.json').read_text())
     src={(j['label'],j['case']):Path(j['config']) for j in manifest['jobs']}
     jobs=[]
-    # Prioritize lower dense rate first for both groups: sparsity30 retains
-    # 70%, then 80%, 90%, and 95%. Existing valid outputs are skipped.
-    for removed in (30,20,10,5):
+    # Active corrected sweep: retained ratios 0.70, 0.50, 0.30, 0.60.
+    # Existing valid outputs are skipped; legacy 05/10/20 configs are not
+    # admitted to this launcher.
+    for removed in (30,50,70,40):
         for group in (14,15):
             keep=1.0-removed/100.0
             label=f'group{group}_sparsity{removed:02d}'
@@ -23,8 +24,8 @@ def make_jobs():
                 case=f'case{i:02d}'
                 old=f'group{group}_sparse{removed:02d}'
                 # Source configs use the same canonical prompt/case mapping.
-                p=src[(old,case)]
-                text=p.read_text()
+                template=src.get((old,case)) or src[(f'group{group}_sparse30',case)]
+                text=template.read_text()
                 text=re.sub(r'^output_folder:.*$', f'output_folder: {OUT}/{label}/{case}', text, flags=re.M)
                 text=re.sub(r'^  group_sparse_ratio:.*$', f'  group_sparse_ratio: {keep:.2f}', text, flags=re.M)
                 text=re.sub(r'^ratio_semantics:.*$', 'ratio_semantics: retained_interaction_ratio', text, flags=re.M)
