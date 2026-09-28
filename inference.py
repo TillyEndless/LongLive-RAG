@@ -408,7 +408,7 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 "RETRIEVAL_QUERY_MODE": str(getattr(config.model_kwargs, "retrieval_query_mode", "current_q")) if draft_rag_active else "none",
                 "Q_PREV": "NO",
                 "FLASH_FETCH": "NO",
-                "NEXT_LAYER_PREFETCH": "NO",
+                "NEXT_LAYER_PREFETCH": "YES" if str(getattr(config.model_kwargs, "group11_fetch_mode", "serial_full")) == "next_layer_prefetch" else "NO",
                 "HOT_CACHE": "NO",
                 "LONG_LIVE_REUSE": "NO",
                 "NUM_OUTPUT_LATENT_FRAMES": int(getattr(config, "num_output_frames", 0)),
@@ -460,6 +460,14 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                     "RETRIEVED_ARCHIVED_ENTRIES": int(c0.get("retrieved_archived_entries", 0)),
                     "TRANSIENT_DEQUANT_GPU_PEAK_BYTES": int(c0.get("transient_dequant_gpu_peak_bytes", 0)),
                     "COMPRESSED_HISTORY_RECORDS": int(len(c0.get("compressed_history_entries", []))),
+                    "PREFETCH_REQUESTED_CHUNKS": int(c0.get("prefetch_requested_chunks", 0)),
+                    "PREFETCH_HIT_CHUNKS": int(c0.get("prefetch_hit_chunks", 0)),
+                    "PREFETCH_CORRECTION_CHUNKS": int(c0.get("prefetch_correction_chunks", 0)),
+                    "PREFETCH_WASTED_CHUNKS": int(c0.get("prefetch_wasted_chunks", 0)),
+                    "PREFETCH_HIT_BYTES": int(c0.get("prefetch_hit_bytes", 0)),
+                    "PREFETCH_CORRECTION_BYTES": int(c0.get("prefetch_correction_bytes", 0)),
+                    "PREFETCH_WASTED_BYTES": int(c0.get("prefetch_wasted_bytes", 0)),
+                    "TRANSIENT_PREFETCH_GPU_PEAK_BYTES": int(c0.get("prefetch_buffer_peak_bytes", 0)),
                 })
                 with open(output_path.replace(".mp4", "_runtime.json"), "w") as f:
                     json.dump(runtime_meta, f, indent=2)

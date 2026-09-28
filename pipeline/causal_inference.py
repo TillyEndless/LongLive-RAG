@@ -119,6 +119,7 @@ class CausalInferencePipeline(torch.nn.Module):
         }.get(group_mode)
         sparse_ratio = float(getattr(args.model_kwargs, "group_sparse_ratio", 0.0))
         fetch_mode = str(getattr(args.model_kwargs, "group11_fetch_mode", "serial_full"))
+        self.group11_fetch_mode = fetch_mode
         for block in getattr(self.generator.model, "blocks", []):
             block.self_attn.retrieval_backend = self.retrieval_backend
             block.self_attn.retrieval_query_mode = self.retrieval_query_mode
@@ -494,6 +495,17 @@ class CausalInferencePipeline(torch.nn.Module):
                 "retrieved_archived_entries": 0,
                 "transient_dequant_gpu_bytes": 0,
                 "transient_dequant_gpu_peak_bytes": 0,
+                "next_layer_prefetch": {},
+                "next_layer_prefetch_trace": [],
+                "prefetch_scheduled_bytes": 0,
+                "prefetch_requested_chunks": 0,
+                "prefetch_hit_bytes": 0,
+                "prefetch_hit_chunks": 0,
+                "prefetch_correction_bytes": 0,
+                "prefetch_correction_chunks": 0,
+                "prefetch_wasted_bytes": 0,
+                "prefetch_wasted_chunks": 0,
+                "prefetch_buffer_peak_bytes": 0,
                 "draft_q_history": None,
                 "draft_q_history_meta": None,
                 "draft_q_pending": None,
@@ -501,6 +513,9 @@ class CausalInferencePipeline(torch.nn.Module):
             })
 
         self.kv_cache1 = kv_cache1  # always store the clean cache
+        if str(getattr(self, "group11_fetch_mode", "serial_full")) == "next_layer_prefetch":
+            for block in getattr(self.generator.model, "blocks", []):
+                block.self_attn.prefetch_kv_cache = kv_cache1
 
     def _initialize_crossattn_cache(self, batch_size, dtype, device):
         """

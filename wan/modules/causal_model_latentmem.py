@@ -145,6 +145,8 @@ class CausalWanSelfAttention(nn.Module):
         self.group_runtime_trace = []
         self.group11_fetch_mode = "serial_full"
         self.group11_flash_trace = []
+        # Group11.4-only transient prefetch pointer. Group12-15 do not use it.
+        self.prefetch_kv_cache = None
         self.group11_profile = None
         self._group11_reuse_cache = {}
         self.qk_norm = qk_norm
@@ -251,6 +253,75 @@ class CausalWanSelfAttention(nn.Module):
             "denoising_step": self.current_denoising_step,
         })
         return selected
+
+    def _prefetch_state(self, kv_cache):
+        """Shared transient state; never a persistent KV owner."""
+        all_cache = getattr(self, "prefetch_kv_cache", None)
+        owner = all_cache[0] if isinstance(all_cache, list) and all_cache else kv_cache
+        state = owner.setdefault("next_layer_prefetch", {})
+        owner.setdefault("next_layer_prefetch_trace", [])
+        owner.setdefault("prefetch_buffer_peak_bytes", 0)
+        return owner, state
+
+    def _reconcile_prefetch(self, kv_cache, layer_index, true_ids):
+        """Drop stale predictions before attention and account for waste."""
+        owner, state = self._prefetch_state(kv_cache)
+        true_set = {int(x) for x in true_ids}
+        wasted = []
+        for key in list(state):
+            if key[0] == int(layer_index) and key[1] not in true_set:
+                wasted.append(state.pop(key))
+        owner["prefetch_wasted_bytes"] = int(owner.get("prefetch_wasted_bytes", 0)) + sum(int(v.get("bytes", 0)) for v in wasted)
+        owner["prefetch_wasted_chunks"] = int(owner.get("prefetch_wasted_chunks", 0)) + len(wasted)
+        return wasted
+
+    def _schedule_next_layer_prefetch(self, kv_cache, layer_index, selected, device):
+        """Schedule (layer+1, I_l) from the next layer's CPU BF16 archive."""
+        all_cache = getattr(self, "prefetch_kv_cache", None)
+        if selected is None or not isinstance(all_cache, list) or layer_index + 1 >= len(all_cache):
+            return
+        owner, state = self._prefetch_state(kv_cache)
+        stream = owner.get("prefetch_stream")
+        if stream is None or stream.device != device:
+            stream = torch.cuda.Stream(device=device)
+            owner["prefetch_stream"] = stream
+        next_cache = all_cache[layer_index + 1]
+        cpu_k, cpu_v = next_cache.get("cpu_k_frames", []), next_cache.get("cpu_v_frames", [])
+        ids = [int(v) for v in selected[0].detach().cpu().tolist()]
+        requested = 0
+        copied_bytes = 0
+        with torch.cuda.stream(stream):
+            for history_id in ids:
+                key = (int(layer_index + 1), history_id)
+                if key in state or history_id >= len(cpu_k) or history_id >= len(cpu_v):
+                    continue
+                src_k, src_v = cpu_k[history_id], cpu_v[history_id]
+                if not src_k.is_pinned():
+                    src_k = src_k.contiguous().pin_memory()
+                if not src_v.is_pinned():
+                    src_v = src_v.contiguous().pin_memory()
+                dst_k, dst_v = src_k.to(device, non_blocking=True), src_v.to(device, non_blocking=True)
+                event = torch.cuda.Event()
+                event.record(stream)
+                nbytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                state[key] = {"k": dst_k, "v": dst_v, "event": event, "bytes": nbytes}
+                requested += 1
+                copied_bytes += nbytes
+        owner["prefetch_requested_chunks"] = int(owner.get("prefetch_requested_chunks", 0)) + requested
+        owner["prefetch_scheduled_bytes"] = int(owner.get("prefetch_scheduled_bytes", 0)) + copied_bytes
+        owner["prefetch_buffer_peak_bytes"] = max(int(owner.get("prefetch_buffer_peak_bytes", 0)), sum(int(v.get("bytes", 0)) for v in state.values()))
+        owner["next_layer_prefetch_trace"].append({"layer_id": int(layer_index), "next_layer_id": int(layer_index + 1), "predicted_ids": ids, "requested_chunks": requested, "prefetch_bytes": copied_bytes})
+
+    def _consume_prefetch_or_fetch(self, kv_cache, layer_index, history_id, batch_index, device):
+        """Consume only exact current-Q hits; None requests a correction fetch."""
+        owner, state = self._prefetch_state(kv_cache)
+        entry = state.pop((int(layer_index), int(history_id)), None)
+        if entry is None:
+            return None
+        torch.cuda.current_stream(device).wait_event(entry["event"])
+        owner["prefetch_hit_chunks"] = int(owner.get("prefetch_hit_chunks", 0)) + 1
+        owner["prefetch_hit_bytes"] = int(owner.get("prefetch_hit_bytes", 0)) + int(entry["bytes"])
+        return entry["k"][batch_index, 0], entry["v"][batch_index, 0]
 
     def _queue_draft_q_history(self, query, kv_cache, layer_index, current_start, frame_seqlen):
         if self.retrieval_query_mode != "previous_q" or kv_cache is None:
@@ -408,6 +479,13 @@ class CausalWanSelfAttention(nn.Module):
         online_memory_indices = self._online_memory_indices(q, kv_cache, layer_index, frame_seqlen, current_start=current_start)
         if online_memory_indices is not None:
             memory_indices = online_memory_indices
+            if self.group11_fetch_mode == "next_layer_prefetch" and kv_cache is not None:
+                true_ids = [int(v) for v in memory_indices[0].detach().cpu().tolist()]
+                wasted = self._reconcile_prefetch(kv_cache, layer_index, true_ids)
+                self._schedule_next_layer_prefetch(kv_cache, layer_index, memory_indices, q.device)
+                if self.draftmap_trace:
+                    self.draftmap_trace[-1]["prefetch_true_ids"] = true_ids
+                    self.draftmap_trace[-1]["prefetch_wasted_count"] = len(wasted)
         draft_k_frames = _draft_frame_pools(k, frame_seqlen)
 
         if kv_cache is None:
@@ -717,6 +795,8 @@ class CausalWanSelfAttention(nn.Module):
                         for bi in range(b):
                             indices = memory_indices[bi]
                             for k_idx in indices:
+                                prefetched = None
+                                cache_hit = False
                                 if archive is not None:
                                     rec = compressed_entries[int(k_idx)]
                                     src_k, src_v = archive.fetch(rec, device)
@@ -731,16 +811,26 @@ class CausalWanSelfAttention(nn.Module):
                                     kv_cache["transient_dequant_gpu_peak_bytes"] = max(int(kv_cache.get("transient_dequant_gpu_peak_bytes", 0)), deq_bytes)
                                     cache_key = None
                                 else:
-                                    src_k = cpu_k_list[k_idx][bi, 0]
-                                    src_v = cpu_v_list[k_idx][bi, 0]
-                                    cache_key = (int(getattr(self, "_current_layer_index", -1)), int(k_idx), int(bi))
+                                    prefetched = None
+                                    if self.group11_fetch_mode == "next_layer_prefetch":
+                                        prefetched = self._consume_prefetch_or_fetch(kv_cache, layer_index, int(k_idx), bi, device)
+                                    if prefetched is not None:
+                                        dst_k, dst_v = prefetched
+                                        src_k, src_v = dst_k, dst_v
+                                        cache_key = None
+                                        cache_hit = True
+                                        k_ms = v_ms = 0.0
+                                    else:
+                                        src_k = cpu_k_list[k_idx][bi, 0]
+                                        src_v = cpu_v_list[k_idx][bi, 0]
+                                        cache_key = (int(getattr(self, "_current_layer_index", -1)), int(k_idx), int(bi))
                                 reuse = os.environ.get("GROUP11_REUSE_CACHE", "0") == "1"
-                                cache_hit = bool(reuse and cache_key in getattr(self, "_group11_reuse_cache", {}))
+                                cache_hit = bool(locals().get("cache_hit", False) or (reuse and cache_key in getattr(self, "_group11_reuse_cache", {})))
                                 if archive is not None:
                                     dst_k, dst_v = src_k, src_v
                                     k_ms = 0.0
                                     v_ms = 0.0
-                                elif cache_hit:
+                                elif cache_hit and prefetched is None:
                                     dst_k, dst_v = self._group11_reuse_cache[cache_key]
                                     k_ms = 0.0
                                     v_ms = 0.0
@@ -749,6 +839,10 @@ class CausalWanSelfAttention(nn.Module):
                                         self.group11_profile["AVOIDED_H2D_CALLS"] += 2
                                         self.group11_profile["AVOIDED_H2D_BYTES"] += int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
                                 else:
+                                    if self.group11_fetch_mode == "next_layer_prefetch":
+                                        owner, _ = self._prefetch_state(kv_cache)
+                                        owner["prefetch_correction_chunks"] = int(owner.get("prefetch_correction_chunks", 0)) + 1
+                                        owner["prefetch_correction_bytes"] = int(owner.get("prefetch_correction_bytes", 0)) + int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
                                     k_start = time.perf_counter()
                                     dst_k = src_k.to(device, non_blocking=True)
                                     k_ms = (time.perf_counter() - k_start) * 1000.0
@@ -766,8 +860,9 @@ class CausalWanSelfAttention(nn.Module):
                                 k_host_ms += k_ms
                                 v_host_ms += v_ms
                                 copied_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
-                                self.runtime_counters["full_kv_h2d_bytes"] += copied_bytes
-                                self.runtime_counters["full_kv_h2d_calls"] += 2
+                                if prefetched is None:
+                                    self.runtime_counters["full_kv_h2d_bytes"] += copied_bytes
+                                    self.runtime_counters["full_kv_h2d_calls"] += 2
                                 self.history_fetch_trace.append({
                                     "history_id": int(k_idx), "batch": int(bi),
                                     "source_k_device": str(src_k.device),

@@ -136,6 +136,15 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
         "GPU_DRAFT_PERSISTENT_BYTES": 0, "CPU_DRAFT_PERSISTENT_BYTES": 0,
         "TRANSIENT_DEQUANT_GPU_BYTES": 0,
         "TRANSIENT_DEQUANT_GPU_PEAK_BYTES": 0,
+        "TRANSIENT_PREFETCH_GPU_BYTES": 0,
+        "TRANSIENT_PREFETCH_GPU_PEAK_BYTES": 0,
+        "PREFETCH_REQUESTED_CHUNKS": 0,
+        "PREFETCH_HIT_CHUNKS": 0,
+        "PREFETCH_CORRECTION_CHUNKS": 0,
+        "PREFETCH_WASTED_CHUNKS": 0,
+        "PREFETCH_HIT_BYTES": 0,
+        "PREFETCH_CORRECTION_BYTES": 0,
+        "PREFETCH_WASTED_BYTES": 0,
         "FULL_HISTORY_BF16_SHADOW_BYTES": 0,
         "EVICTED_COMPRESSED_ENTRIES": 0,
         "RETRIEVED_ARCHIVED_ENTRIES": 0,
@@ -199,6 +208,15 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
                 out["TRANSIENT_DEQUANT_GPU_PEAK_BYTES"],
                 int(cache.get("transient_dequant_gpu_peak_bytes", 0)),
             )
+            out["TRANSIENT_PREFETCH_GPU_BYTES"] += int(cache.get("prefetch_scheduled_bytes", 0))
+            out["TRANSIENT_PREFETCH_GPU_PEAK_BYTES"] = max(out["TRANSIENT_PREFETCH_GPU_PEAK_BYTES"], int(cache.get("prefetch_buffer_peak_bytes", 0)))
+            out["PREFETCH_REQUESTED_CHUNKS"] += int(cache.get("prefetch_requested_chunks", 0))
+            out["PREFETCH_HIT_CHUNKS"] += int(cache.get("prefetch_hit_chunks", 0))
+            out["PREFETCH_CORRECTION_CHUNKS"] += int(cache.get("prefetch_correction_chunks", 0))
+            out["PREFETCH_WASTED_CHUNKS"] += int(cache.get("prefetch_wasted_chunks", 0))
+            out["PREFETCH_HIT_BYTES"] += int(cache.get("prefetch_hit_bytes", 0))
+            out["PREFETCH_CORRECTION_BYTES"] += int(cache.get("prefetch_correction_bytes", 0))
+            out["PREFETCH_WASTED_BYTES"] += int(cache.get("prefetch_wasted_bytes", 0))
     for block in getattr(model, "blocks", []):
         counters = getattr(getattr(block, "self_attn", None), "runtime_counters", {})
         out["DRAFT_H2D_BYTES"] += int(counters.get("draft_h2d_bytes", 0))
