@@ -36,11 +36,16 @@ Validation was performed in an isolated worktree. The active dirty H200 worktree
 H2D_SEMANTIC_FIX_IMPLEMENTED=YES
 GROUP11_3_AGGREGATION_FIXED=YES
 GROUP14_15_PROMOTION_TIMING_FIXED=YES
-GROUP12_13_CACHE_INIT_RECLASSIFIED=PARTIAL (schema fields added; existing cache-init producers remain legacy)
-LEGACY_RAG_H2D_MAPPED=NO (not modified in this isolated H200 worktree)
+GROUP12_13_CACHE_INIT_RECLASSIFIED=YES (cache-init bytes/calls classified; CUDA work remains NOT_AVAILABLE)
+LEGACY_RAG_H2D_MAPPED=YES (unified schema adapter preserves legacy interval semantics)
 UNIFIED_PIPELINE_UPDATED=YES
 PER_CALL_CUDA_SYNCHRONIZE_ADDED=NO
 STATIC_TESTS_PASS=YES
 MINIMAL_GPU_VALIDATION_PASS=YES
 QUALITY_RERUN_OCCURRED=NO
 ```
+
+## Additional static checks
+
+- Unified schema smoke test: PASS (h2d_latency_s maps to H2D_CUDA_WORK_S with legacy timing-class metadata).
+- Cache-init accounting: bytes/calls are separated from steady-state promotion; CUDA work remains NOT_AVAILABLE rather than being fabricated.

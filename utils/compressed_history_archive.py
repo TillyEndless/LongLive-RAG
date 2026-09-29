@@ -88,6 +88,9 @@ class CompressedHistoryArchive:
         self.records: list[CompressedHistoryRecord] = []
         self.last_h2d_ms = 0.0
         self.last_h2d_calls = 0
+        self.last_cache_init_bytes = 0
+        self.last_cache_init_calls = 0
+        self.last_cache_init_legacy_ms = 0.0
         self.last_metadata: dict[str, Any] = {}
         self.last_transient_bf16_bytes = 0
         self.last_promotion_bytes = 0
@@ -135,6 +138,9 @@ class CompressedHistoryArchive:
                           if trace else rec.v_payload.to(device=device, dtype=torch.bfloat16))
                 self.last_h2d_ms = (time.perf_counter() - h2d_start) * 1000.0
                 self.last_h2d_calls = 2
+                self.last_cache_init_legacy_ms += self.last_h2d_ms
+                self.last_cache_init_calls += 2
+                self.last_cache_init_bytes += int(rec.k_payload.numel() * rec.k_payload.element_size() + rec.v_payload.numel() * rec.v_payload.element_size())
                 rec.gpu_k_payload, rec.gpu_k_meta = quantizer.quantize_k(k_bf16)
                 rec.gpu_v_payload, rec.gpu_v_meta = quantizer.quantize_v(v_bf16)
                 del k_bf16, v_bf16
@@ -226,6 +232,9 @@ class CompressedHistoryArchive:
         v_out: list[torch.Tensor | None] = [None] * len(ids)
         self.last_h2d_ms = 0.0
         self.last_h2d_calls = 0
+        self.last_cache_init_bytes = 0
+        self.last_cache_init_calls = 0
+        self.last_cache_init_legacy_ms = 0.0
         self.last_promotion_bytes = 0
         self.last_promotion_calls = 0
         self.last_dequant_bytes = 0

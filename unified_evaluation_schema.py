@@ -9,6 +9,7 @@ LATENCY_FIELDS = [
     'ATTENTION_KERNEL_S', 'NON_TRANSFORMER_E2E_S', 'FETCH_WORK_S',
     'FETCH_EXPOSED_S', 'FETCH_HIDDEN_S', 'VAE_DECODE_S',
     'VIDEO_ENCODE_S', 'PROCESS_WALL_S',
+    'H2D_CUDA_WORK_S', 'H2D_EXPOSED_WAIT_S', 'H2D_HOST_ENQUEUE_S', 'H2D_HIDDEN_S',
 ]
 MEMORY_FIELDS = [
     'GPU_KV_GIB', 'CPU_KV_GIB', 'DRAFT_GPU_GIB', 'TRANSIENT_GPU_GIB',
@@ -33,6 +34,23 @@ def val(d, *keys, default='NOT_AVAILABLE'):
 def load_json(path):
     return json.loads(Path(path).read_text())
 
+def normalize_h2d_runtime(record):
+    """Normalize H200 v2 fields without relabeling legacy RAG intervals."""
+    out = dict(record)
+    if 'H2D_CUDA_WORK_S' not in out:
+        if 'h2d_latency_s' in out:
+            out['H2D_CUDA_WORK_S'] = number(out['h2d_latency_s'])
+            out['H2D_SOURCE_CLASS'] = 'legacy_rag_historical_fetch_interval'
+            out['H2D_TIMING_CLASS'] = 'legacy_cuda_interval_including_stack_or_reshape'
+        else:
+            out['H2D_CUDA_WORK_S'] = 'NOT_AVAILABLE'
+            out['H2D_SOURCE_CLASS'] = 'NOT_AVAILABLE'
+            out['H2D_TIMING_CLASS'] = 'NOT_AVAILABLE'
+    out.setdefault('H2D_EXPOSED_WAIT_S', 'NOT_AVAILABLE')
+    out.setdefault('H2D_HOST_ENQUEUE_S', 'NOT_AVAILABLE')
+    out.setdefault('H2D_HIDDEN_S', 'NOT_AVAILABLE')
+    return out
+
 def sha256(path):
     import hashlib
     h = hashlib.sha256()
@@ -56,6 +74,9 @@ def as_csv_row(summary):
         'Attention Kernel': l.get('ATTENTION_KERNEL_S', 'NOT_AVAILABLE'),
         'Fetch Work': l.get('FETCH_WORK_S', 'NOT_AVAILABLE'), 'Fetch Exposed': l.get('FETCH_EXPOSED_S', 'NOT_AVAILABLE'),
         'Fetch Hidden': l.get('FETCH_HIDDEN_S', 'NOT_AVAILABLE'), 'Process Wall': l.get('PROCESS_WALL_S', 'NOT_AVAILABLE'),
+        'H2D CUDA Work': l.get('H2D_CUDA_WORK_S', 'NOT_AVAILABLE'),
+        'H2D Exposed Wait': l.get('H2D_EXPOSED_WAIT_S', 'NOT_AVAILABLE'),
+        'H2D Host Enqueue': l.get('H2D_HOST_ENQUEUE_S', 'NOT_AVAILABLE'),
         'Quality Source': p.get('quality_source', 'NOT_AVAILABLE'), 'Latency Source': p.get('latency_source', 'NOT_AVAILABLE'),
         'Memory Source': p.get('memory_source', 'NOT_AVAILABLE'), 'Quality Valid': v.get('QUALITY_VALID', False),
         'Latency Valid': v.get('LATENCY_VALID', False), 'Memory Valid': v.get('MEMORY_VALID', False),

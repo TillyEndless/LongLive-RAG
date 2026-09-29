@@ -1664,6 +1664,10 @@ class CausalWanSelfAttention(nn.Module):
                             archive_materialized_meta["Q_SPARSE_INPUT_IDS"] = selected_ids
                             archive_materialized_meta["DRAFTMAP_IMPORTANCE"] = {str(k): float(v) for k, v in score_map.items()}
                             archive_materialized_meta["FINAL_HISTORY_IDS"] = retained_ids
+                            if self.group11_profile is not None:
+                                self.group11_profile["CACHE_INIT_H2D_BYTES"] = int(self.group11_profile.get("CACHE_INIT_H2D_BYTES", 0)) + int(getattr(archive, "last_cache_init_bytes", 0))
+                                self.group11_profile["CACHE_INIT_H2D_CALLS"] = int(self.group11_profile.get("CACHE_INIT_H2D_CALLS", 0)) + int(getattr(archive, "last_cache_init_calls", 0))
+                                self.group11_profile["CACHE_INIT_H2D_TIMING_CLASS"] = "legacy_host_observed_interval"
                             self._last_archive_materialization = archive_materialized_meta
                         k_sel = active_memory_indices.shape[1]
                         for bi in range(b):
