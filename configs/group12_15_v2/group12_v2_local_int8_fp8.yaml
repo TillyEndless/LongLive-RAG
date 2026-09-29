@@ -15,7 +15,7 @@ model_kwargs:
   group_runtime_mode: group12_v2
   group_sparse_ratio: 0.0
   q_sparse_ratio: 0.0
-  local_kv_promotion_ratio: 0.0
+  local_kv_promotion_ratio: 0.2
 cpu_historical_k_storage: bf16
 cpu_historical_v_storage: bf16
 gpu_local_k_storage: int8

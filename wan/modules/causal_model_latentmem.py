@@ -241,14 +241,6 @@ class CausalWanSelfAttention(nn.Module):
             "exposed_wait_s": handle.exposed_wait_s,
             "cuda_work_s": handle.cuda_work_s,
         }
-        if hasattr(self, "group_runtime_trace"):
-            self.group_runtime_trace.append({
-                "V2_FETCH_PLAN": dict(kv_cache["_v2_fetch_plan_meta"]),
-                "HISTORY_SELECTED_CHUNKS": history_ids,
-                "LOCAL_PROMOTED_CHUNKS": list(promotion_sources),
-                "HISTORY_AND_PROMOTION_PLANNED_TOGETHER": "YES",
-                "MANDATORY_SERIAL_FETCH_WAIT": "NO",
-            })
         return handle
 
     def _online_memory_indices(self, query, kv_cache, layer_index, frame_seqlen, current_start=0):
@@ -1718,16 +1710,24 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                 # adapter use the existing Draft-K magnitude as provenance-
                 # traceable local importance.  No new scoring algorithm is
                 # introduced.
-                if store is not None and promotion_ratio > 0.0:
+                if promotion_ratio > 0.0:
                     scores = []
                     for draft in cache.get("local_draft_k_frames", []):
                         if draft is None:
                             scores.append(0.0)
                         else:
                             scores.append(float(draft.float().abs().mean().item()))
-                    # v2 promotion is a transient CPU-BF16 overlay.  Do not
-                    # mutate the persistent low-bit owner.
-                    promoted = store.select_top(scores, promotion_ratio)
+                    if store is not None:
+                        # v2 promotion is a transient CPU-BF16 overlay.  Do
+                        # not mutate the persistent low-bit owner.
+                        promoted = store.select_top(scores, promotion_ratio)
+                    else:
+                        # Group11 BF16 identity promotion: retain the same
+                        # policy/IDs for provenance, but there is no precision
+                        # conversion because the owner is already BF16.
+                        active = [i for i, draft in enumerate(cache.get("local_draft_k_frames", [])) if draft is not None]
+                        count = max(0, min(len(active), int(round(len(active) * promotion_ratio))))
+                        promoted = sorted(active, key=lambda i: (scores[i], i), reverse=True)[:count]
                     cache["local_promoted_ids"] = promoted
                     cache["local_promotion_ratio"] = promotion_ratio
             

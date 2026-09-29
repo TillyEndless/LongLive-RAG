@@ -15,6 +15,7 @@ model_kwargs:
   retrieval_backend: draftmap_online
   group_runtime_mode: baseline
   group_sparse_ratio: 0.0
+  local_kv_promotion_ratio: 0.2
 generator_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_base.pt
 lora_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_lora.pt
 adapter: {type: lora, rank: 256, alpha: 256, dropout: 0.0, dtype: bfloat16, verbose: false}
