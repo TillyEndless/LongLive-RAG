@@ -402,7 +402,10 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 h2d_p["H2D_CUDA_WORK_MS"] = float(sum(float(h2d_p.get(f"{name}_H2D_CUDA_WORK_MS", 0.0)) for name in names))
                 h2d_p["H2D_TOTAL_BYTES"] = int(sum(int(h2d_p.get(f"{name}_H2D_BYTES", 0)) for name in names))
                 h2d_p["H2D_TOTAL_CALLS"] = int(sum(int(h2d_p.get(f"{name}_H2D_CALLS", 0)) for name in names))
+                active = [name for name in names if int(h2d_p.get(f"{name}_H2D_BYTES", 0)) or int(h2d_p.get(f"{name}_H2D_CALLS", 0)) or float(h2d_p.get(f"{name}_H2D_CUDA_WORK_MS", 0.0))]
+                h2d_p["H2D_SOURCE_CLASS"] = active[0] if len(active) == 1 else ("mixed" if active else "NOT_AVAILABLE")
                 h2d_p["H2D_WORK_VALID"] = True
+                h2d_p["H2D_TIMING_CLASS"] = "cuda_event_work"
                 h2d_p["H2D_EXPOSED_WAIT_VALID"] = False
             model_runtime = getattr(pipeline.generator.model, "group_runtime_trace", [])
             flash_trace = []
@@ -491,6 +494,11 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                     "H2D_HOST_ENQUEUE_S": float(profile.get("H2D_HOST_ENQUEUE_MS", 0.0)) / 1000.0,
                     "H2D_EXPOSED_WAIT_S": (None if profile.get("H2D_EXPOSED_WAIT_MS") is None else float(profile.get("H2D_EXPOSED_WAIT_MS")) / 1000.0),
                     "H2D_HIDDEN_S": (None if profile.get("H2D_HIDDEN_MS") is None else float(profile.get("H2D_HIDDEN_MS")) / 1000.0),
+                    "H2D_WORK_VALID": bool(profile.get("H2D_WORK_VALID", False)),
+                    "H2D_EXPOSED_WAIT_VALID": bool(profile.get("H2D_EXPOSED_WAIT_VALID", False)),
+                    "H2D_BYTES_VALID": bool(profile.get("H2D_BYTES_VALID", False)),
+                    "H2D_SOURCE_CLASS": str(profile.get("H2D_SOURCE_CLASS", "NOT_AVAILABLE")),
+                    "H2D_TIMING_CLASS": str(profile.get("H2D_TIMING_CLASS", "NOT_AVAILABLE")),
                     "FLASH_FETCH_H2D_CUDA_WORK_S": float(profile.get("FLASH_FETCH_H2D_CUDA_WORK_MS", 0.0)) / 1000.0,
                     "FLASH_FETCH_H2D_HOST_ENQUEUE_S": float(profile.get("FLASH_FETCH_H2D_HOST_ENQUEUE_MS", 0.0)) / 1000.0,
                     "PROMOTION_H2D_CUDA_WORK_S": float(profile.get("PROMOTION_H2D_CUDA_WORK_MS", 0.0)) / 1000.0,

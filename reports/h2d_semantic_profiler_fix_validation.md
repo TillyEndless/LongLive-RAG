@@ -51,3 +51,17 @@ PUSH_STATUS=SUCCESS
 
 - Unified schema smoke test: PASS (h2d_latency_s maps to H2D_CUDA_WORK_S with legacy timing-class metadata).
 - Cache-init accounting: bytes/calls are separated from steady-state promotion; CUDA work remains NOT_AVAILABLE rather than being fabricated.
+
+## Final packaging status
+
+H2D_DEFINITION_FROZEN=YES
+GROUP11_3_AGGREGATION_FIXED=YES
+GROUP14_15_PROMOTION_TIMING_FIXED=YES
+LEGACY_MAPPING_COMPLETE=YES
+UNIFIED_SCHEMA_UPDATED=YES
+UNIFIED_PIPELINE_UPDATED=YES
+AGGREGATE_TABLE_UPDATED=YES
+STATIC_TESTS_PASS=YES
+INFERENCE_RERUN=NO
+LATENCY_RERUN=NO
+CANONICAL10_RERUN=NO

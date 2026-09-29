@@ -49,5 +49,24 @@
     "Group14/15 promotion H2D reports CUDA work and host enqueue separately.",
     "No per-call CUDA synchronize was added; one deferred finalize synchronization is used at end-of-workload.",
     "Legacy EXPOSED_H2D_* values are preserved for compatibility."
-  ]
+  ],
+  "packaging_static_tests": {
+    "unit_tests": "PASS",
+    "py_compile": "PASS",
+    "aggregate_table_render": "PASS",
+    "gpu_used": false
+  },
+  "final_status": {
+    "H2D_DEFINITION_FROZEN": "YES",
+    "GROUP11_3_AGGREGATION_FIXED": "YES",
+    "GROUP14_15_PROMOTION_TIMING_FIXED": "YES",
+    "LEGACY_MAPPING_COMPLETE": "YES",
+    "UNIFIED_SCHEMA_UPDATED": "YES",
+    "UNIFIED_PIPELINE_UPDATED": "YES",
+    "AGGREGATE_TABLE_UPDATED": "YES",
+    "STATIC_TESTS_PASS": "YES",
+    "INFERENCE_RERUN": "NO",
+    "LATENCY_RERUN": "NO",
+    "CANONICAL10_RERUN": "NO"
+  }
 }

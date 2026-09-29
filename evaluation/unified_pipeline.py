@@ -7,7 +7,7 @@ module never changes inference/profiler semantics.
 import argparse, json, subprocess, sys
 from pathlib import Path
 from unified_evaluation_schema import (LATENCY_FIELDS, MEMORY_FIELDS, QUALITY_FIELDS,
-    as_csv_row, load_json, number, sha256, val, write_csv)
+    as_csv_row, load_json, normalize_h2d_runtime, number, sha256, val, write_csv)
 
 def _source(config, key, default=None):
     p = config.get(key)
@@ -17,6 +17,8 @@ def build_summary(cfg):
     profile = load_json(_source(cfg, 'profile_json')) if cfg.get('profile_json') else {}
     runtime = load_json(_source(cfg, 'runtime_json')) if cfg.get('runtime_json') else {}
     memory = load_json(_source(cfg, 'memory_json')) if cfg.get('memory_json') else {}
+    runtime = normalize_h2d_runtime(runtime)
+    profile = normalize_h2d_runtime({**runtime, **profile})
     quality = dict(cfg.get('quality', {}))
     for k in QUALITY_FIELDS:
         quality.setdefault(k, 'NOT_AVAILABLE')
@@ -30,7 +32,18 @@ def build_summary(cfg):
         'NON_TRANSFORMER_E2E_S': (number(e2e) - number(transformer)) if number(e2e) is not None and number(transformer) is not None else 'NOT_AVAILABLE',
         'FETCH_WORK_S': val(profile, 'fetch_work_s', default=0.0),
         'FETCH_EXPOSED_S': val(profile, 'fetch_exposed_s', default=0.0),
-        'FETCH_HIDDEN_S': val(profile, 'fetch_hidden_s', default=0.0),
+        'FETCH_HIDDEN_S': val(profile, 'fetch_hidden_s', default='NOT_AVAILABLE'),
+        'H2D_CUDA_WORK_S': val(profile, 'H2D_CUDA_WORK_S', default='NOT_AVAILABLE'),
+        'H2D_EXPOSED_WAIT_S': val(profile, 'H2D_EXPOSED_WAIT_S', default='NOT_AVAILABLE'),
+        'H2D_HOST_ENQUEUE_S': val(profile, 'H2D_HOST_ENQUEUE_S', default='NOT_AVAILABLE'),
+        'H2D_HIDDEN_S': val(profile, 'H2D_HIDDEN_S', default='NOT_AVAILABLE'),
+        'H2D_TOTAL_BYTES': val(profile, 'H2D_TOTAL_BYTES', default='NOT_AVAILABLE'),
+        'H2D_TOTAL_CALLS': val(profile, 'H2D_TOTAL_CALLS', default='NOT_AVAILABLE'),
+        'H2D_WORK_VALID': profile.get('H2D_WORK_VALID', False),
+        'H2D_EXPOSED_WAIT_VALID': profile.get('H2D_EXPOSED_WAIT_VALID', False),
+        'H2D_BYTES_VALID': profile.get('H2D_BYTES_VALID', False),
+        'H2D_SOURCE_CLASS': profile.get('H2D_SOURCE_CLASS', 'NOT_AVAILABLE'),
+        'H2D_TIMING_CLASS': profile.get('H2D_TIMING_CLASS', 'NOT_AVAILABLE'),
         'VAE_DECODE_S': val(profile, 'vae_decode_s', default='NOT_AVAILABLE'),
         'VIDEO_ENCODE_S': val(profile, 'video_encode_s', default='NOT_AVAILABLE'),
         'PROCESS_WALL_S': val(profile, 'process_wall_s', default='NOT_AVAILABLE'),

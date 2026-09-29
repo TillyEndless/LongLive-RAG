@@ -34,3 +34,25 @@ Aggregate multiple summaries with:
 python -m evaluation.aggregate_table results/evaluation/*/evaluation_summary.json \
   --output results/evaluation/baseline_table.csv
 ```
+
+
+## H2D semantic contract
+
+The pipeline keeps three distinct timing quantities:
+
+- H2D_CUDA_WORK_S: device-side copy work measured by compatible CUDA events.
+- H2D_EXPOSED_WAIT_S: host critical-path wait attributable to H2D.
+- H2D_HOST_ENQUEUE_S: host time spent issuing/enqueuing H2D operations.
+
+H2D_HIDDEN_S is emitted only when work and exposed-wait measurements have compatible timing boundaries. Otherwise it is NOT_AVAILABLE; it is not inferred by subtraction.
+
+H2D provenance is preserved with source classes:
+DEMAND_FETCH, PREFETCH, FLASH_FETCH, PROMOTION, CACHE_INIT, and LEGACY_HISTORICAL_FETCH.
+
+Group 4.1/4.2 legacy h2d_latency_s is mapped to LEGACY_HISTORICAL_FETCH_H2D_CUDA_INTERVAL_S semantics. It remains discoverable, but is not silently compared as modern exposed wait.
+
+Group11.3 reports FLASH_FETCH_H2D_CUDA_WORK_S, not exposed wait.
+Group12/13 report CACHE_INIT_H2D_* for construction of the persistent low-bit owner, not steady-state retrieval.
+Group14/15 report promotion CUDA work, host enqueue, bytes, and calls; promotion exposed wait remains NOT_AVAILABLE unless directly timed.
+
+Zero is a measured zero. NOT_AVAILABLE means the field was not measured with compatible semantics. The aggregate table therefore has explicit H2D work, exposed wait, enqueue, bytes, calls, source-class, and timing-class columns and does not use one generic Exposed H2D column.

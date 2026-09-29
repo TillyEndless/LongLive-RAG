@@ -122,7 +122,7 @@ class CausalInferencePipeline(torch.nn.Module):
             "H2D_CUDA_WORK_MS": 0.0, "H2D_HOST_ENQUEUE_MS": 0.0,
             "H2D_EXPOSED_WAIT_MS": None, "H2D_HIDDEN_MS": None,
             "H2D_WORK_VALID": False, "H2D_EXPOSED_WAIT_VALID": False,
-            "H2D_HIDDEN_VALID": False, "H2D_SOURCE_CLASS": "mixed",
+            "H2D_HIDDEN_VALID": False, "H2D_SOURCE_CLASS": "mixed", "H2D_TIMING_CLASS": "mixed",
             "RUNTIME_INSTRUMENTATION_VERSION": "v2_h2d_semantics",
             "rag_fetch_events": [], "rag_attention_rows": [],
             "RAG_STRATEGY_PROFILE_VERSION": "v1",

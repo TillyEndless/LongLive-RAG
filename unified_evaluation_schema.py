@@ -35,20 +35,33 @@ def load_json(path):
     return json.loads(Path(path).read_text())
 
 def normalize_h2d_runtime(record):
-    """Normalize H200 v2 fields without relabeling legacy RAG intervals."""
+    """Normalize modern and legacy H2D records without conflating semantics."""
     out = dict(record)
+    def first(*keys, default='NOT_AVAILABLE'):
+        for key in keys:
+            value = out.get(key)
+            if value not in (None, '', 'NA', 'N/A', 'NOT_AVAILABLE'):
+                return value
+        return default
+
     if 'H2D_CUDA_WORK_S' not in out:
-        if 'h2d_latency_s' in out:
-            out['H2D_CUDA_WORK_S'] = number(out['h2d_latency_s'])
-            out['H2D_SOURCE_CLASS'] = 'legacy_rag_historical_fetch_interval'
-            out['H2D_TIMING_CLASS'] = 'legacy_cuda_interval_including_stack_or_reshape'
-        else:
-            out['H2D_CUDA_WORK_S'] = 'NOT_AVAILABLE'
-            out['H2D_SOURCE_CLASS'] = 'NOT_AVAILABLE'
-            out['H2D_TIMING_CLASS'] = 'NOT_AVAILABLE'
-    out.setdefault('H2D_EXPOSED_WAIT_S', 'NOT_AVAILABLE')
-    out.setdefault('H2D_HOST_ENQUEUE_S', 'NOT_AVAILABLE')
-    out.setdefault('H2D_HIDDEN_S', 'NOT_AVAILABLE')
+        legacy = first('h2d_latency_s', 'legacy_historical_fetch_h2d_cuda_interval_s')
+        out['H2D_CUDA_WORK_S'] = legacy
+        if legacy != 'NOT_AVAILABLE':
+            out.setdefault('H2D_SOURCE_CLASS', 'LEGACY_HISTORICAL_FETCH')
+            out.setdefault('H2D_TIMING_CLASS', 'legacy_cuda_interval_including_stack_or_reshape')
+    out.setdefault('H2D_EXPOSED_WAIT_S', first('h2d_exposed_wait_s', default='NOT_AVAILABLE'))
+    out.setdefault('H2D_HOST_ENQUEUE_S', first('h2d_host_enqueue_s', default='NOT_AVAILABLE'))
+    out.setdefault('H2D_HIDDEN_S', first('h2d_hidden_s', default='NOT_AVAILABLE'))
+    out['H2D_TOTAL_BYTES'] = first('H2D_TOTAL_BYTES', 'h2d_total_bytes', 'H2D_BYTES', default='NOT_AVAILABLE')
+    out['H2D_TOTAL_CALLS'] = first('H2D_TOTAL_CALLS', 'h2d_total_calls', 'H2D_CALLS', default='NOT_AVAILABLE')
+    out['H2D_WORK_VALID'] = out.get('H2D_WORK_VALID', out.get('h2d_work_valid', False))
+    out['H2D_EXPOSED_WAIT_VALID'] = out.get('H2D_EXPOSED_WAIT_VALID', out.get('h2d_exposed_valid', False))
+    out['H2D_BYTES_VALID'] = out.get('H2D_BYTES_VALID', out.get('h2d_bytes_valid', False))
+    if not (out['H2D_WORK_VALID'] and out['H2D_EXPOSED_WAIT_VALID']):
+        out['H2D_HIDDEN_S'] = 'NOT_AVAILABLE'
+    out.setdefault('H2D_SOURCE_CLASS', 'NOT_AVAILABLE')
+    out.setdefault('H2D_TIMING_CLASS', 'NOT_AVAILABLE')
     return out
 
 def sha256(path):
@@ -77,6 +90,14 @@ def as_csv_row(summary):
         'H2D CUDA Work': l.get('H2D_CUDA_WORK_S', 'NOT_AVAILABLE'),
         'H2D Exposed Wait': l.get('H2D_EXPOSED_WAIT_S', 'NOT_AVAILABLE'),
         'H2D Host Enqueue': l.get('H2D_HOST_ENQUEUE_S', 'NOT_AVAILABLE'),
+        'H2D Hidden': l.get('H2D_HIDDEN_S', 'NOT_AVAILABLE'),
+        'H2D Bytes': l.get('H2D_TOTAL_BYTES', 'NOT_AVAILABLE'),
+        'H2D Calls': l.get('H2D_TOTAL_CALLS', 'NOT_AVAILABLE'),
+        'H2D Work Valid': l.get('H2D_WORK_VALID', False),
+        'H2D Exposed Valid': l.get('H2D_EXPOSED_WAIT_VALID', False),
+        'H2D Bytes Valid': l.get('H2D_BYTES_VALID', False),
+        'H2D Source Class': l.get('H2D_SOURCE_CLASS', 'NOT_AVAILABLE'),
+        'H2D Timing Class': l.get('H2D_TIMING_CLASS', 'NOT_AVAILABLE'),
         'Quality Source': p.get('quality_source', 'NOT_AVAILABLE'), 'Latency Source': p.get('latency_source', 'NOT_AVAILABLE'),
         'Memory Source': p.get('memory_source', 'NOT_AVAILABLE'), 'Quality Valid': v.get('QUALITY_VALID', False),
         'Latency Valid': v.get('LATENCY_VALID', False), 'Memory Valid': v.get('MEMORY_VALID', False),
