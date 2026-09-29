@@ -1,0 +1,134 @@
+{
+  "commit_sha": "ddfe1b6e39a63d61d16f2858231ba43abcdf73df",
+  "branch": "group12-15-local-lowbit-v2",
+  "canonical10_run": "NO",
+  "static_tests": "PASS",
+  "smoke_type": "real multi-chunk 10-block smoke, one prompt, not canonical evaluation",
+  "groups": [
+    {
+      "group": 12,
+      "status": "PASS",
+      "output_dir": "/data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group11_15_final_semantic_alignment_smoke/group12",
+      "video": "/data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group11_15_final_semantic_alignment_smoke/group12/rank0-0-0_lora.mp4",
+      "blocks": 10,
+      "runtime_contract": {
+        "GROUP_RUNTIME_MODE": "group12_v2",
+        "GROUP14_DRAFTMAP_ACTIVE": "NO",
+        "GROUP15_DRAFTMAP_ACTIVE": "NO",
+        "INTERACTION_SPARSE_ROUTING": "NO",
+        "SPARSE_RATIO": 0.0,
+        "Q_SPARSE_RATIO": null,
+        "LOCAL_KV_PROMOTION_RATIO": null,
+        "SPARSE_SCOPE": null,
+        "FINAL_ATTENTION_DTYPE": "bfloat16",
+        "NATIVE_LOWBIT_KERNEL_USED": "NO",
+        "GPU_PERSISTENT_KV_OWNER": "LOCAL_INT8/FP8_E4M3",
+        "GPU_HISTORICAL_PERSISTENT_OWNER": "NONE"
+      },
+      "memory": {
+        "GPU_KV_ACTUAL_PERSISTENT_BYTES": 1749997440,
+        "GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES": 0,
+        "GPU_DRAFT_PERSISTENT_BYTES": 41472000,
+        "TRANSIENT_LOCAL_DEQUANT_GPU_PEAK_BYTES": 0,
+        "GPU_LOCAL_LOWBIT_K_BYTES": 884736000,
+        "GPU_LOCAL_LOWBIT_V_BYTES": 862617600,
+        "GPU_LOCAL_ACTUAL_PERSISTENT_BYTES": 1749997440
+      }
+    },
+    {
+      "group": 13,
+      "status": "PASS",
+      "output_dir": "/data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group11_15_final_semantic_alignment_smoke/group13",
+      "video": "/data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group11_15_final_semantic_alignment_smoke/group13/rank0-0-0_lora.mp4",
+      "blocks": 10,
+      "runtime_contract": {
+        "GROUP_RUNTIME_MODE": "group13_v2",
+        "GROUP14_DRAFTMAP_ACTIVE": "NO",
+        "GROUP15_DRAFTMAP_ACTIVE": "NO",
+        "INTERACTION_SPARSE_ROUTING": "NO",
+        "SPARSE_RATIO": 0.0,
+        "Q_SPARSE_RATIO": null,
+        "LOCAL_KV_PROMOTION_RATIO": null,
+        "SPARSE_SCOPE": null,
+        "FINAL_ATTENTION_DTYPE": "bfloat16",
+        "NATIVE_LOWBIT_KERNEL_USED": "NO",
+        "GPU_PERSISTENT_KV_OWNER": "LOCAL_NVFP4/NVFP4",
+        "GPU_HISTORICAL_PERSISTENT_OWNER": "NONE"
+      },
+      "memory": {
+        "GPU_KV_ACTUAL_PERSISTENT_BYTES": 975424320,
+        "GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES": 0,
+        "GPU_DRAFT_PERSISTENT_BYTES": 41472000,
+        "TRANSIENT_LOCAL_DEQUANT_GPU_PEAK_BYTES": 0,
+        "GPU_LOCAL_LOWBIT_K_BYTES": 433520640,
+        "GPU_LOCAL_LOWBIT_V_BYTES": 433520640,
+        "GPU_LOCAL_ACTUAL_PERSISTENT_BYTES": 975424320
+      }
+    },
+    {
+      "group": 14,
+      "status": "PASS",
+      "output_dir": "/data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group11_15_final_semantic_alignment_smoke/group14",
+      "video": "/data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group11_15_final_semantic_alignment_smoke/group14/rank0-0-0_lora.mp4",
+      "blocks": 10,
+      "runtime_contract": {
+        "GROUP_RUNTIME_MODE": "group14_v2",
+        "GROUP14_DRAFTMAP_ACTIVE": "YES",
+        "GROUP15_DRAFTMAP_ACTIVE": "NO",
+        "INTERACTION_SPARSE_ROUTING": "YES",
+        "SPARSE_RATIO": 0.5,
+        "Q_SPARSE_RATIO": 0.5,
+        "LOCAL_KV_PROMOTION_RATIO": 0.2,
+        "SPARSE_SCOPE": "local_plus_retrieved_history",
+        "FINAL_ATTENTION_DTYPE": "bfloat16",
+        "NATIVE_LOWBIT_KERNEL_USED": "NO",
+        "GPU_PERSISTENT_KV_OWNER": "LOCAL_INT8/FP8_E4M3",
+        "GPU_HISTORICAL_PERSISTENT_OWNER": "NONE"
+      },
+      "memory": {
+        "GPU_KV_ACTUAL_PERSISTENT_BYTES": 1749997440,
+        "GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES": 0,
+        "GPU_DRAFT_PERSISTENT_BYTES": 41472000,
+        "TRANSIENT_LOCAL_DEQUANT_GPU_PEAK_BYTES": 0,
+        "GPU_LOCAL_LOWBIT_K_BYTES": 884736000,
+        "GPU_LOCAL_LOWBIT_V_BYTES": 862617600,
+        "GPU_LOCAL_ACTUAL_PERSISTENT_BYTES": 1749997440
+      }
+    },
+    {
+      "group": 15,
+      "status": "PASS",
+      "output_dir": "/data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group11_15_final_semantic_alignment_smoke/group15",
+      "video": "/data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group11_15_final_semantic_alignment_smoke/group15/rank0-0-0_lora.mp4",
+      "blocks": 10,
+      "runtime_contract": {
+        "GROUP_RUNTIME_MODE": "group15_v2",
+        "GROUP14_DRAFTMAP_ACTIVE": "NO",
+        "GROUP15_DRAFTMAP_ACTIVE": "YES",
+        "INTERACTION_SPARSE_ROUTING": "YES",
+        "SPARSE_RATIO": 0.5,
+        "Q_SPARSE_RATIO": 0.5,
+        "LOCAL_KV_PROMOTION_RATIO": 0.2,
+        "SPARSE_SCOPE": "local_plus_retrieved_history",
+        "FINAL_ATTENTION_DTYPE": "bfloat16",
+        "NATIVE_LOWBIT_KERNEL_USED": "NO",
+        "GPU_PERSISTENT_KV_OWNER": "LOCAL_NVFP4/NVFP4",
+        "GPU_HISTORICAL_PERSISTENT_OWNER": "NONE"
+      },
+      "memory": {
+        "GPU_KV_ACTUAL_PERSISTENT_BYTES": 975424320,
+        "GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES": 0,
+        "GPU_DRAFT_PERSISTENT_BYTES": 41472000,
+        "TRANSIENT_LOCAL_DEQUANT_GPU_PEAK_BYTES": 0,
+        "GPU_LOCAL_LOWBIT_K_BYTES": 433520640,
+        "GPU_LOCAL_LOWBIT_V_BYTES": 433520640,
+        "GPU_LOCAL_ACTUAL_PERSISTENT_BYTES": 975424320
+      }
+    }
+  ],
+  "notes": [
+    "Group14/15 rerun after metadata correction; runtime metadata now records v2 sparse scope and q_sparse_ratio.",
+    "No quality evaluation was run.",
+    "Group11.2/11.4 overlap claims were not revalidated in this smoke."
+  ]
+}

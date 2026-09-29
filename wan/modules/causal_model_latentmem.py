@@ -206,7 +206,7 @@ class CausalWanSelfAttention(nn.Module):
                 vs[pos] = new_v[:, i * frame_tokens:(i + 1) * frame_tokens].detach().to("cpu", torch.bfloat16).contiguous()
         kv_cache["cpu_local_k_frames"], kv_cache["cpu_local_v_frames"] = ks, vs
 
-    def _v2_unified_fetch(self, kv_cache, memory_indices, device):
+    def _v2_unified_fetch(self, kv_cache, memory_indices, device, promotion_ids=None):
         """Plan history retrieval and local promotion before one wait."""
         if kv_cache is None or memory_indices is None:
             return None
@@ -219,7 +219,7 @@ class CausalWanSelfAttention(nn.Module):
                 if 0 <= idx < len(entries):
                     rec = entries[idx]
                     history_sources[idx] = (rec.k_payload, rec.v_payload)
-        promotion_ids = [int(x) for x in kv_cache.get("local_promoted_ids", [])]
+        promotion_ids = [int(x) for x in (kv_cache.get("local_promoted_ids", []) if promotion_ids is None else promotion_ids)]
         local_ks = kv_cache.get("cpu_local_k_frames", [])
         local_vs = kv_cache.get("cpu_local_v_frames", [])
         promotion_sources = {
@@ -235,6 +235,26 @@ class CausalWanSelfAttention(nn.Module):
             "history_ids": history_ids,
             "promotion_ids": list(promotion_sources),
             "history_bytes": handle.history_bytes,
+            "promotion_bytes": handle.promotion_bytes,
+            "physical_copy_count": handle.physical_copy_count,
+            "host_enqueue_s": handle.host_enqueue_s,
+            "exposed_wait_s": handle.exposed_wait_s,
+            "cuda_work_s": handle.cuda_work_s,
+        }
+        return handle
+
+    def _v2_promotion_fetch(self, kv_cache, promotion_ids, device):
+        """Fetch only retained local promotion IDs through the shared plan."""
+        ids = [int(x) for x in promotion_ids]
+        local_ks = kv_cache.get("cpu_local_k_frames", [])
+        local_vs = kv_cache.get("cpu_local_v_frames", [])
+        sources = {idx: (local_ks[idx], local_vs[idx]) for idx in ids
+                   if 0 <= idx < len(local_ks) and idx < len(local_vs)
+                   and local_ks[idx] is not None and local_vs[idx] is not None}
+        plan = make_plan([], list(sources), {}, sources)
+        handle = wait_fetch(submit_fetch(plan, device), device)
+        kv_cache["_v2_promotion_fetch_meta"] = {
+            "promotion_ids": list(sources),
             "promotion_bytes": handle.promotion_bytes,
             "physical_copy_count": handle.physical_copy_count,
             "host_enqueue_s": handle.host_enqueue_s,
@@ -704,6 +724,17 @@ class CausalWanSelfAttention(nn.Module):
                     temp_k[:, write_start_index:local_end_index] = k[:, roped_offset:roped_offset + write_len]
                     temp_v[:, write_start_index:local_end_index] = v[:, roped_offset:roped_offset + write_len]
 
+                # Group12-15 current-window semantics: the newly projected
+                # current chunk is quantized before this attention call.  The
+                # BF16 tensor below is call-local materialization only; the
+                # persistent owner is updated later by _apply_cache_updates.
+                if self.group_runtime_mode in {"group12_v2", "group13_v2", "group14_v2", "group15_v2"}:
+                    from utils.h200_group_runtime import fake_quantize_kv
+                    temp_k, temp_v, current_quant_meta = fake_quantize_kv(
+                        temp_k, temp_v, self.group_runtime_mode)
+                    kv_cache["current_chunk_fake_quant_before_attention"] = True
+                    kv_cache["current_chunk_fake_quant_meta"] = current_quant_meta
+
                 # === causal online RoPE Application ===
                 # For query: use relative indices based on position in window
                 # Query frames are at the end of the window: [local_attn_size - num_new_frames, ..., local_attn_size - 1]
@@ -773,6 +804,17 @@ class CausalWanSelfAttention(nn.Module):
                     # Store UN-ROPED K in cache
                     temp_k[:, write_start_index:local_end_index] = k[:, roped_offset:roped_offset + write_len]
                     temp_v[:, write_start_index:local_end_index] = v[:, roped_offset:roped_offset + write_len]
+
+                # Group12-15 current-window semantics: the newly projected
+                # current chunk is quantized before this attention call.  The
+                # BF16 tensor below is call-local materialization only; the
+                # persistent owner is updated later by _apply_cache_updates.
+                if self.group_runtime_mode in {"group12_v2", "group13_v2", "group14_v2", "group15_v2"}:
+                    from utils.h200_group_runtime import fake_quantize_kv
+                    temp_k, temp_v, current_quant_meta = fake_quantize_kv(
+                        temp_k, temp_v, self.group_runtime_mode)
+                    kv_cache["current_chunk_fake_quant_before_attention"] = True
+                    kv_cache["current_chunk_fake_quant_meta"] = current_quant_meta
 
                 # === RoPE Application with Relative Indices ===
                 # Current frame position in the window
@@ -848,6 +890,7 @@ class CausalWanSelfAttention(nn.Module):
                 # --- MEMORY TOKEN RETRIEVAL (using pre-computed indices) ---
                 k_mem = None
                 v_mem = None
+                v2_handle = None
                 
                 if self.memory_size > 0 and memory_indices is not None:
                     fetch_start = time.perf_counter()
@@ -858,17 +901,9 @@ class CausalWanSelfAttention(nn.Module):
                     archive = kv_cache.get("compressed_history_archive")
                     v2_handle = None
                     if self.group_runtime_mode in {"group12_v2", "group13_v2", "group14_v2", "group15_v2"}:
-                        v2_handle = self._v2_unified_fetch(kv_cache, memory_indices, q.device)
-                        # Local promotion is a transient CPU-BF16 overlay.  It
-                        # replaces the corresponding local low-bit materialized
-                        # tokens exactly once; the persistent owner is untouched.
-                        if v2_handle is not None:
-                            for local_id, (pk, pv) in v2_handle.promotion.items():
-                                start = int(local_id) * int(frame_seqlen)
-                                end = start + int(frame_seqlen)
-                                if end <= temp_k.shape[1]:
-                                    temp_k[:, start:end] = pk.to(q.device, dtype=temp_k.dtype)
-                                    temp_v[:, start:end] = pv.to(q.device, dtype=temp_v.dtype)
+                        v2_handle = self._v2_unified_fetch(
+                            kv_cache, memory_indices, q.device,
+                            promotion_ids=[] if self.group_runtime_mode in {"group14_v2", "group15_v2"} else None)
                     lookup_ms = (time.perf_counter() - lookup_start) * 1000.0
                     
                     if len(cpu_k_list) > 0:
@@ -998,24 +1033,78 @@ class CausalWanSelfAttention(nn.Module):
                             self.draftmap_trace[-1]["cpu_gather_ms"] = (time.perf_counter() - gather_start) * 1000.0
                             self.draftmap_trace[-1]["h2d_ms"] = 0.0
 
+                # Complete candidate set: retrieved history followed by the
+                # resident local window. Sparse groups route this whole set.
+                k_local = roped_temp_k[:, local_start_for_window:local_end_index] if (
+                    local_budget > 0 and local_start_for_window < local_end_index) else roped_temp_k[:, :0]
+                v_local = temp_v[:, local_start_for_window:local_end_index] if (
+                    local_budget > 0 and local_start_for_window < local_end_index) else temp_v[:, :0]
+                candidate_k_parts, candidate_v_parts = [], []
+                if k_mem is not None:
+                    candidate_k_parts.append(k_mem); candidate_v_parts.append(v_mem)
+                if k_local.shape[1] > 0:
+                    candidate_k_parts.append(k_local); candidate_v_parts.append(v_local)
+                candidate_k = torch.cat(candidate_k_parts, dim=1) if candidate_k_parts else roped_temp_k[:, :0]
+                candidate_v = torch.cat(candidate_v_parts, dim=1) if candidate_v_parts else temp_v[:, :0]
+                history_candidate_chunks = int(k_mem.shape[1] // frame_seqlen) if k_mem is not None else 0
+                local_candidate_chunks = int(k_local.shape[1] // frame_seqlen)
+                local_base_frame = int(local_start_for_window // frame_seqlen)
+                sparse_meta = None
+                promotion_handle = v2_handle
+
+                if self.group_runtime_mode in {"group14_v2", "group15_v2"} and self.q_sparse_ratio:
+                    from utils.persistent_draftmap import route_candidate_chunks
+                    mandatory_id = history_candidate_chunks + local_candidate_chunks - 1
+                    candidate_k, candidate_v, sparse_meta = route_candidate_chunks(
+                        roped_query, candidate_k, candidate_v, self.q_sparse_ratio,
+                        frame_seqlen, mandatory_chunk_ids=(mandatory_id,))
+                    if self.group11_profile is not None:
+                        self.group11_profile.setdefault("v2_sparse_rows", []).append(sparse_meta)
+                    selected_ids = [int(x) for x in sparse_meta["ROUTE_SELECTED_CHUNK_IDS"]]
+                    retained_local = [x - history_candidate_chunks for x in selected_ids
+                                      if x >= history_candidate_chunks]
+                    ratio = float(getattr(self, "local_kv_promotion_ratio", 0.0))
+                    count = max(0, min(len(retained_local), int(round(len(retained_local) * ratio))))
+                    route_scores = sparse_meta.get("ROUTE_CHUNK_SCORES", [])
+                    scores = {idx: float(route_scores[idx]) if idx < len(route_scores) else float(idx)
+                              for idx in retained_local}
+                    promoted_local = sorted(retained_local, key=lambda idx: (scores[idx], idx), reverse=True)[:count]
+                    promotion_handle = self._v2_promotion_fetch(kv_cache, promoted_local, q.device)
+                    sparse_meta["RETAINED_LOCAL_IDS"] = retained_local
+                    sparse_meta["PROMOTED_LOCAL_IDS"] = promoted_local
+                    sparse_meta["LOWBIT_LOCAL_IDS"] = [x for x in retained_local if x not in promoted_local]
+                    one_frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
+                    for out_pos, cand_id in enumerate(selected_ids):
+                        local_id = cand_id - history_candidate_chunks
+                        if local_id not in promotion_handle.promotion:
+                            continue
+                        pk, pv = promotion_handle.promotion[local_id]
+                        rel_frame = local_base_frame + local_id
+                        pk = causal_online_rope(pk.to(q.device, dtype=roped_query.dtype), one_frame_grid, freqs,
+                                                 relative_frame_indices=torch.tensor([rel_frame], device=q.device)).type_as(roped_query)
+                        pv = pv.to(q.device, dtype=v_local.dtype)
+                        lo, hi = out_pos * frame_seqlen, (out_pos + 1) * frame_seqlen
+                        candidate_k[:, lo:hi] = pk; candidate_v[:, lo:hi] = pv
+                elif promotion_handle is not None and promotion_handle.promotion and local_candidate_chunks:
+                    # Dense groups use the same promotion policy over all local
+                    # retained chunks; the BF16 overlay is call-local only.
+                    one_frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
+                    for local_id, (pk, pv) in promotion_handle.promotion.items():
+                        out_pos = history_candidate_chunks + int(local_id)
+                        if out_pos >= candidate_k.shape[1] // frame_seqlen:
+                            continue
+                        rel_frame = local_base_frame + int(local_id)
+                        pk = causal_online_rope(pk.to(q.device, dtype=roped_query.dtype), one_frame_grid, freqs,
+                                                 relative_frame_indices=torch.tensor([rel_frame], device=q.device)).type_as(roped_query)
+                        pv = pv.to(q.device, dtype=v_local.dtype)
+                        lo, hi = out_pos * frame_seqlen, (out_pos + 1) * frame_seqlen
+                        candidate_k[:, lo:hi] = pk; candidate_v[:, lo:hi] = pv
+
                 k_parts = [k_sink]
                 v_parts = [v_sink]
-                
-                if k_mem is not None:
-                    if self.group_runtime_mode in {"group14_v2", "group15_v2"} and self.q_sparse_ratio:
-                        k_mem, v_mem, sparse_meta = __import__("utils.h200_group_runtime", fromlist=["sparse_retain"]).sparse_retain(
-                            roped_query, k_mem, v_mem, self.q_sparse_ratio)
-                        if self.group11_profile is not None:
-                            self.group11_profile.setdefault("v2_sparse_rows", []).append(sparse_meta)
-                    k_parts.append(k_mem)
-                    v_parts.append(v_mem)
-                    
-                if local_budget > 0 and local_start_for_window < local_end_index:
-                    k_local = roped_temp_k[:, local_start_for_window:local_end_index]
-                    v_local = temp_v[:, local_start_for_window:local_end_index]
-                    k_parts.append(k_local)
-                    v_parts.append(v_local)
-                    
+                if candidate_k.shape[1] > 0:
+                    k_parts.append(candidate_k); v_parts.append(candidate_v)
+
                 cat_start = time.perf_counter()
                 k_cat = torch.cat(k_parts, dim=1)
                 v_cat = torch.cat(v_parts, dim=1)

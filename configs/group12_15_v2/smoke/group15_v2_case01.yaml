@@ -12,9 +12,9 @@ model_kwargs:
   use_latentmem: true
   retrieval_backend: draftmap_online
   group_runtime_mode: group15_v2
-  group_sparse_ratio: 0.2
+  group_sparse_ratio: 0.0
   q_sparse_ratio: 0.5
-  local_kv_promotion_ratio: 0.5
+  local_kv_promotion_ratio: 0.2
 generator_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_base.pt
 lora_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_lora.pt
 adapter: {type: lora, rank: 256, alpha: 256, dropout: 0.0, dtype: bfloat16, verbose: false}
@@ -41,3 +41,5 @@ historical_kv_archive: bf16_cpu_nvfp4_gpu
 draft_rag: true
 persistent_gpu_draft_k: true
 ratio_semantics: retained_interaction_ratio
+
+sparse_scope: local_plus_retrieved_history

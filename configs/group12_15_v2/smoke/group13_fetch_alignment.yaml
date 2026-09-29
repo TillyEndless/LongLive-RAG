@@ -40,3 +40,5 @@ persistent_storage_mode: local_lowbit_cpu_history_v2
 historical_kv_archive: bf16
 draft_rag: true
 persistent_gpu_draft_k: true
+
+sparse_scope: local_plus_retrieved_history

@@ -21,3 +21,5 @@ gpu_historical_persistent: none
 attention_compute: bf16
 persistent_storage_mode: local_lowbit_cpu_history_v2
 cache_ownership_version: LOCAL_LOWBIT_CPU_HISTORY_V2
+
+sparse_scope: local_plus_retrieved_history

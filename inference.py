@@ -100,8 +100,10 @@ def validate_group_contract(cfg):
             raise ValueError("Groups14/15-v2 require local_kv_promotion_ratio in [0,1]")
         if mode in {"group12_corrected", "group13_corrected"} and ratio != 0.0:
             raise ValueError("Groups12/13 must have sparse ratio=0")
-        if mode in {"group12_v2", "group13_v2"} and (q_ratio != 0.0 or local_promotion != 0.0):
-            raise ValueError("Groups12/13-v2 baseline must have q_sparse_ratio=0 and local_kv_promotion_ratio=0")
+        if mode in {"group12_v2", "group13_v2"} and q_ratio != 0.0:
+            raise ValueError("Groups12/13-v2 dense baseline must have q_sparse_ratio=0")
+        if mode in {"group12_v2", "group13_v2"} and not (0.0 <= local_promotion <= 1.0):
+            raise ValueError("Groups12/13-v2 require local_kv_promotion_ratio in [0,1]")
     elif group == 11:
         if str(getattr(cfg.model_kwargs, "retrieval_backend", "")) != "draftmap_online":
             raise ValueError("Group11 canonical contract requires retrieval_backend=draftmap_online")
@@ -404,13 +406,17 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             corrected_storage = corrected_group12 or corrected_group13 or corrected_group14 or corrected_group15 or v2_group12 or v2_group13 or v2_group14 or v2_group15
             v2_storage = v2_group12 or v2_group13 or v2_group14 or v2_group15
             draft_rag_active = str(getattr(config.model_kwargs, "retrieval_backend", "")) == "draftmap_online"
+            v2_sparse = v2_group14 or v2_group15
             runtime_meta = {
                 "GROUP": int(getattr(config, "group_id", 0)),
                 "GROUP_RUNTIME_MODE": group_runtime_mode,
-                "GROUP14_DRAFTMAP_ACTIVE": "YES" if corrected_group14 else "NO",
-                "GROUP15_DRAFTMAP_ACTIVE": "YES" if corrected_group15 else "NO",
-                "INTERACTION_SPARSE_ROUTING": "YES" if corrected_group14 or corrected_group15 else "NO",
-                "SPARSE_RATIO": float(getattr(config.model_kwargs, "group_sparse_ratio", 0.0)),
+                "GROUP14_DRAFTMAP_ACTIVE": "YES" if corrected_group14 or v2_group14 else "NO",
+                "GROUP15_DRAFTMAP_ACTIVE": "YES" if corrected_group15 or v2_group15 else "NO",
+                "INTERACTION_SPARSE_ROUTING": "YES" if corrected_group14 or corrected_group15 or v2_sparse else "NO",
+                "SPARSE_RATIO": float(getattr(config.model_kwargs, "q_sparse_ratio", getattr(config.model_kwargs, "group_sparse_ratio", 0.0))),
+                "Q_SPARSE_RATIO": float(getattr(config.model_kwargs, "q_sparse_ratio", 0.0)),
+                "LOCAL_KV_PROMOTION_RATIO": float(getattr(config.model_kwargs, "local_kv_promotion_ratio", 0.0)),
+                "SPARSE_SCOPE": str(getattr(config.model_kwargs, "sparse_scope", "history_only" if not v2_sparse else "local_plus_retrieved_history")),
                 "DRAFT_RAG_ACTIVE": "YES" if draft_rag_active else "NO",
                 "CPU_COMPRESSED_HISTORY_ACTIVE": "NO",
                 "CPU_HISTORICAL_BF16_ARCHIVE_ACTIVE": "YES" if draft_rag_active else "NO",

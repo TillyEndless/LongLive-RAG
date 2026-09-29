@@ -19,7 +19,7 @@ generator_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/lo
 lora_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_lora.pt
 adapter: {type: lora, rank: 256, alpha: 256, dropout: 0.0, dtype: bfloat16, verbose: false}
 data_path: /data/zxl/LongLive-RAG-group11_15_h200/configs/group12_15_corrected_campaign/case01.txt
-output_folder: /data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group12_15_v2_fetch_alignment_smoke/group12/case01
+output_folder: results/group11_15_final_semantic_alignment_smoke/group12
 inference_iter: 0
 skip_existing: false
 num_output_frames: 30

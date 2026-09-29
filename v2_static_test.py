@@ -3,6 +3,8 @@ import torch
 
 from utils.local_lowbit_kv import LocalLowbitKVStore
 from utils.compressed_history_archive import CompressedHistoryArchive
+from utils.h200_group_runtime import fake_quantize_kv
+from utils.persistent_draftmap import route_candidate_chunks
 
 
 def test_local_owner(mode):
@@ -31,8 +33,25 @@ def test_cpu_history_only():
     assert rec.gpu_persistent_bytes() == 0
 
 
+
+def test_full_candidate_sparse_then_promotion():
+    q = torch.randn(1, 4, 2, 4, dtype=torch.bfloat16)
+    k = torch.randn(1, 20, 2, 4, dtype=torch.bfloat16)
+    v = torch.randn_like(k)
+    qk, qv, meta = fake_quantize_kv(k, v, "group12_v2")
+    assert meta["FINAL_ATTENTION_DTYPE"] == "bfloat16"
+    assert qk.dtype == torch.bfloat16 and qv.dtype == torch.bfloat16
+    outk, outv, route = route_candidate_chunks(q, qk, qv, 0.5, 4, (4,))
+    assert route["SPARSE_SCOPE"] == "local_plus_retrieved_history"
+    assert route["CURRENT_CHUNK_MANDATORY"] is True
+    assert 4 in route["ROUTE_SELECTED_CHUNK_IDS"]
+    assert len(route["ROUTE_SELECTED_CHUNK_IDS"]) == 3
+    assert outk.shape == outv.shape
+
+
 if __name__ == "__main__":
     test_local_owner("int8_fp8")
     test_local_owner("nvfp4")
     test_cpu_history_only()
+    test_full_candidate_sparse_then_promotion()
     print("GROUP12_15_V2_STATIC_TESTS=PASS")

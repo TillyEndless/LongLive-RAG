@@ -62,3 +62,75 @@ def route_draftmap(q,k,v,retained_ratio):
       "ACTUAL_ZERO_FRACTION":1.0-retained/max(total,1),
       "ACTUAL_BF16_FRACTION":retained/max(total,1),
     }
+
+
+
+def route_candidate_chunks(q, k, v, drop_ratio, chunk_tokens,
+                           mandatory_chunk_ids=()):
+    """Route the complete local+retrieved candidate set at chunk granularity.
+
+    drop_ratio is the fraction removed. Returned tensors preserve chunk order;
+    mandatory chunks (normally current) always consume quota. Promotion is
+    intentionally applied by the caller afterwards.
+    """
+    if not 0.0 < float(drop_ratio) < 1.0:
+        n = int(math.ceil(k.shape[1] / max(1, int(chunk_tokens))))
+        return k, v, {"SPARSE_ROUTING_ACTIVE": "NO", "ROUTE_BLOCKS_TOTAL": n,
+                       "ROUTE_BLOCKS_RETAINED": n,
+                       "ROUTE_SELECTED_CHUNK_IDS": list(range(n)),
+                       "ROUTE_DROPPED_CHUNK_IDS": [],
+                       "ROUTE_CHUNK_SCORES": [],
+                       "SPARSE_SCOPE": "local_plus_retrieved_history"}
+    chunk_tokens = int(chunk_tokens)
+    if chunk_tokens <= 0 or k.shape[1] % chunk_tokens != 0:
+        raise ValueError("candidate KV must contain complete chunks")
+    b, tokens, h, d = k.shape
+    blocks = tokens // chunk_tokens
+    if blocks <= 0:
+        return k, v, {"SPARSE_ROUTING_ACTIVE": "NO", "ROUTE_BLOCKS_TOTAL": 0,
+                       "ROUTE_BLOCKS_RETAINED": 0,
+                       "ROUTE_SELECTED_CHUNK_IDS": [],
+                       "ROUTE_DROPPED_CHUNK_IDS": [],
+                       "ROUTE_CHUNK_SCORES": [],
+                       "SPARSE_SCOPE": "local_plus_retrieved_history"}
+    qp = q.float().mean(dim=1)
+    kp = k.view(b, blocks, chunk_tokens, h, d).float().mean(dim=2)
+    scores = torch.einsum("bhd,bkhd->bk", qp, kp).mean(dim=0)
+    keep = max(1, int(math.ceil((1.0 - float(drop_ratio)) * blocks)))
+    mandatory = {int(i) for i in mandatory_chunk_ids if 0 <= int(i) < blocks}
+    keep = max(keep, len(mandatory))
+    order = torch.argsort(scores, descending=True, stable=True)
+    selected = list(sorted(mandatory))
+    for idx in order.detach().cpu().tolist():
+        if int(idx) not in mandatory:
+            selected.append(int(idx))
+        if len(selected) >= keep:
+            break
+    selected = sorted(selected[:keep])
+    ids = torch.tensor(selected, device=k.device, dtype=torch.long)
+    starts = ids[:, None] * chunk_tokens + torch.arange(chunk_tokens, device=k.device)[None, :]
+    token_ids = starts.reshape(1, -1).expand(b, -1)
+    gather = token_ids[:, :, None, None].expand(-1, -1, h, d)
+    ko = torch.gather(k, 1, gather)
+    vo = torch.gather(v, 1, gather)
+    selected_scores = scores[ids]
+    return ko, vo, {
+        "SPARSE_ROUTING_ACTIVE": "YES",
+        "SPARSE_EXECUTION_STATUS": "REAL_SPARSE_EXECUTION",
+        "ROUTING_IMPLEMENTATION_ID": ROUTING_IMPLEMENTATION_ID,
+        "DRAFT_BLOCK_SIZE": chunk_tokens,
+        "SPARSE_SCOPE": "local_plus_retrieved_history",
+        "ROUTE_QUOTA_POLICY": "ceil((1-q_sparse_ratio)*candidate_chunks)",
+        "CURRENT_CHUNK_MANDATORY": True,
+        "ROUTE_BLOCKS_TOTAL": blocks,
+        "ROUTE_BLOCKS_RETAINED": len(selected),
+        "ROUTE_SELECTED_CHUNK_IDS": selected,
+        "ROUTE_DROPPED_CHUNK_IDS": [i for i in range(blocks) if i not in selected],
+        "ROUTE_SELECTED_CHUNK_SCORES": selected_scores.detach().float().cpu().tolist(),
+        "ROUTE_CHUNK_SCORES": [float(x) for x in scores.detach().cpu().tolist()],
+        "TOTAL_INTERACTIONS": int(q.shape[1] * tokens),
+        "RETAINED_INTERACTIONS": int(q.shape[1] * ko.shape[1]),
+        "SKIPPED_INTERACTIONS": int(q.shape[1] * (tokens - ko.shape[1])),
+        "ACTUAL_ZERO_FRACTION": 1.0 - ko.shape[1] / max(tokens, 1),
+        "ACTUAL_DENSE_FRACTION": ko.shape[1] / max(tokens, 1),
+    }
