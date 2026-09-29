@@ -79,3 +79,13 @@ quality or latency rerun was performed.
 The smoke workload was monotonically resident, so current and peak are equal in
 these two cases. The peak tracker is updated after persistent-owner state
 changes and preserves the peak if later eviction lowers current occupancy.
+
+## Persistent-KV peak answers
+
+1. The peak tracker updates after cache state changes: after local cache updates and after historical archive materialization/lazy low-bit owner creation. It records the maximum current persistent-owner byte count.
+2. Accounting uses actual tensor storage metadata and packed payload/scale/metadata tensor storage bytes, not theoretical bitwidth.
+3. Yes. Eviction lowers GPU_KV_ACTUAL_PERSISTENT_BYTES, while GPU_KV_PERSISTENT_PEAK_BYTES remains the historical maximum.
+4. Lazy historical chunks are counted when their persistent packed K/V payload and scale/metadata owners become resident on GPU. They are not inferred from retained ratio.
+5. Draft GPU bytes are recorded in DRAFT_GPU_PERSISTENT_BYTES and GPU_METHOD_PERSISTENT_BYTES, but are excluded from GPU_KV_ACTUAL_PERSISTENT_BYTES and KV_COMPRESSION_RATIO.
+6. Old artifacts with only current persistent KV remain reusable for current-memory analysis; their missing peak is NOT_AVAILABLE and is never inferred.
+7. Group14/15 and other lazy-resident runs require profile-only reruns to populate peak fields. Quality and canonical10 do not need reruns.
