@@ -143,6 +143,8 @@ class CausalWanSelfAttention(nn.Module):
         self.current_denoising_step = None
         self.group_runtime_mode = "baseline"
         self.group_sparse_ratio = 0.0
+        self.q_sparse_ratio = 0.0
+        self.local_kv_promotion_ratio = 0.0
         self.group_runtime_trace = []
         self.group11_fetch_mode = "serial_full"
         self.group11_flash_trace = []
@@ -168,6 +170,24 @@ class CausalWanSelfAttention(nn.Module):
         self.o = nn.Linear(dim, dim)
         self.norm_q = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
         self.norm_k = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
+
+    @staticmethod
+    def _v2_local_store(kv_cache):
+        return kv_cache.get("local_lowbit_store") if kv_cache is not None else None
+
+    def _materialize_local_cache(self, kv_cache):
+        store = self._v2_local_store(kv_cache)
+        if store is None:
+            return kv_cache["k"].clone(), kv_cache["v"].clone()
+        k, v = store.materialize()
+        # Preserve the fixed-window indexing contract of the existing causal
+        # update code, but keep this dense BF16 tensor call-local only.
+        if k.shape[1] < store.max_tokens:
+            pad = store.max_tokens - k.shape[1]
+            z_k = torch.zeros((k.shape[0], pad, k.shape[2], k.shape[3]), device=k.device, dtype=k.dtype)
+            z_v = torch.zeros_like(z_k)
+            k, v = torch.cat((k, z_k), dim=1), torch.cat((v, z_v), dim=1)
+        return k, v
 
     def _online_memory_indices(self, query, kv_cache, layer_index, frame_seqlen, current_start=0):
         if self.retrieval_backend != "draftmap_online" or self.memory_size <= 0:
@@ -571,7 +591,8 @@ class CausalWanSelfAttention(nn.Module):
             
             current_end = current_start + q.shape[1]
             sink_tokens = self.sink_size * frame_seqlen
-            kv_cache_size = kv_cache["k"].shape[1]
+            local_store = self._v2_local_store(kv_cache)
+            kv_cache_size = local_store.max_tokens if local_store is not None else kv_cache["k"].shape[1]
             num_new_tokens = q.shape[1]
             
             # Compute cache update parameters without modifying kv_cache directly
@@ -593,8 +614,7 @@ class CausalWanSelfAttention(nn.Module):
 
                 # Construct full k, v for attention computation (without modifying the original cache)
                 # Create temporary k, v for computation - store UN-ROPED K
-                temp_k = kv_cache["k"].clone()  # These are un-roped K values
-                temp_v = kv_cache["v"].clone()
+                temp_k, temp_v = self._materialize_local_cache(kv_cache)  # call-local BF16 work buffers
                 
                 # --- CPU OFFLOAD DUMP LOGIC ---
                 evicted_k_frames = []
@@ -687,8 +707,7 @@ class CausalWanSelfAttention(nn.Module):
                 local_start_index = local_end_index - num_new_tokens
 
                 # Construct full k, v for attention computation
-                temp_k = kv_cache["k"].clone()  # UN-ROPED K
-                temp_v = kv_cache["v"].clone()
+                temp_k, temp_v = self._materialize_local_cache(kv_cache)  # call-local BF16 work buffers
                 
                 # Protect sink_tokens only during recomputation
                 write_start_index = max(local_start_index, sink_tokens) if is_recompute else local_start_index
@@ -913,6 +932,11 @@ class CausalWanSelfAttention(nn.Module):
                 v_parts = [v_sink]
                 
                 if k_mem is not None:
+                    if self.group_runtime_mode in {"group14_v2", "group15_v2"} and self.q_sparse_ratio:
+                        k_mem, v_mem, sparse_meta = __import__("utils.h200_group_runtime", fromlist=["sparse_retain"]).sparse_retain(
+                            roped_query, k_mem, v_mem, self.q_sparse_ratio)
+                        if self.group11_profile is not None:
+                            self.group11_profile.setdefault("v2_sparse_rows", []).append(sparse_meta)
                     k_parts.append(k_mem)
                     v_parts.append(v_mem)
                     
@@ -933,11 +957,13 @@ class CausalWanSelfAttention(nn.Module):
                     and self.group_runtime_mode in {
                         "group12_corrected", "group13_corrected",
                         "group14_corrected", "group15_corrected",
+                        "group12_v2", "group13_v2", "group14_v2", "group15_v2",
                     }
                 )
                 k_cat, v_cat, runtime_meta = prepare_attention_kv(
                     roped_query, k_cat, v_cat,
-                    self.group_runtime_mode, self.group_sparse_ratio,
+                    self.group_runtime_mode,
+                    0.0 if self.group_runtime_mode in {"group14_v2", "group15_v2"} else self.group_sparse_ratio,
                     persistent_owner_already_dequantized=persistent_owner)
                 runtime_meta["TRACE_LAYER"] = int(layer_index)
                 runtime_meta["TRACE_DENOISING_STEP"] = self.current_denoising_step
@@ -1511,16 +1537,23 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                     new_k = update_info["new_k"]
                     new_v = update_info["new_v"]
                     
-                    # Perform the rolling operation
-                    cache["k"][:, sink_tokens:sink_tokens + num_rolled_tokens] = \
-                        cache["k"][:, sink_tokens + num_evicted_tokens:sink_tokens + num_evicted_tokens + num_rolled_tokens].clone()
-                    cache["v"][:, sink_tokens:sink_tokens + num_rolled_tokens] = \
-                        cache["v"][:, sink_tokens + num_evicted_tokens:sink_tokens + num_evicted_tokens + num_rolled_tokens].clone()
-                    
-                    # Insert new key/value
-                    if write_end_index > write_start_index and new_k.shape[1] == (write_end_index - write_start_index):
-                        cache["k"][:, write_start_index:write_end_index] = new_k
-                        cache["v"][:, write_start_index:write_end_index] = new_v
+                    store = cache.get("local_lowbit_store")
+                    if store is None:
+                        # Perform the rolling operation for the legacy path.
+                        cache["k"][:, sink_tokens:sink_tokens + num_rolled_tokens] = \
+                            cache["k"][:, sink_tokens + num_evicted_tokens:sink_tokens + num_evicted_tokens + num_rolled_tokens].clone()
+                        cache["v"][:, sink_tokens:sink_tokens + num_rolled_tokens] = \
+                            cache["v"][:, sink_tokens + num_evicted_tokens:sink_tokens + num_evicted_tokens + num_rolled_tokens].clone()
+                        if write_end_index > write_start_index and new_k.shape[1] == (write_end_index - write_start_index):
+                            cache["k"][:, write_start_index:write_end_index] = new_k
+                            cache["v"][:, write_start_index:write_end_index] = new_v
+                    else:
+                        store.roll_and_insert(
+                            sink_tokens // store.frame_tokens,
+                            num_evicted_tokens // store.frame_tokens,
+                            num_rolled_tokens // store.frame_tokens,
+                            write_start_index // store.frame_tokens,
+                            new_k, new_v)
                     
                     if "evicted_k_frames" in update_info and update_info["evicted_k_frames"]:
                         archive = cache.get("compressed_history_archive")
@@ -1543,10 +1576,13 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                     new_k = update_info["new_k"]
                     new_v = update_info["new_v"]
                     
-                    # Insert new key/value
-                    if write_end_index > write_start_index and new_k.shape[1] == (write_end_index - write_start_index):
-                        cache["k"][:, write_start_index:write_end_index] = new_k
-                        cache["v"][:, write_start_index:write_end_index] = new_v
+                    store = cache.get("local_lowbit_store")
+                    if store is None:
+                        if write_end_index > write_start_index and new_k.shape[1] == (write_end_index - write_start_index):
+                            cache["k"][:, write_start_index:write_end_index] = new_k
+                            cache["v"][:, write_start_index:write_end_index] = new_v
+                    else:
+                        store.insert_frames(write_start_index // store.frame_tokens, new_k, new_v)
 
                 new_k_frames = update_info.get("new_draft_k_frames", [])
                 if update_info["action"] == "roll_and_insert":
@@ -1563,6 +1599,23 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                         old_k.append(None)
                     old_k[start:start + len(new_k_frames)] = list(new_k_frames)
                     cache["local_draft_k_frames"] = old_k
+
+                store = cache.get("local_lowbit_store")
+                promotion_ratio = float(getattr(getattr(self.blocks[block_index], "self_attn", None), "local_kv_promotion_ratio", 0.0))
+                # The attention module owns the policy; for this block-level
+                # adapter use the existing Draft-K magnitude as provenance-
+                # traceable local importance.  No new scoring algorithm is
+                # introduced.
+                if store is not None and promotion_ratio > 0.0:
+                    scores = []
+                    for draft in cache.get("local_draft_k_frames", []):
+                        if draft is None:
+                            scores.append(0.0)
+                        else:
+                            scores.append(float(draft.float().abs().mean().item()))
+                    promoted = store.promote_top(scores, promotion_ratio)
+                    cache["local_promoted_ids"] = promoted
+                    cache["local_promotion_ratio"] = promotion_ratio
             
             # Update indices: do not roll back pointers during recomputation
             is_recompute = False if update_info is None else update_info.get("is_recompute", False)

@@ -11,6 +11,7 @@ from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, move_model_to_device_with_memory_preservation, log_gpu_memory
 from utils.debug_option import DEBUG
 from utils.compressed_history_archive import CompressedHistoryArchive
+from utils.local_lowbit_kv import LocalLowbitKVStore
 import torch.distributed as dist
 
 from ae.config import AEConfig
@@ -52,7 +53,7 @@ class CausalInferencePipeline(torch.nn.Module):
         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
         # WanDiffusionWrapper init.
         model_args_clean = dict(getattr(args, "model_kwargs", {}))
-        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id", "group11_fetch_mode"]:
+        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "q_sparse_ratio", "local_kv_promotion_ratio", "group_id", "group11_fetch_mode"]:
             model_args_clean.pop(key, None)
 
         self.generator = WanDiffusionWrapper(
@@ -121,8 +122,15 @@ class CausalInferencePipeline(torch.nn.Module):
             "group13_corrected": "nvfp4",
             "group14_corrected": "int8_fp8",
             "group15_corrected": "nvfp4",
+            "group12_v2": "int8_fp8",
+            "group13_v2": "nvfp4",
+            "group14_v2": "int8_fp8",
+            "group15_v2": "nvfp4",
         }.get(group_mode)
+        self.local_lowbit_mode = self.compressed_history_mode if group_mode.endswith("_v2") else None
         sparse_ratio = float(getattr(args.model_kwargs, "group_sparse_ratio", 0.0))
+        self.q_sparse_ratio = float(getattr(args.model_kwargs, "q_sparse_ratio", sparse_ratio) or 0.0)
+        self.local_kv_promotion_ratio = float(getattr(args.model_kwargs, "local_kv_promotion_ratio", 0.0) or 0.0)
         fetch_mode = str(getattr(args.model_kwargs, "group11_fetch_mode", "serial_full"))
         self.group11_fetch_mode = fetch_mode
         for block in getattr(self.generator.model, "blocks", []):
@@ -134,6 +142,8 @@ class CausalInferencePipeline(torch.nn.Module):
             block.self_attn.unified_latency_profiler = self.unified_latency_profiler
             block.self_attn.group_runtime_mode = group_mode
             block.self_attn.group_sparse_ratio = sparse_ratio
+            block.self_attn.q_sparse_ratio = self.q_sparse_ratio
+            block.self_attn.local_kv_promotion_ratio = self.local_kv_promotion_ratio
             block.self_attn.group11_fetch_mode = fetch_mode
             block.self_attn.group_runtime_trace = self.generator.model.group_runtime_trace
         self.ae_model = None
@@ -488,9 +498,7 @@ class CausalInferencePipeline(torch.nn.Module):
                 kv_cache_size = 32760
 
         for _ in range(self.num_transformer_blocks):
-            kv_cache1.append({
-                "k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                "v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+            cache = {
                 "global_end_index": torch.tensor([0], dtype=torch.long, device=device),
                 "local_end_index": torch.tensor([0], dtype=torch.long, device=device),
                 "cpu_k_frames": [],
@@ -521,7 +529,17 @@ class CausalInferencePipeline(torch.nn.Module):
                 "draft_q_history_meta": None,
                 "draft_q_pending": None,
                 "draft_q_retrieval_started": False,
-            })
+            }
+            if self.local_lowbit_mode is None:
+                cache["k"] = torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device)
+                cache["v"] = torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device)
+            else:
+                cache["local_lowbit_store"] = LocalLowbitKVStore(
+                    max_frames=int(kv_cache_size // self.frame_seq_length),
+                    frame_tokens=self.frame_seq_length,
+                    heads=12, head_dim=128, mode=self.local_lowbit_mode,
+                    device=device, dtype=torch.bfloat16)
+            kv_cache1.append(cache)
 
         self.kv_cache1 = kv_cache1  # always store the clean cache
         if str(getattr(self, "group11_fetch_mode", "serial_full")) == "next_layer_prefetch":

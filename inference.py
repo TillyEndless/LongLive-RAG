@@ -45,10 +45,12 @@ def validate_group_contract(cfg):
     if group in {12, 13, 14, 15} or mode in {
         "group12_corrected", "group13_corrected",
         "group14_corrected", "group15_corrected",
+        "group12_v2", "group13_v2", "group14_v2", "group15_v2",
     }:
         expected_mode = {12: "group12_corrected", 13: "group13_corrected",
                          14: "group14_corrected", 15: "group15_corrected"}.get(group)
-        if expected_mode and mode != expected_mode:
+        v2_mode = expected_mode.replace("_corrected", "") + "_v2" if expected_mode else None
+        if expected_mode and mode not in {expected_mode, v2_mode}:
             raise ValueError(f"Group {group} requires {expected_mode}, got {mode}")
         if int(getattr(cfg.model_kwargs, "local_attn_size", -1)) != 12:
             raise ValueError("Group11--15 frozen contract requires local_attn_size=12")
@@ -65,18 +67,21 @@ def validate_group_contract(cfg):
         smoke_1block = bool(getattr(cfg, "smoke_1block", False))
         if expected_frames != 120 and not ((smoke_10block and expected_frames == 30) or (smoke_1block and expected_frames == 3)):
             raise ValueError("num_output_frames must be 120 (474 decoded frames), 30-frame/10-block smoke, or 3-frame/1-block smoke")
-        if str(getattr(cfg, "persistent_storage_mode", "")).lower() != "lowbit_storage_bf16_compute":
+        if mode.endswith("_v2"):
+            if str(getattr(cfg, "persistent_storage_mode", "")).lower() != "local_lowbit_cpu_history_v2":
+                raise ValueError("Group12--15-v2 require LOCAL_LOWBIT_CPU_HISTORY_V2")
+        elif str(getattr(cfg, "persistent_storage_mode", "")).lower() != "lowbit_storage_bf16_compute":
             raise ValueError("Corrected Group12--15 require LOWBIT_STORAGE_BF16_COMPUTE")
         if str(getattr(cfg, "cpu_historical_k_storage", "")).lower() != "bf16" or \
            str(getattr(cfg, "cpu_historical_v_storage", "")).lower() != "bf16":
             raise ValueError("CPU historical K/V must remain authoritative BF16")
-        if mode in {"group12_corrected", "group14_corrected"}:
-            if str(getattr(cfg, "gpu_k_storage", "")).lower() != "int8" or \
-               str(getattr(cfg, "gpu_v_storage", "")).lower() != "fp8_e4m3":
+        k_storage = str(getattr(cfg, "gpu_local_k_storage", getattr(cfg, "gpu_k_storage", ""))).lower()
+        v_storage = str(getattr(cfg, "gpu_local_v_storage", getattr(cfg, "gpu_v_storage", ""))).lower()
+        if mode in {"group12_corrected", "group14_corrected", "group12_v2", "group14_v2"}:
+            if k_storage != "int8" or v_storage != "fp8_e4m3":
                 raise ValueError("Groups12/14 require persistent GPU K=INT8, V=FP8_E4M3")
-        if mode in {"group13_corrected", "group15_corrected"}:
-            if str(getattr(cfg, "gpu_k_storage", "")).lower() != "nvfp4" or \
-               str(getattr(cfg, "gpu_v_storage", "")).lower() != "nvfp4":
+        if mode in {"group13_corrected", "group15_corrected", "group13_v2", "group15_v2"}:
+            if k_storage != "nvfp4" or v_storage != "nvfp4":
                 raise ValueError("Groups13/15 require persistent GPU K/V=NVFP4")
         if str(getattr(cfg, "attention_compute", "")).lower() != "bf16":
             raise ValueError("Group12--15 final attention must remain BF16")
@@ -85,10 +90,18 @@ def validate_group_contract(cfg):
            bool(getattr(cfg, "longlive_reuse", False)):
             raise ValueError("Group12--15 must not inherit qprev/FlashFetch/prefetch/hot-cache semantics")
         ratio = float(getattr(cfg.model_kwargs, "group_sparse_ratio", 0.0) or 0.0)
+        q_ratio = float(getattr(cfg.model_kwargs, "q_sparse_ratio", ratio) or 0.0)
+        local_promotion = float(getattr(cfg.model_kwargs, "local_kv_promotion_ratio", 0.0) or 0.0)
         if mode in {"group14_corrected", "group15_corrected"} and not (0.0 < ratio < 1.0):
             raise ValueError("Groups14/15 require an explicit retained sparse ratio in (0,1)")
+        if mode in {"group14_v2", "group15_v2"} and not (0.0 < q_ratio < 1.0):
+            raise ValueError("Groups14/15-v2 require q_sparse_ratio in (0,1)")
+        if mode in {"group14_v2", "group15_v2"} and not (0.0 <= local_promotion <= 1.0):
+            raise ValueError("Groups14/15-v2 require local_kv_promotion_ratio in [0,1]")
         if mode in {"group12_corrected", "group13_corrected"} and ratio != 0.0:
             raise ValueError("Groups12/13 must have sparse ratio=0")
+        if mode in {"group12_v2", "group13_v2"} and (q_ratio != 0.0 or local_promotion != 0.0):
+            raise ValueError("Groups12/13-v2 baseline must have q_sparse_ratio=0 and local_kv_promotion_ratio=0")
     elif group == 11:
         if str(getattr(cfg.model_kwargs, "retrieval_backend", "")) != "draftmap_online":
             raise ValueError("Group11 canonical contract requires retrieval_backend=draftmap_online")
@@ -384,7 +397,12 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             corrected_group13 = group_runtime_mode == "group13_corrected"
             corrected_group14 = group_runtime_mode == "group14_corrected"
             corrected_group15 = group_runtime_mode == "group15_corrected"
-            corrected_storage = corrected_group12 or corrected_group13 or corrected_group14 or corrected_group15
+            v2_group12 = group_runtime_mode == "group12_v2"
+            v2_group13 = group_runtime_mode == "group13_v2"
+            v2_group14 = group_runtime_mode == "group14_v2"
+            v2_group15 = group_runtime_mode == "group15_v2"
+            corrected_storage = corrected_group12 or corrected_group13 or corrected_group14 or corrected_group15 or v2_group12 or v2_group13 or v2_group14 or v2_group15
+            v2_storage = v2_group12 or v2_group13 or v2_group14 or v2_group15
             draft_rag_active = str(getattr(config.model_kwargs, "retrieval_backend", "")) == "draftmap_online"
             runtime_meta = {
                 "GROUP": int(getattr(config, "group_id", 0)),
@@ -397,13 +415,15 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 "CPU_COMPRESSED_HISTORY_ACTIVE": "NO",
                 "CPU_HISTORICAL_BF16_ARCHIVE_ACTIVE": "YES" if draft_rag_active else "NO",
                 "PERSISTENT_GPU_DRAFT_K": "YES" if draft_rag_active else "NO",
-                "HISTORICAL_K_STORAGE": ("INT8" if corrected_group12 or corrected_group14 else ("NVFP4" if corrected_group13 or corrected_group15 else "BF16")),
-                "HISTORICAL_V_STORAGE": ("FP8_E4M3" if corrected_group12 or corrected_group14 else ("NVFP4" if corrected_group13 or corrected_group15 else "BF16")),
+                "HISTORICAL_K_STORAGE": "BF16" if v2_storage else ("INT8" if corrected_group12 or corrected_group14 else ("NVFP4" if corrected_group13 or corrected_group15 else "BF16")),
+                "HISTORICAL_V_STORAGE": "BF16" if v2_storage else ("FP8_E4M3" if corrected_group12 or corrected_group14 else ("NVFP4" if corrected_group13 or corrected_group15 else "BF16")),
                 "FINAL_ATTENTION_DTYPE": "bfloat16",
                 "ATTENTION_KERNEL": "BF16",
                 "NATIVE_LOWBIT_KERNEL_USED": "NO",
-                "PERSISTENT_STORAGE_MODE": "LOWBIT_STORAGE_BF16_COMPUTE" if corrected_storage else "BF16_FAKE_QUANT",
-                "GPU_PERSISTENT_KV_OWNER": "INT8/FP8_E4M3" if corrected_group12 or corrected_group14 else ("NVFP4/NVFP4" if corrected_group13 or corrected_group15 else "BF16"),
+                "PERSISTENT_STORAGE_MODE": "LOCAL_LOWBIT_CPU_HISTORY_V2" if v2_storage else ("LOWBIT_STORAGE_BF16_COMPUTE" if corrected_storage else "BF16_FAKE_QUANT"),
+                "GPU_PERSISTENT_KV_OWNER": ("LOCAL_INT8/FP8_E4M3" if v2_group12 or v2_group14 else ("LOCAL_NVFP4/NVFP4" if v2_group13 or v2_group15 else ("INT8/FP8_E4M3" if corrected_group12 or corrected_group14 else ("NVFP4/NVFP4" if corrected_group13 or corrected_group15 else "BF16")))),
+                "GPU_HISTORICAL_PERSISTENT_OWNER": "NONE" if v2_storage else ("LOWBIT" if corrected_storage else "BF16"),
+                "GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES": 0 if v2_storage else None,
                 "TRANSIENT_BF16_DEQUANT_ALLOWED": "YES" if corrected_storage else "NO",
                 "RETRIEVAL_QUERY_MODE": str(getattr(config.model_kwargs, "retrieval_query_mode", "current_q")) if draft_rag_active else "none",
                 "Q_PREV": "NO",
@@ -444,7 +464,7 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             # Re-assert corrected storage contract after per-step trace merge.
             if corrected_storage:
                 runtime_meta.update({
-                    "PERSISTENT_STORAGE_MODE": "LOWBIT_STORAGE_BF16_COMPUTE",
+                    "PERSISTENT_STORAGE_MODE": "LOCAL_LOWBIT_CPU_HISTORY_V2" if v2_storage else "LOWBIT_STORAGE_BF16_COMPUTE",
                     "FINAL_ATTENTION_DTYPE": "bfloat16",
                     "ATTENTION_KERNEL": "BF16",
                     "NATIVE_LOWBIT_KERNEL_USED": "NO",

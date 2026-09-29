@@ -152,6 +152,15 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
         "GPU_PACKED_K_BYTES": 0, "GPU_PACKED_V_BYTES": 0,
         "GPU_PACKED_SCALE_BYTES": 0, "GPU_PACKED_METADATA_BYTES": 0,
         "GPU_KV_BF16_EQUIVALENT_BYTES": 0,
+        "GPU_LOCAL_BF16_EQUIVALENT_BYTES": 0,
+        "GPU_LOCAL_LOWBIT_K_BYTES": 0, "GPU_LOCAL_LOWBIT_V_BYTES": 0,
+        "GPU_LOCAL_PROMOTED_BF16_K_BYTES": 0, "GPU_LOCAL_PROMOTED_BF16_V_BYTES": 0,
+        "GPU_LOCAL_SCALE_BYTES": 0, "GPU_LOCAL_METADATA_BYTES": 0,
+        "GPU_LOCAL_ACTUAL_PERSISTENT_BYTES": 0,
+        "GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES": 0,
+        "GPU_METHOD_PERSISTENT_TOTAL_BYTES": 0,
+        "TRANSIENT_LOCAL_DEQUANT_GPU_PEAK_BYTES": 0,
+        "TRANSIENT_HISTORICAL_FETCH_GPU_PEAK_BYTES": 0,
         "GPU_KV_ACTUAL_PERSISTENT_BYTES": 0,
         "PERSISTENT_STORAGE_MODE": storage_mode,
     }
@@ -167,13 +176,32 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
     for cache in caches or []:
         if not isinstance(cache, dict):
             continue
-        add("GPU_KV_MEASURED_BYTES", cache.get("k"))
-        add("GPU_KV_MEASURED_BYTES", cache.get("v"))
-        out["GPU_LOCAL_BF16_KV_BYTES"] += sum(int(t.untyped_storage().nbytes()) for t in (cache.get("k"), cache.get("v")) if t is not None)
+        store = cache.get("local_lowbit_store")
+        if store is not None:
+            packed = int(store.persistent_bytes())
+            breakdown = store.memory_breakdown()
+            out["GPU_LOCAL_LOWBIT_K_BYTES"] += int(breakdown["lowbit_k"])
+            out["GPU_LOCAL_LOWBIT_V_BYTES"] += int(breakdown["lowbit_v"])
+            out["GPU_LOCAL_PROMOTED_BF16_K_BYTES"] += int(breakdown["promoted_k"])
+            out["GPU_LOCAL_PROMOTED_BF16_V_BYTES"] += int(breakdown["promoted_v"])
+            out["GPU_LOCAL_SCALE_BYTES"] += int(breakdown["scale"])
+            out["GPU_LOCAL_ACTUAL_PERSISTENT_BYTES"] += packed
+            bf16_eq = int(store.max_frames * store.frame_tokens * store.heads * store.head_dim * 2 * 2)
+            out["GPU_LOCAL_BF16_EQUIVALENT_BYTES"] += bf16_eq
+            out["GPU_KV_BF16_EQUIVALENT_BYTES"] += bf16_eq
+            out["GPU_KV_MEASURED_BYTES"] += packed
+        else:
+            add("GPU_KV_MEASURED_BYTES", cache.get("k"))
+            add("GPU_KV_MEASURED_BYTES", cache.get("v"))
+            local_bf16 = sum(int(t.untyped_storage().nbytes()) for t in (cache.get("k"), cache.get("v")) if t is not None)
+            out["GPU_LOCAL_BF16_KV_BYTES"] += local_bf16
+            out["GPU_LOCAL_BF16_EQUIVALENT_BYTES"] += local_bf16
+            out["GPU_KV_BF16_EQUIVALENT_BYTES"] += local_bf16
         archive = cache.get("compressed_history_archive")
         entries = cache.get("compressed_history_entries", [])
         if archive is not None and entries:
-            out["PERSISTENT_STORAGE_MODE"] = "LOWBIT_STORAGE_BF16_COMPUTE"
+            if storage_mode != "LOCAL_LOWBIT_CPU_HISTORY_V2":
+                out["PERSISTENT_STORAGE_MODE"] = "LOWBIT_STORAGE_BF16_COMPUTE"
             out["EVICTED_COMPRESSED_ENTRIES"] += int(cache.get("evicted_compressed_entries", len(entries)))
             for rec in entries:
                 cpu_bytes = int(rec.cpu_persistent_bytes()) if hasattr(rec, "cpu_persistent_bytes") else int(rec.persistent_bytes())
@@ -182,13 +210,8 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
                 shape = getattr(rec, "tensor_shape", None)
                 if shape is not None:
                     out["GPU_KV_BF16_EQUIVALENT_BYTES"] += int(torch.tensor(shape).prod().item()) * 2 * 2
-                kp, vp = getattr(rec, "gpu_k_payload", None), getattr(rec, "gpu_v_payload", None)
-                if kp is not None:
-                    out["GPU_PACKED_K_BYTES"] += _payload_value_bytes(kp)
-                    out["GPU_PACKED_V_BYTES"] += _payload_value_bytes(vp)
-                    out["GPU_PACKED_SCALE_BYTES"] += sum(_object_bytes(_tensor_attr(x, n)) for x in (kp, vp) for n in ("scale_factors", "amax"))
-                    out["GPU_PACKED_SCALE_BYTES"] += _object_bytes(getattr(rec, "gpu_k_meta", None)) + _object_bytes(getattr(rec, "gpu_v_meta", None))
-                    out["GPU_PACKED_METADATA_BYTES"] += 0
+                if getattr(rec, "gpu_k_payload", None) is not None or getattr(rec, "gpu_v_payload", None) is not None:
+                    raise AssertionError("v2 historical GPU packed owner detected")
             out["CPU_COMPRESSED_K_PAYLOAD_BYTES"] = 0
             out["CPU_COMPRESSED_V_PAYLOAD_BYTES"] = 0
             out["CPU_COMPRESSED_SCALE_META_BYTES"] = 0
@@ -228,8 +251,13 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
     out["CPU_KV_MEASURED_GiB"] = out["CPU_KV_MEASURED_BYTES"] / 2**30
     out["GPU_DRAFT_PERSISTENT_GiB"] = out["GPU_DRAFT_PERSISTENT_BYTES"] / 2**30
     out["CPU_DRAFT_PERSISTENT_GiB"] = 0.0
-    out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] = out["GPU_KV_MEASURED_BYTES"] + out["GPU_PACKED_K_BYTES"] + out["GPU_PACKED_V_BYTES"] + out["GPU_PACKED_SCALE_BYTES"] + out["GPU_PACKED_METADATA_BYTES"]
-    out["GPU_KV_BF16_EQUIVALENT_BYTES"] += out["GPU_LOCAL_BF16_KV_BYTES"]
+    out["GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES"] = 0
+    has_v2 = any(isinstance(c, dict) and c.get("local_lowbit_store") is not None for c in (caches or []))
+    if has_v2:
+        out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] = out["GPU_LOCAL_ACTUAL_PERSISTENT_BYTES"]
+    else:
+        out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] = out["GPU_KV_MEASURED_BYTES"] + out["GPU_PACKED_K_BYTES"] + out["GPU_PACKED_V_BYTES"] + out["GPU_PACKED_SCALE_BYTES"] + out["GPU_PACKED_METADATA_BYTES"]
+    out["GPU_METHOD_PERSISTENT_TOTAL_BYTES"] = out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] + out["GPU_DRAFT_PERSISTENT_BYTES"]
     out["GPU_KV_COMPRESSION_RATIO"] = (out["GPU_KV_BF16_EQUIVALENT_BYTES"] / out["GPU_KV_ACTUAL_PERSISTENT_BYTES"]) if out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] else 1.0
     out["KV_COMPRESSION_RATIO"] = out["GPU_KV_COMPRESSION_RATIO"]
     return out

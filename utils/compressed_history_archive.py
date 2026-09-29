@@ -45,21 +45,9 @@ class CompressedHistoryRecord:
         return sum(int(x.untyped_storage().nbytes()) for x in (self.k_payload, self.v_payload))
 
     def gpu_persistent_bytes(self) -> int:
-        total = 0
-        for value in (self.gpu_k_payload, self.gpu_v_payload,
-                      self.gpu_k_meta, self.gpu_v_meta):
-            if value is None:
-                continue
-            if hasattr(value, "untyped_storage"):
-                total += int(value.untyped_storage().nbytes())
-            else:
-                for name in ("values", "scale_factors", "amax"):
-                    item = getattr(value, name, None)
-                    if callable(item) and not isinstance(item, torch.Tensor):
-                        item = item()
-                    if item is not None and hasattr(item, "untyped_storage"):
-                        total += int(item.untyped_storage().nbytes())
-        return total
+        # V2: the archive is CPU BF16 only.  Fetch/dequant materialization is
+        # transient and must never become a persistent GPU history owner.
+        return 0
 
 
 class CompressedHistoryArchive:
@@ -98,39 +86,14 @@ class CompressedHistoryArchive:
         self.last_h2d_calls = 0
         if rec.k_payload.dtype != torch.bfloat16 or rec.v_payload.dtype != torch.bfloat16:
             raise AssertionError("CPU historical archive must remain BF16")
-        if rec.gpu_k_payload is None:
-            from utils.persistent_kv_storage import PersistentHistoryQuantizer
-            if self.mode == "int8_fp8":
-                quantizer = PersistentHistoryQuantizer()
-                # BF16 is transferred first; only the packed tensors and
-                # scale metadata remain as persistent GPU owners.
-                h2d_start = time.perf_counter()
-                k_bf16 = rec.k_payload.to(device=device, dtype=torch.bfloat16)
-                v_bf16 = rec.v_payload.to(device=device, dtype=torch.bfloat16)
-                self.last_h2d_ms = (time.perf_counter() - h2d_start) * 1000.0
-                self.last_h2d_calls = 2
-                rec.gpu_k_payload, rec.gpu_k_meta = quantizer.quantize_k(k_bf16)
-                rec.gpu_v_payload, rec.gpu_v_meta = quantizer.quantize_v(v_bf16)
-                del k_bf16, v_bf16
-            else:
-                from utils.quant import quantize_kv
-                from fouroversix.quantize import QuantizationConfig
-                h2d_start = time.perf_counter()
-                k_bf16 = rec.k_payload.to(device=device, dtype=torch.bfloat16)
-                v_bf16 = rec.v_payload.to(device=device, dtype=torch.bfloat16)
-                self.last_h2d_ms = (time.perf_counter() - h2d_start) * 1000.0
-                self.last_h2d_calls = 2
-                cfg = QuantizationConfig()
-                rec.gpu_k_payload = quantize_kv(k_bf16.reshape(-1, k_bf16.shape[-1]), cfg)
-                rec.gpu_v_payload = quantize_kv(v_bf16.reshape(-1, v_bf16.shape[-1]), cfg)
-                del k_bf16, v_bf16
-        if self.mode == "int8_fp8":
-            from utils.persistent_kv_storage import PersistentHistoryQuantizer
-            quantizer = PersistentHistoryQuantizer()
-            return (quantizer.dequantize_k(rec.gpu_k_payload, rec.gpu_k_meta),
-                    quantizer.dequantize_v(rec.gpu_v_payload, rec.gpu_v_meta))
-        return (rec.gpu_k_payload.dequantize(dtype=torch.bfloat16).reshape(rec.tensor_shape),
-                rec.gpu_v_payload.dequantize(dtype=torch.bfloat16).reshape(rec.tensor_shape))
+        h2d_start = time.perf_counter()
+        k = rec.k_payload.to(device=device, dtype=torch.bfloat16, non_blocking=True)
+        v = rec.v_payload.to(device=device, dtype=torch.bfloat16, non_blocking=True)
+        self.last_h2d_ms = (time.perf_counter() - h2d_start) * 1000.0
+        self.last_h2d_calls = 2
+        # Returned tensors are bounded temporary fetches.  No GPU payload is
+        # attached to the record, so GPU historical persistent bytes remain 0.
+        return k, v
 
     def total_bytes(self) -> int:
         return sum(r.persistent_bytes() for r in self.records)

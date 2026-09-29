@@ -18,7 +18,7 @@ from fouroversix.quantize import QuantizationConfig
 def fake_quantize_kv(k: torch.Tensor, v: torch.Tensor, mode: str):
     if k.dtype != torch.bfloat16 or v.dtype != torch.bfloat16:
         raise TypeError("fake-quant input must be BF16")
-    if mode in {"group12_corrected", "group14_corrected"}:
+    if mode in {"group12_corrected", "group14_corrected", "group12_v2", "group14_v2"}:
         # CPU history has already crossed H2D as BF16.  Quantize only the GPU
         # working operands, then dequantize for the unchanged BF16 attention.
         quantizer = PersistentHistoryQuantizer()
@@ -35,7 +35,7 @@ def fake_quantize_kv(k: torch.Tensor, v: torch.Tensor, mode: str):
             "ARCHIVE_DEQUANT_BEFORE_BF16_ATTENTION": "YES",
             "FINAL_ATTENTION_DTYPE": "bfloat16",
         }
-    if mode in {"group13_corrected", "group15_corrected"}:
+    if mode in {"group13_corrected", "group15_corrected", "group13_v2", "group15_v2"}:
         cfg = QuantizationConfig()
         def one(x):
             shape = x.shape
@@ -132,9 +132,12 @@ def prepare_attention_kv(q, k, v, mode="baseline", sparse_ratio=0.0,
             "CPU_HISTORY_STORAGE_DTYPE": "bf16",
             "FINAL_ATTENTION_DTYPE": "bfloat16",
             "TRANSIENT_BF16_DEQUANT": "NO",
-            "PERSISTENT_STORAGE_MODE": "LOWBIT_STORAGE_BF16_COMPUTE"
+            "PERSISTENT_STORAGE_MODE": "LOCAL_LOWBIT_CPU_HISTORY_V2"
+            if mode in {"group12_v2", "group13_v2", "group14_v2", "group15_v2"}
+            else ("LOWBIT_STORAGE_BF16_COMPUTE"
             if mode in {"group12_corrected", "group13_corrected", "group14_corrected", "group15_corrected"}
             else "BF16_FAKE_QUANT",
+            )
         }
     elif persistent_owner_already_dequantized:
         if k.dtype != torch.bfloat16 or v.dtype != torch.bfloat16:
@@ -152,7 +155,7 @@ def prepare_attention_kv(q, k, v, mode="baseline", sparse_ratio=0.0,
     else:
         k, v, meta = fake_quantize_kv(k, v, mode)
     if sparse_ratio:
-        if mode in {"group14_corrected", "group15_corrected"}:
+        if mode in {"group14_corrected", "group15_corrected", "group14_v2", "group15_v2"}:
             k, v, sparse = route_draftmap(q, k, v, sparse_ratio)
         else:
             k, v, sparse = sparse_retain(q, k, v, sparse_ratio)
