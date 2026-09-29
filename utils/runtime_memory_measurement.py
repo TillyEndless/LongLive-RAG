@@ -136,6 +136,9 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
         "GPU_DRAFT_PERSISTENT_BYTES": 0, "CPU_DRAFT_PERSISTENT_BYTES": 0,
         "TRANSIENT_DEQUANT_GPU_BYTES": 0,
         "TRANSIENT_DEQUANT_GPU_PEAK_BYTES": 0,
+        "TRANSIENT_PROMOTION_GPU_BYTES": 0,
+        "TRANSIENT_PROMOTION_GPU_PEAK_BYTES": 0,
+        "TRANSIENT_BF16_TOTAL_BYTES": 0,
         "TRANSIENT_PREFETCH_GPU_BYTES": 0,
         "TRANSIENT_PREFETCH_GPU_PEAK_BYTES": 0,
         "PREFETCH_REQUESTED_CHUNKS": 0,
@@ -207,6 +210,15 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
             out["TRANSIENT_DEQUANT_GPU_PEAK_BYTES"] = max(
                 out["TRANSIENT_DEQUANT_GPU_PEAK_BYTES"],
                 int(cache.get("transient_dequant_gpu_peak_bytes", 0)),
+            )
+            out["TRANSIENT_PROMOTION_GPU_PEAK_BYTES"] = max(
+                out["TRANSIENT_PROMOTION_GPU_PEAK_BYTES"],
+                int(cache.get("transient_promotion_gpu_peak_bytes", 0)),
+            )
+            out["TRANSIENT_PROMOTION_GPU_BYTES"] += int(cache.get("transient_promotion_gpu_bytes", 0))
+            out["TRANSIENT_BF16_TOTAL_BYTES"] = max(
+                out["TRANSIENT_BF16_TOTAL_BYTES"],
+                out["TRANSIENT_DEQUANT_GPU_PEAK_BYTES"] + out["TRANSIENT_PROMOTION_GPU_PEAK_BYTES"],
             )
             out["TRANSIENT_PREFETCH_GPU_BYTES"] += int(cache.get("prefetch_scheduled_bytes", 0))
             out["TRANSIENT_PREFETCH_GPU_PEAK_BYTES"] = max(out["TRANSIENT_PREFETCH_GPU_PEAK_BYTES"], int(cache.get("prefetch_buffer_peak_bytes", 0)))

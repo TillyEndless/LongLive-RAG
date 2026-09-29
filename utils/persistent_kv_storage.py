@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import torch
+import utils.critical_path_trace as cpt
 
 
 FP8_E4M3 = torch.float8_e4m3fn
@@ -70,9 +71,13 @@ class PersistentHistoryQuantizer:
         padded_tokens = blocks * self.k_block_tokens
         q = torch.nn.functional.pad(k_int8, (0, 0, 0, 0, 0, padded_tokens - tokens))
         scale = k_scale.permute(0, 2, 1).unsqueeze(2).unsqueeze(-1)
-        return (q.float().view(b, blocks, self.k_block_tokens, heads, dim) * scale).view(
+        decoded = (q.float().view(b, blocks, self.k_block_tokens, heads, dim) * scale).view(
             b, padded_tokens, heads, dim
-        )[:, :tokens].to(torch.bfloat16).contiguous()
+        )[:, :tokens]
+        trace = cpt.ACTIVE_TRACE
+        return (trace.measure('BF16_K_MATERIALIZATION_CONTIGUOUS',
+                              lambda: decoded.to(torch.bfloat16).contiguous())
+                if trace else decoded.to(torch.bfloat16).contiguous())
 
     def quantize_v(self, v_bf16: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         if v_bf16.ndim != 4 or v_bf16.dtype != torch.bfloat16:
@@ -86,7 +91,11 @@ class PersistentHistoryQuantizer:
     def dequantize_v(self, v_fp8: torch.Tensor, v_scale: torch.Tensor) -> torch.Tensor:
         if v_fp8.dtype != FP8_E4M3 or v_scale.dtype != torch.float32:
             raise ValueError("invalid V archive dtypes")
-        return (v_fp8.float() * v_scale.unsqueeze(1)).to(torch.bfloat16).contiguous()
+        decoded = v_fp8.float() * v_scale.unsqueeze(1)
+        trace = cpt.ACTIVE_TRACE
+        return (trace.measure('BF16_V_MATERIALIZATION_CONTIGUOUS',
+                              lambda: decoded.to(torch.bfloat16).contiguous())
+                if trace else decoded.to(torch.bfloat16).contiguous())
 
     def archive(
         self, history_id: int, k_bf16: torch.Tensor, v_bf16: torch.Tensor, *, start_token: int

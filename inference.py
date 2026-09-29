@@ -84,11 +84,19 @@ def validate_group_contract(cfg):
            bool(getattr(cfg, "next_layer_prefetch", False)) or bool(getattr(cfg, "hot_cache", False)) or \
            bool(getattr(cfg, "longlive_reuse", False)):
             raise ValueError("Group12--15 must not inherit qprev/FlashFetch/prefetch/hot-cache semantics")
-        ratio = float(getattr(cfg.model_kwargs, "group_sparse_ratio", 0.0) or 0.0)
-        if mode in {"group14_corrected", "group15_corrected"} and not (0.0 < ratio < 1.0):
-            raise ValueError("Groups14/15 require an explicit retained sparse ratio in (0,1)")
-        if mode in {"group12_corrected", "group13_corrected"} and ratio != 0.0:
-            raise ValueError("Groups12/13 must have sparse ratio=0")
+        sparse_ratio = float(getattr(cfg.model_kwargs, "group_sparse_ratio", 0.0) or 0.0)
+        if sparse_ratio != 0.0:
+            raise ValueError("Group12--15 do not use sparse block removal; group_sparse_ratio must be 0")
+        q_sparse_ratio = float(getattr(cfg.model_kwargs, "q_sparse_ratio", 1.0) or 1.0)
+        kv_promotion_ratio = float(getattr(cfg.model_kwargs, "kv_promotion_ratio", getattr(cfg.model_kwargs, "promotion_ratio", 0.0)) or 0.0)
+        if not 0.0 < q_sparse_ratio <= 1.0:
+            raise ValueError("q_sparse_ratio must be in (0,1]")
+        if not 0.0 <= kv_promotion_ratio <= 1.0:
+            raise ValueError("kv_promotion_ratio must be in [0,1]")
+        if mode in {"group12_corrected", "group13_corrected"} and kv_promotion_ratio != 0.0:
+            raise ValueError("Groups12/13 require kv_promotion_ratio=0")
+        if mode in {"group14_corrected", "group15_corrected"} and not (0.0 < q_sparse_ratio <= 1.0):
+            raise ValueError("Groups14/15 require q_sparse_ratio in (0,1]")
     elif group == 11:
         if str(getattr(cfg.model_kwargs, "retrieval_backend", "")) != "draftmap_online":
             raise ValueError("Group11 canonical contract requires retrieval_backend=draftmap_online")
@@ -392,7 +400,13 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 "GROUP14_DRAFTMAP_ACTIVE": "YES" if corrected_group14 else "NO",
                 "GROUP15_DRAFTMAP_ACTIVE": "YES" if corrected_group15 else "NO",
                 "INTERACTION_SPARSE_ROUTING": "YES" if corrected_group14 or corrected_group15 else "NO",
-                "SPARSE_RATIO": float(getattr(config.model_kwargs, "group_sparse_ratio", 0.0)),
+                "SPARSE_RATIO": 0.0,
+                "Q_SPARSE_ENABLED": "YES" if corrected_group14 or corrected_group15 else "NO",
+                "Q_SPARSE_RATIO": float(getattr(config.model_kwargs, "q_sparse_ratio", 1.0)),
+                "PROMOTION_ENABLED": "YES" if corrected_group14 or corrected_group15 else "NO",
+                "PROMOTION_RATIO": float(getattr(config.model_kwargs, "kv_promotion_ratio", getattr(config.model_kwargs, "promotion_ratio", 0.0))),
+                "PROMOTION_SOURCE": str(getattr(config.model_kwargs, "promotion_source", "draftmap")),
+                "MATERIALIZATION_MODE": str(getattr(config.model_kwargs, "materialization_mode", "serial_reference")),
                 "DRAFT_RAG_ACTIVE": "YES" if draft_rag_active else "NO",
                 "CPU_COMPRESSED_HISTORY_ACTIVE": "NO",
                 "CPU_HISTORICAL_BF16_ARCHIVE_ACTIVE": "YES" if draft_rag_active else "NO",
@@ -407,8 +421,14 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 "TRANSIENT_BF16_DEQUANT_ALLOWED": "YES" if corrected_storage else "NO",
                 "RETRIEVAL_QUERY_MODE": str(getattr(config.model_kwargs, "retrieval_query_mode", "current_q")) if draft_rag_active else "none",
                 "Q_PREV": "NO",
-                "FLASH_FETCH": "NO",
-                "NEXT_LAYER_PREFETCH": "YES" if str(getattr(config.model_kwargs, "group11_fetch_mode", "serial_full")) == "next_layer_prefetch" else "NO",
+                "FLASH_FETCH": "YES" if str(getattr(config.model_kwargs, "group11_fetch_mode", "serial_full")) in {"flashfetch_serial", "flashfetch_chunk", "flashfetch_async", "async_double_buffer", "async_stock_flashattn"} else "NO",
+                "FLASH_FETCH_MODE": str(getattr(config.model_kwargs, "flash_fetch_mode", "serial_reference")),
+                "STOCK_FLASHATTN_USED": "YES" if str(getattr(config.model_kwargs, "flash_fetch_mode", "serial_reference")) == "async_stock_flashattn" else "NO",
+                "PINNED_SOURCE": "YES" if str(getattr(config.model_kwargs, "flash_fetch_mode", "serial_reference")) in {"async_double_buffer", "async_stock_flashattn"} else "REFERENCE_PATH",
+                "DEDICATED_FETCH_STREAM": "YES" if str(getattr(config.model_kwargs, "flash_fetch_mode", "serial_reference")) in {"async_double_buffer", "async_stock_flashattn"} else "NO",
+                "DOUBLE_BUFFERED": "YES" if str(getattr(config.model_kwargs, "flash_fetch_mode", "serial_reference")) in {"async_double_buffer", "async_stock_flashattn"} else "NO",
+                "NEXT_LAYER_PREFETCH": "YES" if str(getattr(config.model_kwargs, "group11_fetch_mode", "serial_full")) in {"next_layer_prefetch", "next_layer_prefetch_direct"} else "NO",
+                "GROUP11_FETCH_MODE": str(getattr(config.model_kwargs, "group11_fetch_mode", "serial_full")),
                 "HOT_CACHE": "NO",
                 "LONG_LIVE_REUSE": "NO",
                 "NUM_OUTPUT_LATENT_FRAMES": int(getattr(config, "num_output_frames", 0)),
@@ -430,12 +450,18 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                     "E2E_LATENCY_MS": float(profile.get("E2E_LATENCY_MS", 0.0)),
                     "TRANSFORMER_LATENCY_MS": float(profile.get("TRANSFORMER_LATENCY_MS", 0.0)),
                     "WRAPPER_LATENCY_MS": float(profile.get("WRAPPER_LATENCY_MS", 0.0)),
+                    "NON_TRANSFORMER_E2E_MS": float(profile.get("NON_TRANSFORMER_E2E_MS", 0.0)),
+                    "SELF_ATTN_WRAPPER_MS": (None if profile.get("SELF_ATTN_WRAPPER_MS") is None
+                                              else float(profile.get("SELF_ATTN_WRAPPER_MS"))),
                     "EXPOSED_H2D_MS": float(profile.get("EXPOSED_H2D_MS", 0.0)),
                     "EXPOSED_H2D_CALLS": int(profile.get("EXPOSED_H2D_CALLS", 0)),
                     "RUNTIME_INSTRUMENTATION_VERSION": str(profile.get("RUNTIME_INSTRUMENTATION_VERSION", "v1")),
                     "E2E_LATENCY_S": float(profile.get("E2E_LATENCY_MS", 0.0)) / 1000.0,
                     "TRANSFORMER_LATENCY_S": float(profile.get("TRANSFORMER_LATENCY_MS", 0.0)) / 1000.0,
                     "WRAPPER_LATENCY_S": float(profile.get("WRAPPER_LATENCY_MS", 0.0)) / 1000.0,
+                    "NON_TRANSFORMER_E2E_S": float(profile.get("NON_TRANSFORMER_E2E_MS", 0.0)) / 1000.0,
+                    "SELF_ATTN_WRAPPER_S": (None if profile.get("SELF_ATTN_WRAPPER_MS") is None
+                                             else float(profile.get("SELF_ATTN_WRAPPER_MS")) / 1000.0),
                     "EXPOSED_H2D_S": float(profile.get("EXPOSED_H2D_MS", 0.0)) / 1000.0,
                     "UNIFIED_LATENCY_PROFILE": profile.get("UNIFIED_LATENCY_PROFILE", {
                         "enabled": False, "records": [], "synchronization": "none"
