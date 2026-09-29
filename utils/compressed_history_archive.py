@@ -25,13 +25,6 @@ class CompressedHistoryRecord:
     k_meta: Any = None
     v_meta: Any = None
     tensor_shape: tuple[int, int, int, int] | None = None
-    # GPU-owned low-bit representation. These are populated lazily on the
-    # first selected fetch and remain the long-lived owner thereafter.
-    gpu_k_payload: Any = None
-    gpu_v_payload: Any = None
-    gpu_k_meta: Any = None
-    gpu_v_meta: Any = None
-
     def persistent_bytes(self) -> int:
         total = 0
         values = []

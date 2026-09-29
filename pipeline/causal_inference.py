@@ -503,6 +503,12 @@ class CausalInferencePipeline(torch.nn.Module):
                 "local_end_index": torch.tensor([0], dtype=torch.long, device=device),
                 "cpu_k_frames": [],
                 "cpu_v_frames": [],
+                # Authoritative CPU BF16 copies of the resident local window.
+                # These are only used for transient Group14/15 promotion;
+                # they are never counted as GPU persistent KV.
+                "cpu_local_k_frames": [],
+                "cpu_local_v_frames": [],
+                "frame_seq_length": int(self.frame_seq_length),
                 "gpu_draft_k_frames": [],
                 "local_draft_k_frames": [],
                 "compressed_history_archive": (

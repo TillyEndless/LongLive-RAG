@@ -30,6 +30,7 @@ from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, log
 
 from utils.debug_option import DEBUG
 from utils.h200_group_runtime import prepare_attention_kv
+from utils.attention_fetch_plan import make_plan, submit as submit_fetch, wait as wait_fetch
 from utils.unified_latency_profiler import UnifiedLatencyProfiler
 
 # wan 1.3B model has a weird channel / head configurations and require max-autotune to work with flexattention
@@ -188,6 +189,67 @@ class CausalWanSelfAttention(nn.Module):
             z_v = torch.zeros_like(z_k)
             k, v = torch.cat((k, z_k), dim=1), torch.cat((v, z_v), dim=1)
         return k, v
+
+    @staticmethod
+    def _v2_cpu_local_insert(kv_cache, start_frame, new_k, new_v, max_frames):
+        """Maintain authoritative CPU BF16 copies for transient promotion."""
+        ks = list(kv_cache.setdefault("cpu_local_k_frames", [None] * max_frames))
+        vs = list(kv_cache.setdefault("cpu_local_v_frames", [None] * max_frames))
+        while len(ks) < max_frames:
+            ks.append(None); vs.append(None)
+        # The caller passes whole-frame tensors; the cache records frame size.
+        frame_tokens = int(kv_cache.get("frame_seq_length", new_k.shape[1]))
+        for i in range(int(new_k.shape[1] // frame_tokens)):
+            pos = int(start_frame) + i
+            if 0 <= pos < max_frames:
+                ks[pos] = new_k[:, i * frame_tokens:(i + 1) * frame_tokens].detach().to("cpu", torch.bfloat16).contiguous()
+                vs[pos] = new_v[:, i * frame_tokens:(i + 1) * frame_tokens].detach().to("cpu", torch.bfloat16).contiguous()
+        kv_cache["cpu_local_k_frames"], kv_cache["cpu_local_v_frames"] = ks, vs
+
+    def _v2_unified_fetch(self, kv_cache, memory_indices, device):
+        """Plan history retrieval and local promotion before one wait."""
+        if kv_cache is None or memory_indices is None:
+            return None
+        archive = kv_cache.get("compressed_history_archive")
+        entries = kv_cache.get("compressed_history_entries", [])
+        history_ids = [int(x) for x in memory_indices[0].detach().cpu().tolist()]
+        history_sources = {}
+        if archive is not None:
+            for idx in history_ids:
+                if 0 <= idx < len(entries):
+                    rec = entries[idx]
+                    history_sources[idx] = (rec.k_payload, rec.v_payload)
+        promotion_ids = [int(x) for x in kv_cache.get("local_promoted_ids", [])]
+        local_ks = kv_cache.get("cpu_local_k_frames", [])
+        local_vs = kv_cache.get("cpu_local_v_frames", [])
+        promotion_sources = {
+            idx: (local_ks[idx], local_vs[idx])
+            for idx in promotion_ids
+            if idx < len(local_ks) and idx < len(local_vs)
+            and local_ks[idx] is not None and local_vs[idx] is not None
+        }
+        plan = make_plan(history_ids, list(promotion_sources), history_sources, promotion_sources)
+        handle = wait_fetch(submit_fetch(plan, device), device)
+        kv_cache["_v2_unified_fetch_handle"] = handle
+        kv_cache["_v2_fetch_plan_meta"] = {
+            "history_ids": history_ids,
+            "promotion_ids": list(promotion_sources),
+            "history_bytes": handle.history_bytes,
+            "promotion_bytes": handle.promotion_bytes,
+            "physical_copy_count": handle.physical_copy_count,
+            "host_enqueue_s": handle.host_enqueue_s,
+            "exposed_wait_s": handle.exposed_wait_s,
+            "cuda_work_s": handle.cuda_work_s,
+        }
+        if hasattr(self, "group_runtime_trace"):
+            self.group_runtime_trace.append({
+                "V2_FETCH_PLAN": dict(kv_cache["_v2_fetch_plan_meta"]),
+                "HISTORY_SELECTED_CHUNKS": history_ids,
+                "LOCAL_PROMOTED_CHUNKS": list(promotion_sources),
+                "HISTORY_AND_PROMOTION_PLANNED_TOGETHER": "YES",
+                "MANDATORY_SERIAL_FETCH_WAIT": "NO",
+            })
+        return handle
 
     def _online_memory_indices(self, query, kv_cache, layer_index, frame_seqlen, current_start=0):
         if self.retrieval_backend != "draftmap_online" or self.memory_size <= 0:
@@ -802,6 +864,19 @@ class CausalWanSelfAttention(nn.Module):
                     cpu_k_list = compressed_entries if compressed_entries else kv_cache.get("cpu_k_frames", [])
                     cpu_v_list = kv_cache.get("cpu_v_frames", [])
                     archive = kv_cache.get("compressed_history_archive")
+                    v2_handle = None
+                    if self.group_runtime_mode in {"group12_v2", "group13_v2", "group14_v2", "group15_v2"}:
+                        v2_handle = self._v2_unified_fetch(kv_cache, memory_indices, q.device)
+                        # Local promotion is a transient CPU-BF16 overlay.  It
+                        # replaces the corresponding local low-bit materialized
+                        # tokens exactly once; the persistent owner is untouched.
+                        if v2_handle is not None:
+                            for local_id, (pk, pv) in v2_handle.promotion.items():
+                                start = int(local_id) * int(frame_seqlen)
+                                end = start + int(frame_seqlen)
+                                if end <= temp_k.shape[1]:
+                                    temp_k[:, start:end] = pk.to(q.device, dtype=temp_k.dtype)
+                                    temp_v[:, start:end] = pv.to(q.device, dtype=temp_v.dtype)
                     lookup_ms = (time.perf_counter() - lookup_start) * 1000.0
                     
                     if len(cpu_k_list) > 0:
@@ -819,8 +894,11 @@ class CausalWanSelfAttention(nn.Module):
                                 prefetched = None
                                 cache_hit = False
                                 if archive is not None:
-                                    rec = compressed_entries[int(k_idx)]
-                                    src_k, src_v = archive.fetch(rec, device)
+                                    if v2_handle is not None and int(k_idx) in v2_handle.history:
+                                        src_k, src_v = v2_handle.history[int(k_idx)]
+                                    else:
+                                        rec = compressed_entries[int(k_idx)]
+                                        src_k, src_v = archive.fetch(rec, device)
                                     if self.group11_profile is not None:
                                         self.group11_profile["EXPOSED_H2D_MS"] = float(self.group11_profile.get("EXPOSED_H2D_MS", 0.0)) + float(getattr(archive, "last_h2d_ms", 0.0))
                                         self.group11_profile["EXPOSED_H2D_CALLS"] = int(self.group11_profile.get("EXPOSED_H2D_CALLS", 0)) + int(getattr(archive, "last_h2d_calls", 0))
@@ -1202,6 +1280,21 @@ class CausalHead(nn.Module):
 
 
 class CausalWanModel(ModelMixin, ConfigMixin):
+    @staticmethod
+    def _v2_cpu_local_insert(kv_cache, start_frame, new_k, new_v, max_frames):
+        """Maintain CPU BF16 copies used only for transient promotion."""
+        ks = list(kv_cache.setdefault("cpu_local_k_frames", [None] * max_frames))
+        vs = list(kv_cache.setdefault("cpu_local_v_frames", [None] * max_frames))
+        while len(ks) < max_frames:
+            ks.append(None); vs.append(None)
+        frame_tokens = int(kv_cache.get("frame_seq_length", new_k.shape[1]))
+        for i in range(int(new_k.shape[1] // frame_tokens)):
+            pos = int(start_frame) + i
+            if 0 <= pos < max_frames:
+                ks[pos] = new_k[:, i * frame_tokens:(i + 1) * frame_tokens].detach().to("cpu", torch.bfloat16).contiguous()
+                vs[pos] = new_v[:, i * frame_tokens:(i + 1) * frame_tokens].detach().to("cpu", torch.bfloat16).contiguous()
+        kv_cache["cpu_local_k_frames"], kv_cache["cpu_local_v_frames"] = ks, vs
+
     r"""
     Wan diffusion backbone supporting both text-to-video and image-to-video.
     """
@@ -1554,6 +1647,23 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                             num_rolled_tokens // store.frame_tokens,
                             write_start_index // store.frame_tokens,
                             new_k, new_v)
+                    if store is not None:
+                        old_ks = list(cache.get("cpu_local_k_frames", []))
+                        old_vs = list(cache.get("cpu_local_v_frames", []))
+                        max_frames = int(store.max_frames)
+                        sink_frames = int(sink_tokens // store.frame_tokens)
+                        evicted_frames = int(num_evicted_tokens // store.frame_tokens)
+                        rolled_frames = int(num_rolled_tokens // store.frame_tokens)
+                        cache["cpu_local_k_frames"] = (
+                            old_ks[:sink_frames] +
+                            old_ks[sink_frames + evicted_frames:sink_frames + evicted_frames + rolled_frames] +
+                            [None] * max(0, max_frames - sink_frames - rolled_frames))[:max_frames]
+                        cache["cpu_local_v_frames"] = (
+                            old_vs[:sink_frames] +
+                            old_vs[sink_frames + evicted_frames:sink_frames + evicted_frames + rolled_frames] +
+                            [None] * max(0, max_frames - sink_frames - rolled_frames))[:max_frames]
+                        self._v2_cpu_local_insert(cache, write_start_index // store.frame_tokens,
+                                                  new_k, new_v, max_frames)
                     
                     if "evicted_k_frames" in update_info and update_info["evicted_k_frames"]:
                         archive = cache.get("compressed_history_archive")
@@ -1583,6 +1693,8 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                             cache["v"][:, write_start_index:write_end_index] = new_v
                     else:
                         store.insert_frames(write_start_index // store.frame_tokens, new_k, new_v)
+                        self._v2_cpu_local_insert(cache, write_start_index // store.frame_tokens,
+                                                  new_k, new_v, int(store.max_frames))
 
                 new_k_frames = update_info.get("new_draft_k_frames", [])
                 if update_info["action"] == "roll_and_insert":
@@ -1613,7 +1725,9 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                             scores.append(0.0)
                         else:
                             scores.append(float(draft.float().abs().mean().item()))
-                    promoted = store.promote_top(scores, promotion_ratio)
+                    # v2 promotion is a transient CPU-BF16 overlay.  Do not
+                    # mutate the persistent low-bit owner.
+                    promoted = store.select_top(scores, promotion_ratio)
                     cache["local_promoted_ids"] = promoted
                     cache["local_promotion_ratio"] = promotion_ratio
             

@@ -1,0 +1,46 @@
+{
+  "base_commit": "ae1c2faa8139a065139fbc0d4164565c64706e69",
+  "canonical10_run": false,
+  "quality_evaluation_run": false,
+  "static_tests_pass": true,
+  "minimal_smoke_pass": true,
+  "gpu_historical_persistent_kv_bytes": 0,
+  "promotion_modifies_persistent_owner": false,
+  "group14_v2": {
+    "history_selected_chunks_sample": [5, 11, 1, 3, 9, 7],
+    "local_promoted_chunks_sample": [5, 4, 3, 2, 1, 7],
+    "history_fetch_bytes": 57507840,
+    "promotion_fetch_bytes": 57507840,
+    "physical_h2d_copy_count": 24,
+    "history_and_promotion_planned_together": true,
+    "mandatory_serial_fetch_wait": false,
+    "final_attention_dtype": "bfloat16",
+    "native_lowbit_kernel": false
+  },
+  "group15_v2": {
+    "history_selected_chunks_sample": [1, 5, 11, 3, 2, 9],
+    "local_promoted_chunks_sample": [5, 4, 3, 2, 1, 8],
+    "history_fetch_bytes": 57507840,
+    "promotion_fetch_bytes": 57507840,
+    "physical_h2d_copy_count": 24,
+    "history_and_promotion_planned_together": true,
+    "mandatory_serial_fetch_wait": false,
+    "final_attention_dtype": "bfloat16",
+    "native_lowbit_kernel": false
+  },
+  "serial_vs_unified_ab": {
+    "group14_v2": {
+      "serial_exposed_fetch_s": 0.1778566837,
+      "unified_exposed_fetch_s": 0.0000509005,
+      "max_abs_error": 0.0,
+      "numerically_equal": true
+    },
+    "group15_v2": {
+      "serial_exposed_fetch_s": 0.0003233682,
+      "unified_exposed_fetch_s": 0.0000297576,
+      "max_abs_error": 0.0,
+      "numerically_equal": true
+    },
+    "is_e2e_speedup": false
+  }
+}

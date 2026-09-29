@@ -491,6 +491,15 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                     "PREFETCH_CORRECTION_BYTES": int(c0.get("prefetch_correction_bytes", 0)),
                     "PREFETCH_WASTED_BYTES": int(c0.get("prefetch_wasted_bytes", 0)),
                     "TRANSIENT_PREFETCH_GPU_PEAK_BYTES": int(c0.get("prefetch_buffer_peak_bytes", 0)),
+                    "V2_FETCH_PLAN": c0.get("_v2_fetch_plan_meta", {}),
+                    "HISTORY_SELECTED_CHUNKS": c0.get("_v2_fetch_plan_meta", {}).get("history_ids", []),
+                    "LOCAL_PROMOTED_CHUNKS": c0.get("_v2_fetch_plan_meta", {}).get("promotion_ids", []),
+                    "HISTORY_FETCH_BYTES": int(c0.get("_v2_fetch_plan_meta", {}).get("history_bytes", 0)),
+                    "PROMOTION_FETCH_BYTES": int(c0.get("_v2_fetch_plan_meta", {}).get("promotion_bytes", 0)),
+                    "PHYSICAL_H2D_COPY_COUNT": int(c0.get("_v2_fetch_plan_meta", {}).get("physical_copy_count", 0)),
+                    "H2D_HOST_ENQUEUE_S": float(c0.get("_v2_fetch_plan_meta", {}).get("host_enqueue_s", 0.0)),
+                    "H2D_EXPOSED_WAIT_S": float(c0.get("_v2_fetch_plan_meta", {}).get("exposed_wait_s", 0.0)),
+                    "H2D_CUDA_WORK_S": float(c0.get("_v2_fetch_plan_meta", {}).get("cuda_work_s", 0.0)),
                 })
                 with open(output_path.replace(".mp4", "_runtime.json"), "w") as f:
                     json.dump(runtime_meta, f, indent=2)

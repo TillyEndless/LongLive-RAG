@@ -18,7 +18,8 @@ class _Slot:
     k: object
     v: object
     tokens: int
-    promoted: bool = False
+    cpu_k: torch.Tensor | None = None
+    cpu_v: torch.Tensor | None = None
 
 
 class LocalLowbitKVStore:
@@ -52,14 +53,16 @@ class LocalLowbitKVStore:
             kq, ks = self._q.quantize_k(k)
             vq, vs = self._q.quantize_v(v)
             return _Slot((kq.contiguous(), ks.contiguous()),
-                         (vq.contiguous(), vs.contiguous()), self.frame_tokens)
+                         (vq.contiguous(), vs.contiguous()), self.frame_tokens,
+                         k.detach().to("cpu", dtype=torch.bfloat16).contiguous(),
+                         v.detach().to("cpu", dtype=torch.bfloat16).contiguous())
         kq = quantize_kv(k.reshape(-1, self.head_dim), self._fp4_config)
         vq = quantize_kv(v.reshape(-1, self.head_dim), self._fp4_config)
-        return _Slot(kq, vq, self.frame_tokens)
+        return _Slot(kq, vq, self.frame_tokens,
+                     k.detach().to("cpu", dtype=torch.bfloat16).contiguous(),
+                     v.detach().to("cpu", dtype=torch.bfloat16).contiguous())
 
     def _decode(self, slot: _Slot) -> tuple[torch.Tensor, torch.Tensor]:
-        if slot.promoted:
-            return slot.k, slot.v
         if self.mode == "int8_fp8":
             kq, ks = slot.k
             vq, vs = slot.v
@@ -81,21 +84,41 @@ class LocalLowbitKVStore:
                 v[:, i * self.frame_tokens:(i + 1) * self.frame_tokens])
 
     def promote_top(self, scores: list[float], ratio: float) -> list[int]:
-        """Promote local slots using the existing local draft importance signal."""
+        """Return promotion IDs without mutating the low-bit owner."""
         active = [i for i, slot in enumerate(self.slots) if slot is not None]
         count = max(0, min(len(active), int(round(len(active) * float(ratio)))))
         if count == 0:
             return []
         ranked = sorted(active, key=lambda i: (float(scores[i]) if i < len(scores) else 0.0, i), reverse=True)
-        promoted = []
-        for i in ranked[:count]:
-            slot = self.slots[i]
-            if slot is None or slot.promoted:
-                continue
-            k, v = self._decode(slot)
-            self.slots[i] = _Slot(k.detach().contiguous(), v.detach().contiguous(), self.frame_tokens, True)
-            promoted.append(i)
-        return promoted
+        return ranked[:count]
+
+    def select_top(self, scores: list[float], ratio: float) -> list[int]:
+        """Return local slot IDs without changing persistent ownership.
+
+        This is the v2 promotion policy primitive.  The caller fetches the
+        authoritative BF16 copy from the CPU archive for the returned IDs.
+        """
+        active = [i for i, slot in enumerate(self.slots) if slot is not None]
+        count = max(0, min(len(active), int(round(len(active) * float(ratio)))))
+        ranked = sorted(active, key=lambda i: (float(scores[i]) if i < len(scores) else 0.0, i), reverse=True)
+        return ranked[:count]
+
+    def select_by_query(self, query: torch.Tensor, draft_frames: list[torch.Tensor],
+                        ratio: float) -> list[int]:
+        """Select local promotion IDs from current Q and local Draft-K."""
+        active = [i for i, slot in enumerate(self.slots) if slot is not None]
+        count = max(0, min(len(active), int(round(len(active) * float(ratio)))))
+        if count == 0 or query.numel() == 0:
+            return []
+        q = query.float().mean(dim=1)
+        scored = []
+        for i in active:
+            d = draft_frames[i] if i < len(draft_frames) else None
+            score = float("-inf") if d is None else float(
+                (q * d.to(device=query.device, dtype=torch.float32).mean(dim=1)).mean().item())
+            scored.append((score, -i, i))
+        scored.sort(reverse=True)
+        return [x[2] for x in scored[:count]]
 
     def roll_and_insert(self, sink_frames: int, evicted_frames: int,
                         rolled_frames: int, write_start_frame: int,
@@ -106,12 +129,26 @@ class LocalLowbitKVStore:
                       [None] * max(0, self.max_frames - sink_frames - rolled_frames))[:self.max_frames]
         self.insert_frames(write_start_frame, new_k, new_v)
 
-    def materialize(self) -> tuple[torch.Tensor, torch.Tensor]:
+    def materialize(self, promoted_ids: set[int] | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+        """Materialize BF16 working tensors; promotion is call-local only."""
+        promoted_ids = set() if promoted_ids is None else {int(x) for x in promoted_ids}
+        self.last_materialize_meta = {"promoted_ids": [], "promotion_fetch_bytes": 0,
+                                      "dequant_ids": []}
         ks, vs = [], []
-        for slot in self.slots:
+        for i, slot in enumerate(self.slots):
             if slot is None:
                 break
-            k, v = self._decode(slot)
+            if i in promoted_ids:
+                if slot.cpu_k is None or slot.cpu_v is None:
+                    raise RuntimeError(f"missing CPU BF16 authority for local slot {i}")
+                k = slot.cpu_k.to(self.device, dtype=self.dtype, non_blocking=True)
+                v = slot.cpu_v.to(self.device, dtype=self.dtype, non_blocking=True)
+                self.last_materialize_meta["promoted_ids"].append(i)
+                self.last_materialize_meta["promotion_fetch_bytes"] += int(
+                    slot.cpu_k.untyped_storage().nbytes() + slot.cpu_v.untyped_storage().nbytes())
+            else:
+                k, v = self._decode(slot)
+                self.last_materialize_meta["dequant_ids"].append(i)
             ks.append(k)
             vs.append(v)
         if not ks:
@@ -125,9 +162,7 @@ class LocalLowbitKVStore:
         for slot in self.slots:
             if slot is None:
                 continue
-            if slot.promoted:
-                values = (slot.k, slot.v)
-            elif isinstance(slot.k, tuple):
+            if isinstance(slot.k, tuple):
                 values = slot.k + slot.v
             else:
                 values = (
@@ -143,10 +178,6 @@ class LocalLowbitKVStore:
                "scale": 0, "metadata": 0}
         for slot in self.slots:
             if slot is None:
-                continue
-            if slot.promoted:
-                out["promoted_k"] += int(slot.k.untyped_storage().nbytes())
-                out["promoted_v"] += int(slot.v.untyped_storage().nbytes())
                 continue
             values_k = slot.k if isinstance(slot.k, tuple) else (slot.k.values, slot.k.scale_factors, slot.k.amax)
             values_v = slot.v if isinstance(slot.v, tuple) else (slot.v.values, slot.v.scale_factors, slot.v.amax)

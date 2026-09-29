@@ -219,6 +219,13 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
             add("CPU_KV_MEASURED_BYTES", tensor)
         for tensor in cache.get("cpu_v_frames", []):
             add("CPU_KV_MEASURED_BYTES", tensor)
+        # v2 local promotion source: authoritative CPU BF16 copies of the
+        # resident local window.  Deduplication in add() prevents overlap with
+        # any archive tensor while keeping CPU accounting truthful.
+        for tensor in cache.get("cpu_local_k_frames", []):
+            add("CPU_KV_MEASURED_BYTES", tensor)
+        for tensor in cache.get("cpu_local_v_frames", []):
+            add("CPU_KV_MEASURED_BYTES", tensor)
         for tensor in cache.get("gpu_draft_k_frames", []):
             add("GPU_DRAFT_PERSISTENT_BYTES", tensor)
     # Cache-local counters are per attention cache; do not accidentally read
