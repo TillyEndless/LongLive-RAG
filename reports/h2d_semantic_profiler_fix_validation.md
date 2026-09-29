@@ -65,3 +65,17 @@ STATIC_TESTS_PASS=YES
 INFERENCE_RERUN=NO
 LATENCY_RERUN=NO
 CANONICAL10_RERUN=NO
+
+## Persistent-KV peak validation
+
+A minimal one-case Group14 and Group15 profile-only smoke passed. No canonical10
+quality or latency rerun was performed.
+
+| Variant | Persistent current GiB | Persistent peak GiB | Historical resident peak GiB | Draft+KV method peak GiB | Dequant peak GiB | Promotion peak GiB | Process allocated peak GiB | Process reserved peak GiB |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Group14 | 5.4399 | 5.4399 | 2.2230 | 5.6716 | 0.0089 | 0.0089 | 24.44 | 28.55 |
+| Group15 | 4.6688 | 4.6688 | 1.4538 | 4.8990 | 0.0089 | 0.0089 | 23.75 | 28.97 |
+
+The smoke workload was monotonically resident, so current and peak are equal in
+these two cases. The peak tracker is updated after persistent-owner state
+changes and preserves the peak if later eviction lowers current occupancy.

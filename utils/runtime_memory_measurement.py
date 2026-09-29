@@ -117,10 +117,10 @@ def persistent_cache_memory(caches):
     return out
 
 
-__all__ = ["persistent_cache_memory"]
+__all__ = ["persistent_cache_memory", "runtime_inference_memory", "update_persistent_kv_peak"]
 
 
-def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
+def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT", _update_peak=True):
     """Measure the actual cache owners used by the H200 inference path."""
     seen = set()
     out = {
@@ -156,6 +156,17 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
         "GPU_PACKED_SCALE_BYTES": 0, "GPU_PACKED_METADATA_BYTES": 0,
         "GPU_KV_BF16_EQUIVALENT_BYTES": 0,
         "GPU_KV_ACTUAL_PERSISTENT_BYTES": 0,
+        "GPU_LOCAL_PERSISTENT_KV_BYTES": 0,
+        "GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES": 0,
+        "GPU_HISTORICAL_PERSISTENT_CURRENT_BYTES": 0,
+        "GPU_HISTORICAL_PERSISTENT_PEAK_BYTES": 0,
+        "GPU_KV_PERSISTENT_PEAK_BYTES": 0,
+        "DRAFT_GPU_PERSISTENT_BYTES": 0,
+        "GPU_METHOD_PERSISTENT_BYTES": 0,
+        "GPU_METHOD_PERSISTENT_PEAK_BYTES": 0,
+        "TRANSIENT_HISTORICAL_GPU_PEAK_BYTES": 0,
+        "PEAK_GPU_ALLOCATED_BYTES": 0,
+        "PEAK_GPU_RESERVED_BYTES": 0,
         "PERSISTENT_STORAGE_MODE": storage_mode,
     }
     def add(name, tensor):
@@ -240,8 +251,97 @@ def runtime_inference_memory(caches, model, storage_mode="BF16_FAKE_QUANT"):
     out["CPU_KV_MEASURED_GiB"] = out["CPU_KV_MEASURED_BYTES"] / 2**30
     out["GPU_DRAFT_PERSISTENT_GiB"] = out["GPU_DRAFT_PERSISTENT_BYTES"] / 2**30
     out["CPU_DRAFT_PERSISTENT_GiB"] = 0.0
-    out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] = out["GPU_KV_MEASURED_BYTES"] + out["GPU_PACKED_K_BYTES"] + out["GPU_PACKED_V_BYTES"] + out["GPU_PACKED_SCALE_BYTES"] + out["GPU_PACKED_METADATA_BYTES"]
+    out["GPU_LOCAL_PERSISTENT_KV_BYTES"] = out["GPU_LOCAL_BF16_KV_BYTES"]
+    out["GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES"] = (
+        out["GPU_PACKED_K_BYTES"] + out["GPU_PACKED_V_BYTES"] +
+        out["GPU_PACKED_SCALE_BYTES"] + out["GPU_PACKED_METADATA_BYTES"]
+    )
+    out["GPU_HISTORICAL_PERSISTENT_CURRENT_BYTES"] = out["GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES"]
+    out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] = (
+        out["GPU_LOCAL_PERSISTENT_KV_BYTES"] +
+        out["GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES"]
+    )
+    out["DRAFT_GPU_PERSISTENT_BYTES"] = out["GPU_DRAFT_PERSISTENT_BYTES"]
+    out["GPU_METHOD_PERSISTENT_BYTES"] = (
+        out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] + out["DRAFT_GPU_PERSISTENT_BYTES"]
+    )
+    stored_peak = max(
+        [int(cache.get("GPU_KV_PERSISTENT_PEAK_BYTES", 0))
+         for cache in (caches or []) if isinstance(cache, dict)] or [0]
+    )
+    stored_hist_peak = max(
+        [int(cache.get("GPU_HISTORICAL_PERSISTENT_PEAK_BYTES", 0))
+         for cache in (caches or []) if isinstance(cache, dict)] or [0]
+    )
+    stored_method_peak = max(
+        [int(cache.get("GPU_METHOD_PERSISTENT_PEAK_BYTES", 0))
+         for cache in (caches or []) if isinstance(cache, dict)] or [0]
+    )
+    out["GPU_KV_PERSISTENT_PEAK_BYTES"] = max(out["GPU_KV_ACTUAL_PERSISTENT_BYTES"], stored_peak)
+    out["GPU_HISTORICAL_PERSISTENT_PEAK_BYTES"] = max(
+        out["GPU_HISTORICAL_PERSISTENT_CURRENT_BYTES"], stored_hist_peak
+    )
+    out["GPU_METHOD_PERSISTENT_PEAK_BYTES"] = max(
+        out["GPU_METHOD_PERSISTENT_BYTES"], stored_method_peak
+    )
+    out["TRANSIENT_HISTORICAL_GPU_PEAK_BYTES"] = max(
+        out["TRANSIENT_DEQUANT_GPU_PEAK_BYTES"],
+        out["TRANSIENT_PROMOTION_GPU_PEAK_BYTES"],
+    )
+    if torch.cuda.is_available():
+        out["PEAK_GPU_ALLOCATED_BYTES"] = int(torch.cuda.max_memory_allocated())
+        out["PEAK_GPU_RESERVED_BYTES"] = int(torch.cuda.max_memory_reserved())
     out["GPU_KV_BF16_EQUIVALENT_BYTES"] += out["GPU_LOCAL_BF16_KV_BYTES"]
-    out["GPU_KV_COMPRESSION_RATIO"] = (out["GPU_KV_BF16_EQUIVALENT_BYTES"] / out["GPU_KV_ACTUAL_PERSISTENT_BYTES"]) if out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] else 1.0
+    out["GPU_KV_COMPRESSION_RATIO"] = (
+        out["GPU_KV_BF16_EQUIVALENT_BYTES"] / out["GPU_KV_ACTUAL_PERSISTENT_BYTES"]
+        if out["GPU_KV_ACTUAL_PERSISTENT_BYTES"] else 1.0
+    )
     out["KV_COMPRESSION_RATIO"] = out["GPU_KV_COMPRESSION_RATIO"]
+    out["KV_COMPRESSION_AT_PERSISTENT_PEAK"] = (
+        out["GPU_KV_BF16_EQUIVALENT_BYTES"] / out["GPU_KV_PERSISTENT_PEAK_BYTES"]
+        if out["GPU_KV_PERSISTENT_PEAK_BYTES"] else "NOT_AVAILABLE"
+    )
+    out["GPU_KV_PERSISTENT_MEAN_VALID"] = True
+    out["GPU_KV_PERSISTENT_PEAK_VALID"] = bool(stored_peak or out["GPU_KV_ACTUAL_PERSISTENT_BYTES"])
+    out["TRANSIENT_PEAK_VALID"] = bool(
+        out["TRANSIENT_DEQUANT_GPU_PEAK_BYTES"] or out["TRANSIENT_PROMOTION_GPU_PEAK_BYTES"]
+    )
+    out["PROCESS_GPU_PEAK_VALID"] = bool(torch.cuda.is_available())
     return out
+
+
+def update_persistent_kv_peak(caches, model=None):
+    """Update current/peak persistent-owner counters without CUDA synchronization.
+
+    The authoritative owner accounting is reused; no allocator snapshot or
+    nvidia-smi query occurs in the hot path.
+    """
+    measurement = runtime_inference_memory(caches, model, _update_peak=False)
+    current = int(measurement["GPU_KV_ACTUAL_PERSISTENT_BYTES"])
+    historical = int(measurement["GPU_HISTORICAL_PERSISTENT_CURRENT_BYTES"])
+    method = int(measurement["GPU_METHOD_PERSISTENT_BYTES"])
+    if caches:
+        target = next((cache for cache in caches if isinstance(cache, dict)), None)
+        if target is not None:
+            target["GPU_KV_PERSISTENT_PEAK_BYTES"] = max(
+                int(target.get("GPU_KV_PERSISTENT_PEAK_BYTES", 0)), current
+            )
+            target["GPU_HISTORICAL_PERSISTENT_PEAK_BYTES"] = max(
+                int(target.get("GPU_HISTORICAL_PERSISTENT_PEAK_BYTES", 0)), historical
+            )
+            target["GPU_METHOD_PERSISTENT_PEAK_BYTES"] = max(
+                int(target.get("GPU_METHOD_PERSISTENT_PEAK_BYTES", 0)), method
+            )
+    measurement["GPU_KV_PERSISTENT_PEAK_BYTES"] = max(
+        current, int(next((cache.get("GPU_KV_PERSISTENT_PEAK_BYTES", 0)
+                           for cache in caches if isinstance(cache, dict)), 0))
+    )
+    measurement["GPU_HISTORICAL_PERSISTENT_PEAK_BYTES"] = max(
+        historical, int(next((cache.get("GPU_HISTORICAL_PERSISTENT_PEAK_BYTES", 0)
+                              for cache in caches if isinstance(cache, dict)), 0))
+    )
+    measurement["GPU_METHOD_PERSISTENT_PEAK_BYTES"] = max(
+        method, int(next((cache.get("GPU_METHOD_PERSISTENT_PEAK_BYTES", 0)
+                          for cache in caches if isinstance(cache, dict)), 0))
+    )
+    return measurement

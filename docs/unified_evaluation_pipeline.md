@@ -56,3 +56,24 @@ Group12/13 report CACHE_INIT_H2D_* for construction of the persistent low-bit ow
 Group14/15 report promotion CUDA work, host enqueue, bytes, and calls; promotion exposed wait remains NOT_AVAILABLE unless directly timed.
 
 Zero is a measured zero. NOT_AVAILABLE means the field was not measured with compatible semantics. The aggregate table therefore has explicit H2D work, exposed wait, enqueue, bytes, calls, source-class, and timing-class columns and does not use one generic Exposed H2D column.
+
+
+## Persistent KV current versus peak
+
+GPU_KV_ACTUAL_PERSISTENT_BYTES is the current measured owner occupancy.
+GPU_KV_PERSISTENT_PEAK_BYTES is the maximum owner occupancy observed after
+persistent-owner state changes during the case. It is not
+torch.cuda.max_memory_allocated().
+
+Lazy historical low-bit owners are counted when their packed payload, scales, or
+metadata become resident. Eviction can reduce current occupancy while the
+recorded peak remains unchanged. Draft persistent bytes are separate from KV
+compression, and transient dequant/promotion peaks are separate from both.
+Whole-process allocator peaks (PEAK_GPU_ALLOCATED_BYTES and
+PEAK_GPU_RESERVED_BYTES) include weights, activations, workspace, KV, and
+temporary tensors.
+
+Old artifacts containing only current persistent KV remain reusable for current
+memory analysis. Their persistent peak is NOT_AVAILABLE; it is never inferred
+from final occupancy. Profile-only reruns are required for Group14/15 and other
+lazy-resident experiments when peak fields are needed.

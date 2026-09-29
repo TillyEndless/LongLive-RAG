@@ -13,6 +13,16 @@ def _source(config, key, default=None):
     p = config.get(key)
     return Path(p) if p else default
 
+def _bytes_to_gib(value):
+    if value in (None, '', 'NA', 'N/A', 'NOT_AVAILABLE'):
+        return 'NOT_AVAILABLE'
+    try:
+        # Preserve already-normalized GiB values used by older adapters.
+        x = float(value)
+        return x / (2 ** 30) if abs(x) >= 1024 * 1024 else x
+    except (TypeError, ValueError):
+        return 'NOT_AVAILABLE'
+
 def build_summary(cfg):
     profile = load_json(_source(cfg, 'profile_json')) if cfg.get('profile_json') else {}
     runtime = load_json(_source(cfg, 'runtime_json')) if cfg.get('runtime_json') else {}
@@ -55,7 +65,19 @@ def build_summary(cfg):
         'TRANSIENT_GPU_GIB': val(profile, 'transient_fetch_gpu_gib', default=val(memory, 'TRANSIENT_PREFETCH_GPU_PEAK_GiB', default=0.0)),
         'PEAK_GPU_ALLOCATED_GIB': val(profile, 'peak_gpu_allocated_gib', default='NOT_AVAILABLE'),
         'PEAK_GPU_RESERVED_GIB': val(profile, 'peak_gpu_reserved_gib', default='NOT_AVAILABLE'),
-        'KV_COMPRESSION_RATIO': val(memory, 'GPU_KV_COMPRESSION_RATIO', 'KV_COMPRESSION_RATIO', default=1.0),
+        'KV_COMPRESSION_RATIO': val(memory, 'GPU_KV_COMPRESSION_RATIO', 'KV_COMPRESSION_RATIO', default='NOT_AVAILABLE'),
+        'GPU_LOCAL_PERSISTENT_KV_GIB': _bytes_to_gib(val(memory, 'GPU_LOCAL_PERSISTENT_KV_BYTES', default='NOT_AVAILABLE')),
+        'GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_GIB': _bytes_to_gib(val(memory, 'GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES', default='NOT_AVAILABLE')),
+        'GPU_KV_PERSISTENT_MEAN_GIB': _bytes_to_gib(val(memory, 'GPU_KV_ACTUAL_PERSISTENT_BYTES', default='NOT_AVAILABLE')),
+        'GPU_KV_PERSISTENT_PEAK_MEAN_GIB': _bytes_to_gib(val(memory, 'GPU_KV_PERSISTENT_PEAK_BYTES', default='NOT_AVAILABLE')),
+        'GPU_KV_PERSISTENT_PEAK_MAX_GIB': _bytes_to_gib(val(memory, 'GPU_KV_PERSISTENT_PEAK_BYTES', default='NOT_AVAILABLE')),
+        'DRAFT_GPU_PERSISTENT_GIB': _bytes_to_gib(val(memory, 'GPU_DRAFT_PERSISTENT_BYTES', default=memory_out.get('DRAFT_GPU_GIB', 'NOT_AVAILABLE'))),
+        'GPU_METHOD_PERSISTENT_MEAN_GIB': _bytes_to_gib(val(memory, 'GPU_METHOD_PERSISTENT_BYTES', default='NOT_AVAILABLE')),
+        'GPU_METHOD_PERSISTENT_PEAK_GIB': _bytes_to_gib(val(memory, 'GPU_METHOD_PERSISTENT_PEAK_BYTES', default='NOT_AVAILABLE')),
+        'TRANSIENT_DEQUANT_GPU_PEAK_GIB': _bytes_to_gib(val(memory, 'TRANSIENT_DEQUANT_GPU_PEAK_BYTES', default='NOT_AVAILABLE')),
+        'TRANSIENT_PROMOTION_GPU_PEAK_GIB': _bytes_to_gib(val(memory, 'TRANSIENT_PROMOTION_GPU_PEAK_BYTES', default='NOT_AVAILABLE')),
+        'TRANSIENT_HISTORICAL_GPU_PEAK_GIB': _bytes_to_gib(val(memory, 'TRANSIENT_HISTORICAL_GPU_PEAK_BYTES', default='NOT_AVAILABLE')),
+        'KV_COMPRESSION_AT_PERSISTENT_PEAK': val(memory, 'KV_COMPRESSION_AT_PERSISTENT_PEAK', default='NOT_AVAILABLE'),
     }
     manifest = cfg.get('manifest_path')
     manifest_hash = cfg.get('manifest_sha256')

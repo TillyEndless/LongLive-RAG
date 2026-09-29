@@ -1669,6 +1669,8 @@ class CausalWanSelfAttention(nn.Module):
                                 self.group11_profile["CACHE_INIT_H2D_CALLS"] = int(self.group11_profile.get("CACHE_INIT_H2D_CALLS", 0)) + int(getattr(archive, "last_cache_init_calls", 0))
                                 self.group11_profile["CACHE_INIT_H2D_TIMING_CLASS"] = "legacy_host_observed_interval"
                             self._last_archive_materialization = archive_materialized_meta
+                            from utils.runtime_memory_measurement import update_persistent_kv_peak
+                            update_persistent_kv_peak(kv_cache, None)
                         k_sel = active_memory_indices.shape[1]
                         for bi in range(b):
                             indices = active_memory_indices[bi]
@@ -2702,6 +2704,8 @@ class CausalWanModel(ModelMixin, ConfigMixin):
         # After all blocks are processed, apply cache updates in a single pass
         if kv_cache is not None and cache_update_infos:
             self._apply_cache_updates(kv_cache, cache_update_infos)
+            from utils.runtime_memory_measurement import update_persistent_kv_peak
+            update_persistent_kv_peak(kv_cache, None)
 
         # head
         x = self.head(x, e.unflatten(dim=0, sizes=t.shape).unsqueeze(2))
