@@ -53,7 +53,7 @@ class CausalInferencePipeline(torch.nn.Module):
         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
         # WanDiffusionWrapper init.
         model_args_clean = dict(getattr(args, "model_kwargs", {}))
-        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "q_sparse_ratio", "local_kv_promotion_ratio", "group_id", "group11_fetch_mode"]:
+        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "q_sparse_ratio", "local_kv_promotion_ratio", "v2_fetch_scheduler", "group_id", "group11_fetch_mode"]:
             model_args_clean.pop(key, None)
 
         self.generator = WanDiffusionWrapper(
@@ -131,6 +131,7 @@ class CausalInferencePipeline(torch.nn.Module):
         sparse_ratio = float(getattr(args.model_kwargs, "group_sparse_ratio", 0.0))
         self.q_sparse_ratio = float(getattr(args.model_kwargs, "q_sparse_ratio", sparse_ratio) or 0.0)
         self.local_kv_promotion_ratio = float(getattr(args.model_kwargs, "local_kv_promotion_ratio", 0.0) or 0.0)
+        self.v2_fetch_scheduler = str(getattr(args.model_kwargs, "v2_fetch_scheduler", "serial_two_wait"))
         fetch_mode = str(getattr(args.model_kwargs, "group11_fetch_mode", "serial_full"))
         self.group11_fetch_mode = fetch_mode
         for block in getattr(self.generator.model, "blocks", []):
@@ -144,6 +145,7 @@ class CausalInferencePipeline(torch.nn.Module):
             block.self_attn.group_sparse_ratio = sparse_ratio
             block.self_attn.q_sparse_ratio = self.q_sparse_ratio
             block.self_attn.local_kv_promotion_ratio = self.local_kv_promotion_ratio
+            block.self_attn.v2_fetch_scheduler = self.v2_fetch_scheduler
             block.self_attn.group11_fetch_mode = fetch_mode
             block.self_attn.group_runtime_trace = self.generator.model.group_runtime_trace
         self.ae_model = None

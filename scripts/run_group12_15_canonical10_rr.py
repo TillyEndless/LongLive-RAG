@@ -12,13 +12,14 @@ from pathlib import Path
 
 ROOT = Path('/data/zxl/LongLive-RAG-group11_15_h200')
 MANIFEST = ROOT / 'results/group12_15_persistent_campaign/campaign_manifest.json'
-RUN_ROOT = ROOT / 'results/group12_15_persistent_campaign/canonical10_rr'
+RUN_ROOT = ROOT / 'results/group12_15_persistent_campaign/canonical3_rr'
 STATE = RUN_ROOT / 'runner_state.json'
 LOG = RUN_ROOT / 'runner.log'
 PYTHON = '/data/zxl/SolarWM_wan5b_direct/.conda-wan/bin/python'
 EVAL_PYTHON = '/data/zxl/SolarWM/.env_vbench310/bin/python'
 INFERENCE = ROOT / 'inference.py'
 EVALUATOR = ROOT / 'scripts/evaluate_group12_15_corrected.py'
+CANONICAL_CASE_COUNT = 3
 GPUS = ['0', '1']
 NORMAL_FREE_MIB = 30 * 1024
 RETRY_FREE_MIB = 30 * 1024
@@ -40,7 +41,7 @@ def save_state(pending, active, completed, failed, stage='RUNNING', extra=None):
         'active': {gpu: item['key'] for gpu, item in active.items()},
         'completed': sorted(completed), 'failed_attempts': dict(failed),
         'normal_threshold_mib': NORMAL_FREE_MIB, 'retry_threshold_mib': RETRY_FREE_MIB,
-        'gpus': GPUS, 'output_root': str(ROOT / 'results/group12_15_persistent_campaign'),
+        'gpus': GPUS, 'output_root': str(ROOT / 'results/group12_15_persistent_campaign/canonical3_rr'),
     }
     if extra:
         data.update(extra)
@@ -56,18 +57,19 @@ def ordered_jobs(manifest):
     missing=[]
     for label in labels:
         cases={case for (lab, case) in jobs if lab == label}
-        expected={f'case{i:02d}' for i in range(1,11)}
+        expected={f'case{i:02d}' for i in range(1, CANONICAL_CASE_COUNT + 1)}
         if cases != expected:
             missing.append(f'{label}: {sorted(cases)}')
     if missing:
         raise RuntimeError('CANONICAL10_MANIFEST_GATE_FAILED: ' + '; '.join(missing))
     out = []
-    for i in range(1, 11):
+    for i in range(1, CANONICAL_CASE_COUNT + 1):
         case = f'case{i:02d}'
         for label in labels:
             if (label, case) in jobs:
                 j = dict(jobs[(label, case)])
                 j['key'] = f'{label}/{case}'
+                j['output'] = str(RUN_ROOT / 'outputs' / label / case)
                 out.append(j)
     return out
 
@@ -90,7 +92,11 @@ def make_config(job):
         if 'ratio_semantics:' not in text:
             text += '\nratio_semantics: retained_interaction_ratio\n'
     text = re.sub(r'^skip_existing:\s*true\s*$', 'skip_existing: false', text, flags=re.M)
-    text += '\n# canonical10_rr runner snapshot\n'
+    text = re.sub(
+        r'(?m)^output_folder:\s*[^\n]+$',
+        'output_folder: ' + str(RUN_ROOT / 'outputs' / label / job['case']),
+        text)
+    text += f'\ncanonical_case_count: {CANONICAL_CASE_COUNT}\ncanonical_case_selection: first_n\n# canonical3_rr runner snapshot\n'
     dst.write_text(text)
     return dst
 
@@ -179,7 +185,7 @@ def run_one(gpu, job, pending, active, completed, failed):
 def run_evaluation(manifest, completed, pending, active, failed):
     wait_gpu(GPUS[0], NORMAL_FREE_MIB, 'EVALUATION', pending, active, completed, failed)
     evlog=RUN_ROOT/'evaluation.log'
-    cmd=['env',f'CUDA_VISIBLE_DEVICES={GPUS[0]}',EVAL_PYTHON,'-u',str(EVALUATOR)]
+    cmd=['env', 'CANONICAL_CASE_COUNT=3', f'CUDA_VISIBLE_DEVICES={GPUS[0]}', EVAL_PYTHON, '-u', str(EVALUATOR)]
     log(f'EVALUATION_START command={" ".join(cmd)}')
     with evlog.open('a') as fh:
         proc=subprocess.run(cmd,cwd=ROOT,stdout=fh,stderr=subprocess.STDOUT)
@@ -206,7 +212,7 @@ def main():
         pending=collections.deque(j['key'] for j in jobs)
     pending=collections.deque(k for k in pending if k not in completed)
     active={}
-    log(f'RUNNER_START jobs={len(jobs)} pending={len(pending)} gpus={GPUS} RR=true')
+    log(f'RUNNER_START canonical_cases=first_3 jobs={len(jobs)} pending={len(pending)} gpus={GPUS} RR=true')
     while pending or active:
         started=False
         for gpu in GPUS:

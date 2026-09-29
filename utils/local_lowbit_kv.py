@@ -114,8 +114,12 @@ class LocalLowbitKVStore:
         scored = []
         for i in active:
             d = draft_frames[i] if i < len(draft_frames) else None
-            score = float("-inf") if d is None else float(
-                (q * d.to(device=query.device, dtype=torch.float32).mean(dim=1)).mean().item())
+            if d is None:
+                score = float("-inf")
+            else:
+                d = d.to(device=query.device, dtype=torch.float32)
+                d_pool = d.mean(dim=2) if d.ndim == 4 and d.shape[1] == q.shape[1] else d.mean(dim=1)
+                score = float((q * d_pool).mean().item())
             scored.append((score, -i, i))
         scored.sort(reverse=True)
         return [x[2] for x in scored[:count]]
@@ -155,6 +159,38 @@ class LocalLowbitKVStore:
             shape = (1, 0, self.heads, self.head_dim)
             return (torch.empty(shape, dtype=self.dtype, device=self.device),
                     torch.empty(shape, dtype=self.dtype, device=self.device))
+        return torch.cat(ks, dim=1), torch.cat(vs, dim=1)
+
+    def materialize_frames(self, frame_ids, promoted=None, fallback=None):
+        """Build a call-local BF16 working set in requested frame order.
+
+        ``fallback`` is only for the first attention call before a newly
+        projected frame has been committed to the rolling store. It is
+        passed through the same quantize/dequantize rule and is not retained.
+        """
+        promoted = {} if promoted is None else {int(k): v for k, v in promoted.items()}
+        fallback = {} if fallback is None else {int(k): v for k, v in fallback.items()}
+        ks, vs = [], []
+        for frame_id in frame_ids:
+            idx = int(frame_id)
+            if idx in promoted:
+                k, v = promoted[idx]
+                k = k.to(self.device, dtype=self.dtype, non_blocking=True)
+                v = v.to(self.device, dtype=self.dtype, non_blocking=True)
+            elif 0 <= idx < len(self.slots) and self.slots[idx] is not None:
+                k, v = self._decode(self.slots[idx])
+            elif idx in fallback:
+                # Bootstrap only: quantize/dequantize the new projected frame
+                # without creating a second persistent owner.
+                k, v = self._decode(self._encode(*fallback[idx]))
+            else:
+                raise RuntimeError(f"missing local KV frame {idx}")
+            ks.append(k)
+            vs.append(v)
+        if not ks:
+            shape = (1, 0, self.heads, self.head_dim)
+            empty = torch.empty(shape, dtype=self.dtype, device=self.device)
+            return empty, empty.clone()
         return torch.cat(ks, dim=1), torch.cat(vs, dim=1)
 
     def persistent_bytes(self) -> int:

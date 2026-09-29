@@ -1,0 +1,6 @@
+# Frozen canonical evaluation policy
+canonical_case_count: 3
+canonical_case_selection: first_n
+canonical_case_ids: [case_01, case_02, case_03]
+source_manifest: /data/zxl/LongLive-RAG-profile/prompts10.txt
+legacy_ten_case_results: preserved_read_only

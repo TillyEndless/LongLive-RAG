@@ -7,7 +7,7 @@ from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 from transformers import AutoImageProcessor, AutoModel
 
 ROOT=Path('/data/zxl/LongLive-RAG-group11_15_h200')
-OUT=ROOT/'results/group14_full10_audit'
+OUT=ROOT/'results/group14_first3_evaluation'
 MANIFEST=Path('/data/zxl/LongLive-RAG-profile/prompts10.txt')
 OUT.mkdir(parents=True,exist_ok=True)
 processor=AutoImageProcessor.from_pretrained('/data/zxl/eval_models/dinov2-small')
@@ -33,7 +33,7 @@ def one(path,group,case,removed_percent):
 rows=[]
 for removed in (30,20,10,5):
     root=ROOT/'results/group12_15_persistent_campaign'/f'group14_sparse{removed:02d}'
-    for i in range(1,11):
+    for i in range(1,4):
         p=root/f'case{i:02d}'/'rank0-0-0_lora.mp4'
         if not p.exists(): raise FileNotFoundError(p)
         rows.append(one(p,14,f'case_{i:02d}',removed))

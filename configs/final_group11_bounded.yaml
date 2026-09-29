@@ -13,6 +13,7 @@ model_kwargs:
   compression_method: avg_pool
   ae_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/ae_latent_mem.pt
   retrieval_backend: draftmap_online
+  local_kv_promotion_ratio: 0.2
   group_runtime_mode: baseline
   group_sparse_ratio: 0.0
 generator_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_base.pt

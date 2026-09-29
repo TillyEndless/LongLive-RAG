@@ -14,6 +14,7 @@ model_kwargs:
   compression_method: "ae"
   ae_ckpt: "checkpoints/ae_latent_mem.pt"
   retrieval_backend: "draftmap_online"
+  local_kv_promotion_ratio: 0.2
 
 generator_ckpt: checkpoints/longlive_base.pt
 lora_ckpt: checkpoints/longlive_lora.pt

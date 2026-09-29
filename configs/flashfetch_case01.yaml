@@ -12,6 +12,7 @@ model_kwargs:
   compression_method: "ae"
   ae_ckpt: /data/zxl/LongLive-RAG-group11_15_h200/checkpoints/ae_latent_mem.pt
   retrieval_backend: "draftmap_online"
+  local_kv_promotion_ratio: 0.2
   group11_fetch_mode: "flashfetch_serial"
 generator_ckpt: /data/zxl/LongLive-RAG-group11_15_h200/checkpoints/longlive_base.pt
 lora_ckpt: /data/zxl/LongLive-RAG-group11_15_h200/checkpoints/longlive_lora.pt

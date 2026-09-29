@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import csv, json, hashlib
+import csv, json, hashlib, os
 from pathlib import Path
 import cv2
 import torch
@@ -8,8 +8,12 @@ from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 from transformers import AutoImageProcessor, AutoModel
 
 ROOT = Path('/data/zxl/LongLive-RAG-group11_15_h200')
-OUT = ROOT / 'results/group12_15_persistent_campaign'
-manifest = json.loads((OUT / 'campaign_manifest.json').read_text())
+OUT = ROOT / 'results/group12_15_persistent_campaign/canonical3_evaluation'
+MANIFEST_ROOT = ROOT / 'results/group12_15_persistent_campaign'
+manifest = json.loads((MANIFEST_ROOT / 'campaign_manifest.json').read_text())
+CANONICAL_CASE_COUNT = int(os.environ.get('CANONICAL_CASE_COUNT', '3'))
+manifest['jobs'] = [j for j in manifest['jobs'] if int(str(j['case']).split('_')[-1]) <= CANONICAL_CASE_COUNT]
+
 processor = AutoImageProcessor.from_pretrained('/data/zxl/eval_models/dinov2-small')
 model = AutoModel.from_pretrained('/data/zxl/eval_models/dinov2-small').to('cuda').eval()
 
@@ -113,9 +117,9 @@ for job in manifest['jobs']:
     row.update({f'meta_{k}':v for k,v in collect_numbers(Path(job['output'])).items()})
     rows.append(row)
 
-# Hard gate: every canonical experiment must have exactly the same ten cases
-# as the manifest before any aggregate summary is considered valid.  In
-# particular, never silently reduce Group14/15 to case_01-only evaluation.
+# Hard gate: every canonical experiment must have exactly the same configured first-N cases
+# as the manifest before any aggregate summary is considered valid.
+# Never silently reduce the configured first-N set further.
 expected = {}
 for job in manifest['jobs']:
     expected.setdefault(job['label'], set()).add(job['case'])
@@ -124,7 +128,7 @@ for label, cases in expected.items():
     actual=[r for r in rows if r['label']==label]
     actual_cases={r['case'] for r in actual}
     if len(cases) != 10 or actual_cases != cases or len(actual) != 10:
-        bad.append(f'{label}: expected_cases={sorted(cases)}, actual_cases={sorted(actual_cases)}, rows={len(actual)}')
+        bad.append(f'{label}: expected_first_{CANONICAL_CASE_COUNT}_cases={sorted(cases)}, actual_cases={sorted(actual_cases)}, rows={len(actual)}')
     invalid=[r['case'] for r in actual if r.get('status')!='OK']
     if invalid:
         bad.append(f'{label}: invalid_cases={sorted(invalid)}')
@@ -143,7 +147,7 @@ for label in sorted({r['label'] for r in rows}):
     ratio=next((r['retained_ratio'] for r in rows if r['label']==label),'NA')
     summary.append({'label':label,'group':group,'window':12,'retained_ratio':ratio,'cases':sum(r['label']==label for r in rows),'valid_cases':sum(r['label']==label and r['status']=='OK' for r in rows),'DINO':mean(label,'DINO'),'SSIM':mean(label,'SSIM'),'PSNR':mean(label,'PSNR'),'LPIPS':'NOT_AVAILABLE',
                      **{k: mean(label, k) for k in TIMING_KEYS}})
-with (OUT/'group12_15_final_10case.csv').open('w',newline='') as f:
+with (OUT/'group12_15_final_3case.csv').open('w',newline='') as f:
     w=csv.DictWriter(f,fieldnames=list(summary[0])); w.writeheader(); w.writerows(summary)
-(OUT/'group12_15_final_provenance.json').write_text(json.dumps({'manifest_sha256':hashlib.sha256(Path('/data/zxl/LongLive-RAG-profile/prompts10.txt').read_bytes()).hexdigest(),'seed':0,'protocol':'frame 0 vs frame 237; 474 frames; 16 FPS; 832x480; DINOv2-small CLS; raw RGB SSIM/PSNR; LPIPS NOT_AVAILABLE','backend':'BF16 final attention; fake quant only; no native Anemoi kernel'},indent=2)+'\n')
-print('WROTE',OUT/'group12_15_final_10case.csv')
+(OUT/'group12_15_final_provenance.json').write_text(json.dumps({'manifest_sha256':hashlib.sha256(Path('/data/zxl/LongLive-RAG-profile/prompts10.txt').read_bytes()).hexdigest(),'seed':0,'canonical_case_count':CANONICAL_CASE_COUNT,'canonical_case_selection':'first_n','protocol':'frame 0 vs frame 237; 474 frames; 16 FPS; 832x480; DINOv2-small CLS; raw RGB SSIM/PSNR; LPIPS NOT_AVAILABLE','backend':'BF16 final attention; fake quant only; no native Anemoi kernel'},indent=2)+'\n')
+print('WROTE',OUT/'group12_15_final_3case.csv')

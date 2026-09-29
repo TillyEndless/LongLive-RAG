@@ -9,23 +9,17 @@ from torchvision import transforms
 from torchvision.io import write_video
 from einops import rearrange
 import torch.distributed as dist
-from torch.utils.data import DataLoader, SequentialSampler
+from torch.utils.data import DataLoader, SequentialSampler, Subset
 from torch.utils.data.distributed import DistributedSampler
 import matplotlib.pyplot as plt
 from torch.profiler import profile as torch_profile, ProfilerActivity
 
-from pipeline import (
-    CausalInferencePipeline,
-)
-from utils.dataset import TextDataset
-from utils.misc import set_seed
-
-from utils.memory import get_cuda_free_memory_gb, DynamicSwapInstaller
-from utils.runtime_memory_measurement import runtime_inference_memory
+# Heavy model imports are delayed until after config-only validation.
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config_path", type=str, help="Path to the config file")
 parser.add_argument("--v5_profiler_output", type=str, default="", help="Diagnostic bounded torch.profiler output root")
+parser.add_argument("--config_contract_only", action="store_true", help="Load and validate config contract without CUDA/checkpoint/inference")
 args = parser.parse_args()
 
 config = OmegaConf.load(args.config_path)
@@ -115,6 +109,38 @@ def validate_group_contract(cfg):
 
 
 validate_group_contract(config)
+
+def validate_entrypoint_contract(cfg):
+    required = ['generator_ckpt', 'use_ema', 'seed', 'adapter', 'data_path', 'output_folder', 'num_samples', 'save_with_index', 'num_output_frames', 'inference_iter', 'denoising_step_list', 'warp_denoising_step', 'num_frame_per_block', 'model_name']
+    missing = [key for key in required if key not in cfg]
+    if missing:
+        raise KeyError('Missing required inference config keys: ' + ', '.join(missing))
+    for key in ['num_samples', 'num_output_frames', 'num_frame_per_block', 'inference_iter']:
+        if not isinstance(cfg[key], int):
+            raise TypeError(f'{key} must be int, got {type(cfg[key]).__name__}')
+    if cfg.num_samples <= 0 or cfg.num_output_frames <= 0 or cfg.num_frame_per_block <= 0:
+        raise ValueError('num_samples/num_output_frames/num_frame_per_block must be positive')
+    if not hasattr(cfg.denoising_step_list, '__len__') or len(cfg.denoising_step_list) == 0:
+        raise TypeError('denoising_step_list must be a non-empty list')
+    if not isinstance(cfg.seed, int):
+        raise TypeError('seed must be int')
+    if 'model_kwargs' not in cfg:
+        raise KeyError('Missing required inference config key: model_kwargs')
+
+validate_entrypoint_contract(config)
+if args.config_contract_only:
+    print('CONFIG_CONTRACT_PASS')
+    print({'generator_ckpt': str(config.generator_ckpt), 'denoising_step_list': list(config.denoising_step_list), 'num_samples': int(config.num_samples), 'seed': int(config.seed), 'num_output_frames': int(config.num_output_frames), 'window': int(getattr(config.model_kwargs, 'local_attn_size', -1)), 'output_folder': str(config.output_folder)})
+    raise SystemExit(0)
+
+from pipeline import (
+    CausalInferencePipeline,
+)
+from utils.dataset import TextDataset
+from utils.misc import set_seed
+
+from utils.memory import get_cuda_free_memory_gb, DynamicSwapInstaller
+from utils.runtime_memory_measurement import runtime_inference_memory
 
 # === Cross-machine deterministic / reproducible inference ===
 # Must be set before the CUDA context is created (i.e. before any CUDA op,
@@ -239,6 +265,13 @@ pipeline.vae.to(device=device)
 
 extended_prompt_path = config.data_path
 dataset = TextDataset(prompt_path=config.data_path, extended_prompt_path=extended_prompt_path)
+_original_num_prompts = len(dataset)
+canonical_case_count = int(getattr(config, "canonical_case_count", 3))
+canonical_case_selection = str(getattr(config, "canonical_case_selection", "first_n"))
+if canonical_case_selection == "first_n" and canonical_case_count > 0 and _original_num_prompts > canonical_case_count:
+    _canonical_indices = list(range(canonical_case_count))
+    dataset = Subset(dataset, _canonical_indices)
+    print(f"Canonical case policy: first {canonical_case_count} cases; original={_original_num_prompts}; selected_indices={_canonical_indices}")
 num_prompts = len(dataset)
 print(f"Number of prompts: {num_prompts}")
 
@@ -407,6 +440,7 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             v2_storage = v2_group12 or v2_group13 or v2_group14 or v2_group15
             draft_rag_active = str(getattr(config.model_kwargs, "retrieval_backend", "")) == "draftmap_online"
             v2_sparse = v2_group14 or v2_group15
+            group11_4_active = str(getattr(config.model_kwargs, "group11_fetch_mode", "serial_full")) == "next_layer_prefetch"
             runtime_meta = {
                 "GROUP": int(getattr(config, "group_id", 0)),
                 "GROUP_RUNTIME_MODE": group_runtime_mode,
@@ -435,11 +469,17 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                 "Q_PREV": "NO",
                 "FLASH_FETCH": "NO",
                 "NEXT_LAYER_PREFETCH": "YES" if str(getattr(config.model_kwargs, "group11_fetch_mode", "serial_full")) == "next_layer_prefetch" else "NO",
+                "CORRECTION_FETCH_ENABLED": False if group11_4_active else None,
+                "GROUP11_4_APPROXIMATE_RETRIEVAL": True if group11_4_active else False,
+                "PREFETCH_CORRECTION_CHUNKS": 0 if group11_4_active else None,
+                "PREFETCH_CORRECTION_BYTES": 0 if group11_4_active else None,
                 "HOT_CACHE": "NO",
                 "LONG_LIVE_REUSE": "NO",
                 "NUM_OUTPUT_LATENT_FRAMES": int(getattr(config, "num_output_frames", 0)),
                 "EXPECTED_DECODED_FRAMES": 474,
                 "CANONICAL_EVAL_PROTOCOL": "474 frames; 16 FPS; 832x480; frame 0 vs 237; seed 0",
+                "CANONICAL_CASE_COUNT": int(canonical_case_count),
+                "CANONICAL_CASE_SELECTION": canonical_case_selection,
                 "runtime_trace": model_runtime,
                 "flash_fetch_trace": flash_trace,
                 "group11_profile": getattr(pipeline.generator.model, "group11_profile", None),

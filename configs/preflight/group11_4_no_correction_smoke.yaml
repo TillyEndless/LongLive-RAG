@@ -29,10 +29,11 @@ adapter:
   verbose: false
 
 data_path: /data/zxl/LongLive-RAG-profile/prefetch_case01_prompt.txt
-output_folder: /data/zxl/LongLive-RAG-group11_15_h200/results/group11_4_next_layer_prefetch_case01
+output_folder: /data/zxl/LongLive-RAG-group12_15_local_lowbit_v2/results/group11_4_no_correction_smoke/case_01
 inference_iter: 0
-skip_existing: true
-num_output_frames: 120
+skip_existing: false
+num_output_frames: 30
+smoke_10block: true
 use_ema: false
 seed: 0
 num_samples: 1

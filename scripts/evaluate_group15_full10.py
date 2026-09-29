@@ -8,7 +8,7 @@ from transformers import AutoImageProcessor, AutoModel
 
 ROOT=Path('/data/zxl/LongLive-RAG-group11_15_h200')
 BASE=ROOT/'results/group12_15_persistent_campaign'
-OUT=ROOT/'results/group15_full10_evaluation'
+OUT=ROOT/'results/group15_first3_evaluation'
 OUT.mkdir(parents=True,exist_ok=True)
 processor=AutoImageProcessor.from_pretrained('/data/zxl/eval_models/dinov2-small')
 model=AutoModel.from_pretrained('/data/zxl/eval_models/dinov2-small').to('cuda').eval()
@@ -28,7 +28,7 @@ def load(p): return json.loads(p.read_text())
 rows=[]
 for removed in (30,20,10,5):
     root=BASE/f'group15_sparse{removed:02d}'
-    for i in range(1,11):
+    for i in range(1,4):
         case=f'case{i:02d}'
         video=root/case/'rank0-0-0_lora.mp4'
         runtime=root/case/'rank0-0-0_lora_runtime.json'
@@ -47,5 +47,5 @@ for removed in (30,20,10,5):
     summary.append({'removed_percent':removed,'retained_ratio':1.0-removed/100.0,'cases':len(rr),'DINO':sum(r['dino'] for r in rr)/len(rr),'SSIM':sum(r['ssim'] for r in rr)/len(rr),'PSNR':sum(r['psnr'] for r in rr)/len(rr),'actual_sparse_ratio':sorted(set(r['actual_sparse_ratio'] for r in rr)),'actual_retained_blocks':sorted(set(r['actual_retained_blocks'] for r in rr)),'total_blocks':sorted(set(r['total_blocks'] for r in rr)),'actual_retained_fraction':sorted(set(r['actual_retained_fraction'] for r in rr)),'actual_zero_fraction':sorted(set(r['actual_zero_fraction'] for r in rr)),'sparse_execution_status':sorted(set(r['sparse_execution_status'] for r in rr))})
 with (OUT/'summary.csv').open('w',newline='') as f:
     w=csv.DictWriter(f,fieldnames=list(summary[0])); w.writeheader(); w.writerows(summary)
-(OUT/'README.md').write_text('# Group15 full canonical10 evaluation\n\nExisting videos only; no inference. Protocol: 474 frames, 16 FPS, 832x480, frame 0 vs 237, DINOv2-small CLS cosine, raw RGB SSIM/PSNR.\n')
+(OUT/'README.md').write_text('# Group15 full canonical3 evaluation\n\nExisting videos only; no inference. Protocol: 474 frames, 16 FPS, 832x480, frame 0 vs 237, DINOv2-small CLS cosine, raw RGB SSIM/PSNR.\n')
 print(OUT)

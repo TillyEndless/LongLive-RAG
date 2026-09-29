@@ -65,6 +65,80 @@ def route_draftmap(q,k,v,retained_ratio):
 
 
 
+
+def route_candidate_chunk_ids_from_descriptors(q, history_descriptors, local_descriptors,
+                                                drop_ratio, mandatory_chunk_ids=()):
+    """Route chunk IDs from persistent Draft-K descriptors without full-K H2D.
+
+    Descriptors are pooled with the same chunk-level mean-score contract used by
+    route_candidate_chunks.  This function returns IDs/metadata only; it never
+    materializes full BF16 history K/V.
+    """
+    def pool_one(d):
+        if d is None:
+            return None
+        d = d.to(device=q.device, dtype=torch.float32)
+        if d.ndim == 4:
+            # Draft-K is commonly [B,H,blocks,D]; accept [B,blocks,H,D] too.
+            if d.shape[1] == q.shape[2]:
+                return d.mean(dim=2)
+            return d.mean(dim=1)
+        if d.ndim == 3:
+            if d.shape[1] == q.shape[2]:
+                return d.mean(dim=2)
+            return d.mean(dim=1, keepdim=True).expand(-1, q.shape[2], -1)
+        if d.ndim == 2:
+            return d.mean(dim=0, keepdim=True).expand(q.shape[0], q.shape[2], -1)
+        raise ValueError(f"unsupported Draft-K descriptor shape: {tuple(d.shape)}")
+
+    qpool = q.to(dtype=torch.float32).mean(dim=1)
+    pooled = []
+    for d in list(history_descriptors) + list(local_descriptors):
+        p = pool_one(d)
+        if p is None:
+            p = torch.zeros_like(qpool)
+        pooled.append(p)
+    blocks = len(pooled)
+    if blocks == 0:
+        return {"ROUTE_SELECTED_CHUNK_IDS": [], "ROUTE_DROPPED_CHUNK_IDS": [],
+                "ROUTE_CHUNK_SCORES": [], "ROUTE_SELECTED_CHUNK_SCORES": [],
+                "ROUTE_BLOCKS_TOTAL": 0, "ROUTE_BLOCKS_RETAINED": 0,
+                "DESCRIPTOR_ROUTING": "YES"}
+    kp = torch.stack(pooled, dim=1)  # [B, blocks, H, D]
+    scores = torch.einsum("bhd,bkhd->bk", qpool, kp).mean(dim=0)
+    keep = max(1, int(math.ceil((1.0 - float(drop_ratio)) * blocks)))
+    mandatory = {int(i) for i in mandatory_chunk_ids if 0 <= int(i) < blocks}
+    keep = max(keep, len(mandatory))
+    order = torch.argsort(scores, descending=True, stable=True)
+    selected = list(sorted(mandatory))
+    for idx in order.detach().cpu().tolist():
+        if int(idx) not in mandatory:
+            selected.append(int(idx))
+        if len(selected) >= keep:
+            break
+    selected = sorted(selected[:keep])
+    return {
+        "SPARSE_ROUTING_ACTIVE": "YES",
+        "SPARSE_EXECUTION_STATUS": "REAL_SPARSE_EXECUTION",
+        "ROUTING_IMPLEMENTATION_ID": ROUTING_IMPLEMENTATION_ID + "+descriptor_only",
+        "DRAFT_BLOCK_SIZE": int(getattr(q, "shape", [0, 0])[1]),
+        "SPARSE_SCOPE": "local_plus_retrieved_history",
+        "ROUTE_QUOTA_POLICY": "ceil((1-q_sparse_ratio)*candidate_chunks)",
+        "CURRENT_CHUNK_MANDATORY": True,
+        "ROUTE_BLOCKS_TOTAL": blocks,
+        "ROUTE_BLOCKS_RETAINED": len(selected),
+        "ROUTE_SELECTED_CHUNK_IDS": selected,
+        "ROUTE_DROPPED_CHUNK_IDS": [i for i in range(blocks) if i not in selected],
+        "ROUTE_SELECTED_CHUNK_SCORES": [float(scores[i].item()) for i in selected],
+        "ROUTE_CHUNK_SCORES": [float(x) for x in scores.detach().cpu().tolist()],
+        "DESCRIPTOR_ROUTING": "YES",
+        "TOTAL_INTERACTIONS": int(q.shape[1] * blocks),
+        "RETAINED_INTERACTIONS": int(q.shape[1] * len(selected)),
+        "SKIPPED_INTERACTIONS": int(q.shape[1] * (blocks - len(selected))),
+        "ACTUAL_ZERO_FRACTION": 1.0 - len(selected) / max(blocks, 1),
+        "ACTUAL_DENSE_FRACTION": len(selected) / max(blocks, 1),
+    }
+
 def route_candidate_chunks(q, k, v, drop_ratio, chunk_tokens,
                            mandatory_chunk_ids=()):
     """Route the complete local+retrieved candidate set at chunk granularity.

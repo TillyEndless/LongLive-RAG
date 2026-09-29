@@ -32,6 +32,7 @@ from utils.debug_option import DEBUG
 from utils.h200_group_runtime import prepare_attention_kv
 from utils.attention_fetch_plan import make_plan, submit as submit_fetch, wait as wait_fetch
 from utils.unified_latency_profiler import UnifiedLatencyProfiler
+from utils.same_state_replay import run_same_state_replay
 
 # wan 1.3B model has a weird channel / head configurations and require max-autotune to work with flexattention
 # see https://github.com/pytorch/pytorch/issues/133254
@@ -148,6 +149,7 @@ class CausalWanSelfAttention(nn.Module):
         self.local_kv_promotion_ratio = 0.0
         self.group_runtime_trace = []
         self.group11_fetch_mode = "serial_full"
+        self.v2_fetch_scheduler = "serial_two_wait"
         self.group11_flash_trace = []
         # Group11.4-only transient prefetch pointer. Group12-15 do not use it.
         self.prefetch_kv_cache = None
@@ -206,6 +208,124 @@ class CausalWanSelfAttention(nn.Module):
                 vs[pos] = new_v[:, i * frame_tokens:(i + 1) * frame_tokens].detach().to("cpu", torch.bfloat16).contiguous()
         kv_cache["cpu_local_k_frames"], kv_cache["cpu_local_v_frames"] = ks, vs
 
+    def _v2_unified_sparse_materialize(self, q, roped_query, temp_k, temp_v, local_start_for_window, local_end_index, local_budget, frame_seqlen, kv_cache, memory_indices, grid_sizes, freqs, device, value_dtype, k_sink=None, v_sink=None):
+        """Speculative all-candidate fetch, then exact serial sparse routing."""
+        from utils.persistent_draftmap import route_candidate_chunks
+        if kv_cache is None or memory_indices is None:
+            raise RuntimeError("unified single-wait path requires memory indices")
+        history_ids = [int(x) for x in memory_indices[0].detach().cpu().tolist()]
+        local_frame_ids = list(range(int(local_start_for_window // frame_seqlen), int(local_end_index // frame_seqlen))) if (local_budget > 0 and local_start_for_window < local_end_index) else []
+        history_count = len(history_ids)
+        local_candidate_chunks = len(local_frame_ids)
+        local_base_frame = int(local_start_for_window // frame_seqlen)
+        archive = kv_cache.get("compressed_history_archive")
+        entries = kv_cache.get("compressed_history_entries", [])
+        history_sources = {}
+        if archive is not None:
+            for idx in history_ids:
+                if 0 <= idx < len(entries):
+                    rec = entries[idx]; history_sources[idx] = (rec.k_payload, rec.v_payload)
+        local_ks = kv_cache.get("cpu_local_k_frames", []); local_vs = kv_cache.get("cpu_local_v_frames", [])
+        # Serial reference indexes CPU local promotion frames by the local
+        # candidate position, not by the absolute frame number.
+        promotion_ids = list(range(local_candidate_chunks))
+        promotion_sources = {}
+        for idx in promotion_ids:
+            if idx < len(local_ks) and idx < len(local_vs) and local_ks[idx] is not None and local_vs[idx] is not None:
+                promotion_sources[idx] = (local_ks[idx], local_vs[idx])
+        plan = make_plan(history_ids, list(promotion_sources), history_sources, promotion_sources)
+        handle = submit_fetch(plan, device)
+        local_store = kv_cache.get("local_lowbit_store")
+        fallback_frames = {int(fid): (temp_k[:, local_start_for_window + off * frame_seqlen:local_start_for_window + (off + 1) * frame_seqlen], temp_v[:, local_start_for_window + off * frame_seqlen:local_start_for_window + (off + 1) * frame_seqlen]) for off, fid in enumerate(local_frame_ids)}
+        dequant_start = time.perf_counter()
+        if local_store is not None:
+            k_local, v_local = local_store.materialize_frames(local_frame_ids, None, fallback=fallback_frames)
+        elif local_frame_ids:
+            k_local = torch.cat([fallback_frames[i][0] for i in local_frame_ids], dim=1); v_local = torch.cat([fallback_frames[i][1] for i in local_frame_ids], dim=1)
+        else:
+            k_local, v_local = temp_k[:, :0], temp_v[:, :0]
+        dequant_s = time.perf_counter() - dequant_start
+        handle = wait_fetch(handle, device)
+        if history_ids:
+            k_mem_unroped = torch.stack([handle.history[idx][0][bi] for bi in range(q.shape[0]) for idx in history_ids], dim=0).reshape(q.shape[0], -1, q.shape[2], q.shape[3])
+            v_mem = torch.stack([handle.history[idx][1][bi] for bi in range(q.shape[0]) for idx in history_ids], dim=0).reshape(q.shape[0], -1, q.shape[2], q.shape[3])
+            mem_grid = grid_sizes.clone(); mem_grid[:, 0] = len(history_ids)
+            k_mem = causal_online_rope(k_mem_unroped, mem_grid, freqs, relative_frame_indices=torch.zeros(len(history_ids), dtype=torch.long, device=device)).type_as(value_dtype)
+        else:
+            k_mem = q.new_empty((q.shape[0], 0, q.shape[2], q.shape[3])); v_mem = q.new_empty((q.shape[0], 0, q.shape[2], q.shape[3]))
+        if local_frame_ids:
+            local_grid = grid_sizes.new_tensor([[len(local_frame_ids), grid_sizes[0, 1], grid_sizes[0, 2]]])
+            k_local = causal_online_rope(k_local, local_grid, freqs, relative_frame_indices=torch.tensor(local_frame_ids, dtype=torch.long, device=device)).type_as(value_dtype)
+        candidate_k = torch.cat([k_mem, k_local], dim=1); candidate_v = torch.cat([v_mem, v_local], dim=1)
+        mandatory_id = history_count + local_candidate_chunks - 1
+        # Optional same-call reference audit: both paths invoke the exact full
+        # candidate router on identical BF16 candidate tensors. This is enabled
+        # only for the correctness smoke and adds no production behavior.
+        serial_ref_meta = None
+        if os.environ.get("V2_SINGLE_WAIT_AUDIT", "0") == "1":
+            _, _, serial_ref_meta = route_candidate_chunks(
+                roped_query, candidate_k, candidate_v, self.q_sparse_ratio,
+                frame_seqlen, mandatory_chunk_ids=(mandatory_id,))
+        candidate_k, candidate_v, sparse_meta = route_candidate_chunks(roped_query, candidate_k, candidate_v, self.q_sparse_ratio, frame_seqlen, mandatory_chunk_ids=(mandatory_id,))
+        if serial_ref_meta is not None:
+            ref_ids = [int(x) for x in serial_ref_meta.get("ROUTE_SELECTED_CHUNK_IDS", [])]
+            got_ids = [int(x) for x in sparse_meta.get("ROUTE_SELECTED_CHUNK_IDS", [])]
+            if ref_ids != got_ids:
+                raise AssertionError(f"same-call exact routing mismatch: {ref_ids} != {got_ids}")
+            sparse_meta["SERIAL_REFERENCE_SELECTED_IDS"] = ref_ids
+            sparse_meta["SERIAL_REFERENCE_MATCH"] = "YES"
+        selected_ids = [int(x) for x in sparse_meta.get("ROUTE_SELECTED_CHUNK_IDS", [])]
+        retained_local = [x - history_count for x in selected_ids if x >= history_count]
+        ratio = float(getattr(self, "local_kv_promotion_ratio", 0.0) or 0.0)
+        count = max(0, min(len(retained_local), int(round(len(retained_local) * ratio))))
+        route_scores = sparse_meta.get("ROUTE_CHUNK_SCORES", [])
+        scores = {idx: float(route_scores[idx]) if idx < len(route_scores) else float(idx) for idx in retained_local}
+        promoted_local = sorted(retained_local, key=lambda idx: (scores[idx], idx), reverse=True)[:count]
+        lowbit_local = [x for x in retained_local if x not in promoted_local]
+        one_frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
+        for out_pos, cand_id in enumerate(selected_ids):
+            local_id = cand_id - history_count
+            if local_id < 0 or local_id not in promoted_local or local_id not in handle.promotion:
+                continue
+            pk, pv = handle.promotion[local_id]
+            rel_frame = local_base_frame + local_id
+            pk = causal_online_rope(pk.to(device, dtype=roped_query.dtype), one_frame_grid, freqs, relative_frame_indices=torch.tensor([rel_frame], device=device)).type_as(roped_query)
+            pv = pv.to(device, dtype=value_dtype.dtype)
+            lo, hi = out_pos * frame_seqlen, (out_pos + 1) * frame_seqlen
+            candidate_k[:, lo:hi] = pk; candidate_v[:, lo:hi] = pv
+        def pair_bytes(pair):
+            return int(pair[0].numel() * pair[0].element_size() + pair[1].numel() * pair[1].element_size())
+        speculative_bytes = sum(pair_bytes(v) for v in promotion_sources.values())
+        used_bytes = sum(pair_bytes(handle.promotion[i]) for i in promoted_local if i in handle.promotion)
+        sparse_meta.update({"RETAINED_LOCAL_IDS": retained_local, "PROMOTED_LOCAL_IDS": promoted_local, "LOWBIT_LOCAL_IDS": lowbit_local, "HISTORY_SELECTED_IDS": history_ids, "FINAL_VISIBLE_IDS": selected_ids, "FETCH_SCHEDULER": "UNIFIED_SINGLE_WAIT", "FETCH_BARRIER_COUNT": 1, "HISTORY_AND_PROMOTION_UNIFIED_PLAN": "YES", "DESCRIPTOR_ONLY_ROUTING": "NO"})
+        kv_cache["_v2_fetch_plan_meta"] = {"history_ids": history_ids, "promotion_ids": list(promotion_sources), "history_bytes": handle.history_bytes, "promotion_bytes": handle.promotion_bytes, "local_speculative_bf16_fetch_bytes": speculative_bytes, "local_promotion_used_bytes": used_bytes, "local_promotion_wasted_bytes": max(0, speculative_bytes - used_bytes), "promotion_prefetch_useful_ratio": (used_bytes / speculative_bytes if speculative_bytes else 1.0), "physical_copy_count": handle.physical_copy_count, "host_enqueue_s": handle.host_enqueue_s, "exposed_wait_s": handle.exposed_wait_s, "cuda_work_s": handle.cuda_work_s, "fetch_barrier_count": 1, "fetch_scheduler": "unified_single_wait", "local_dequant_work_s": dequant_s, "local_dequant_overlap_with_h2d": bool(handle.event is not None), "exact_sparse_routing": "YES", "descriptor_only_routing": "NO"}
+        kv_cache["_v2_unified_fetch_handle"] = handle
+        kv_cache["_v2_single_wait_trace"] = {"history_selected_ids": history_ids, "promotion_ids": promoted_local, "sparse_retained_ids": selected_ids, "final_visible_ids": selected_ids, "fetch_barrier_count": 1, "local_dequant_work_s": dequant_s, "local_dequant_overlap_with_h2d": bool(handle.event is not None)}
+        if os.environ.get("V2_SAME_STATE_REPLAY", "0") == "1" and "_v2_same_state_replay" not in kv_cache:
+            replay = run_same_state_replay(
+                q=q, roped_query=roped_query, temp_k=temp_k, temp_v=temp_v,
+                k_sink=k_sink, v_sink=v_sink,
+                local_start_for_window=local_start_for_window,
+                local_end_index=local_end_index, local_budget=local_budget,
+                frame_seqlen=frame_seqlen, kv_cache=kv_cache,
+                memory_indices=memory_indices, grid_sizes=grid_sizes,
+                freqs=freqs, device=device, value_dtype=value_dtype,
+                q_sparse_ratio=self.q_sparse_ratio,
+                promotion_ratio=float(getattr(self, "local_kv_promotion_ratio", 0.0) or 0.0),
+                unified_candidate_k=candidate_k, unified_candidate_v=candidate_v,
+                unified_meta=sparse_meta, unified_handle=handle)
+            if replay.get("status") in {"PASS", "FAIL"}:
+                kv_cache["_v2_same_state_replay"] = replay
+                output_path = os.environ.get("V2_SAME_STATE_REPLAY_OUTPUT")
+                if output_path:
+                    import json
+                    with open(output_path, "w") as f:
+                        json.dump(replay, f, indent=2)
+                if os.environ.get("V2_SAME_STATE_REPLAY_STOP", "0") == "1":
+                    raise SystemExit(0 if replay.get("status") == "PASS" else 2)
+        if self.group11_profile is not None: self.group11_profile.setdefault("v2_sparse_rows", []).append(sparse_meta)
+        return candidate_k, candidate_v, sparse_meta, handle
+
     def _v2_unified_fetch(self, kv_cache, memory_indices, device, promotion_ids=None):
         """Plan history retrieval and local promotion before one wait."""
         if kv_cache is None or memory_indices is None:
@@ -262,6 +382,78 @@ class CausalWanSelfAttention(nn.Module):
             "cuda_work_s": handle.cuda_work_s,
         }
         return handle
+
+    def _current_q_local_promotion_ids(self, query, kv_cache):
+        # Select local promotion IDs from the current Q and local Draft-K.
+        ratio = float(getattr(self, "local_kv_promotion_ratio", 0.0) or 0.0)
+        if kv_cache is None or ratio <= 0.0:
+            return []
+        draft_frames = kv_cache.get("local_draft_k_frames", [])
+        store = kv_cache.get("local_lowbit_store")
+        if store is not None:
+            return [int(x) for x in store.select_by_query(query, draft_frames, ratio)]
+        active = [i for i, x in enumerate(draft_frames) if x is not None]
+        count = max(0, min(len(active), int(round(len(active) * ratio))))
+        if count == 0 or query.numel() == 0:
+            return []
+        # Group11 is the dense BF16 baseline.  Its promotion is an identity
+        # provenance policy, so use the same shape-independent Draft-K
+        # magnitude ranking used by cache update bookkeeping.  Query-based
+        # scoring is only needed for the v2 low-bit local owner below.
+        if store is None:
+            scored = []
+            for idx in active:
+                d = draft_frames[idx]
+                score = float(d.float().abs().mean().item()) if d is not None else float("-inf")
+                scored.append((score, idx))
+            return [idx for _, idx in sorted(scored, key=lambda x: (x[0], x[1]), reverse=True)[:count]]
+        qpool = query.float().mean(dim=1)
+        scored = []
+        for idx in active:
+            d = draft_frames[idx]
+            score = float((qpool * d.to(query.device, dtype=torch.float32).mean(dim=1)).mean().item())
+            scored.append((score, idx))
+        return [idx for _, idx in sorted(scored, key=lambda x: (x[0], x[1]), reverse=True)[:count]]
+
+    def _schedule_same_layer_prefetch(self, kv_cache, layer_index, selected, device):
+        # Submit current-layer BF16 history fetch without a consumer wait.
+        if selected is None or kv_cache is None:
+            return
+        owner, state = self._prefetch_state(kv_cache)
+        stream = owner.get("prefetch_stream")
+        if stream is None or stream.device != device:
+            stream = torch.cuda.Stream(device=device)
+            owner["prefetch_stream"] = stream
+        cpu_k = kv_cache.get("cpu_k_frames", [])
+        cpu_v = kv_cache.get("cpu_v_frames", [])
+        ids = [int(v) for v in selected[0].detach().cpu().tolist()]
+        requested = copied = 0
+        with torch.cuda.stream(stream):
+            for history_id in ids:
+                key = (int(layer_index), history_id)
+                if key in state and not state[key].get("consumed", False):
+                    continue
+                if key in state and state[key].get("consumed", False):
+                    state.pop(key, None)
+                if history_id >= len(cpu_k) or history_id >= len(cpu_v):
+                    continue
+                src_k, src_v = cpu_k[history_id], cpu_v[history_id]
+                if not src_k.is_pinned():
+                    src_k = src_k.contiguous().pin_memory()
+                if not src_v.is_pinned():
+                    src_v = src_v.contiguous().pin_memory()
+                dst_k = src_k.to(device, non_blocking=True)
+                dst_v = src_v.to(device, non_blocking=True)
+                event = torch.cuda.Event()
+                event.record(stream)
+                nbytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                state[key] = {"k": dst_k, "v": dst_v, "event": event, "bytes": nbytes}
+                requested += 1
+                copied += nbytes
+        owner["prefetch_requested_chunks"] = int(owner.get("prefetch_requested_chunks", 0)) + requested
+        owner["prefetch_scheduled_bytes"] = int(owner.get("prefetch_scheduled_bytes", 0)) + copied
+        owner["prefetch_buffer_peak_bytes"] = max(int(owner.get("prefetch_buffer_peak_bytes", 0)), sum(int(v.get("bytes", 0)) for v in state.values()))
+        owner.setdefault("same_layer_prefetch_trace", []).append({"layer_id": int(layer_index), "predicted_ids": ids, "requested_chunks": requested, "prefetch_bytes": copied})
 
     def _online_memory_indices(self, query, kv_cache, layer_index, frame_seqlen, current_start=0):
         if self.retrieval_backend != "draftmap_online" or self.memory_size <= 0:
@@ -389,7 +581,11 @@ class CausalWanSelfAttention(nn.Module):
         with torch.cuda.stream(stream):
             for history_id in ids:
                 key = (int(layer_index + 1), history_id)
-                if key in state or history_id >= len(cpu_k) or history_id >= len(cpu_v):
+                if key in state and not state[key].get("consumed", False):
+                    continue
+                if key in state and state[key].get("consumed", False):
+                    state.pop(key, None)
+                if history_id >= len(cpu_k) or history_id >= len(cpu_v):
                     continue
                 src_k, src_v = cpu_k[history_id], cpu_v[history_id]
                 if not src_k.is_pinned():
@@ -409,12 +605,18 @@ class CausalWanSelfAttention(nn.Module):
         owner["next_layer_prefetch_trace"].append({"layer_id": int(layer_index), "next_layer_id": int(layer_index + 1), "predicted_ids": ids, "requested_chunks": requested, "prefetch_bytes": copied_bytes})
 
     def _consume_prefetch_or_fetch(self, kv_cache, layer_index, history_id, batch_index, device):
-        """Consume only exact current-Q hits; None requests a correction fetch."""
+        """Consume an already submitted next-layer prefetch.
+
+        Group11.4 is deliberately approximate: a miss is not repaired by a
+        late CPU fetch.  The caller turns a miss into an explicit invalid
+        execution instead of changing the retrieval semantics.
+        """
         owner, state = self._prefetch_state(kv_cache)
-        entry = state.pop((int(layer_index), int(history_id)), None)
+        entry = state.get((int(layer_index), int(history_id)) )
         if entry is None:
             return None
         torch.cuda.current_stream(device).wait_event(entry["event"])
+        entry["consumed"] = True
         owner["prefetch_hit_chunks"] = int(owner.get("prefetch_hit_chunks", 0)) + 1
         owner["prefetch_hit_bytes"] = int(owner.get("prefetch_hit_bytes", 0)) + int(entry["bytes"])
         return entry["k"][batch_index, 0], entry["v"][batch_index, 0]
@@ -439,14 +641,7 @@ class CausalWanSelfAttention(nn.Module):
     def _flashfetch_online_attention(self, query, sink_k, sink_v, local_k, local_v,
                                      kv_cache, memory_indices, grid_sizes, freqs,
                                      layer_index):
-        """Serial full-chunk Flash Fetch correctness path.
-
-        Each selected history chunk is one 1560-token partition.  The online
-        softmax merge is mathematically equivalent to one dense unmasked
-        attention over resident + selected history tokens.  This first phase
-        intentionally uses blocking H2D; async double buffering is enabled
-        only after this path passes the numerical gate.
-        """
+        """Chunk-pipelined Flash Fetch correctness path."""
         if query.size(0) != 1:
             raise RuntimeError("flashfetch prototype currently requires batch_size=1")
         if memory_indices is None:
@@ -459,14 +654,31 @@ class CausalWanSelfAttention(nn.Module):
         h, w = int(grid_sizes[0, 1].item()), int(grid_sizes[0, 2].item())
         one_frame_grid = grid_sizes.new_tensor([[1, h, w]])
         scale = query.shape[-1] ** -0.5
-        M = None
-        L = None
-        O = None
+        M = L = O = None
         timeline = []
+        fetch_stream = torch.cuda.Stream(device=query.device)
+
+        def schedule(history_id):
+            if history_id >= len(cpu_k) or history_id >= len(cpu_v):
+                raise IndexError(f"history id {history_id} unavailable")
+            src_k = cpu_k[history_id][0, 0].contiguous()
+            src_v = cpu_v[history_id][0, 0].contiguous()
+            if not src_k.is_pinned(): src_k = src_k.pin_memory()
+            if not src_v.is_pinned(): src_v = src_v.pin_memory()
+            with torch.cuda.stream(fetch_stream):
+                t0 = time.perf_counter()
+                dk = src_k.to(query.device, non_blocking=True)
+                dv = src_v.to(query.device, non_blocking=True)
+                event = torch.cuda.Event()
+                event.record(fetch_stream)
+                enqueue_ms = (time.perf_counter() - t0) * 1000.0
+            return {"k": dk, "v": dv, "event": event,
+                    "enqueue_ms": enqueue_ms,
+                    "bytes": int(src_k.numel() * src_k.element_size() * 2)}
 
         def merge(k_part, v_part, partition_name, history_id=None):
             nonlocal M, L, O
-            start = time.perf_counter()
+            t0 = time.perf_counter()
             scores = torch.einsum("bqhd,bkhd->bqhk", query.float(), k_part.float()) * scale
             m = scores.amax(dim=-1)
             exp_scores = torch.exp(scores - m.unsqueeze(-1))
@@ -481,45 +693,44 @@ class CausalWanSelfAttention(nn.Module):
                 O = alpha.unsqueeze(-1) * O + beta.unsqueeze(-1) * o
                 L = alpha * L + beta * l
                 M = new_m
-            end = time.perf_counter()
             timeline.append({"partition": partition_name, "history_id": history_id,
-                             "compute_ms": (end - start) * 1000.0,
+                             "compute_ms": (time.perf_counter() - t0) * 1000.0,
                              "tokens": int(k_part.shape[1])})
 
-        resident_k = torch.cat([sink_k, local_k], dim=1)
-        resident_v = torch.cat([sink_v, local_v], dim=1)
-        merge(resident_k, resident_v, "resident", None)
-        total_h2d = 0.0
+        merge(torch.cat([sink_k, local_k], dim=1),
+              torch.cat([sink_v, local_v], dim=1), "resident", None)
+        pending = None
+        total_enqueue = 0.0
         for rank, history_id in enumerate(ids):
-            if history_id >= len(cpu_k) or history_id >= len(cpu_v):
-                raise IndexError(f"history id {history_id} unavailable")
-            h2d_start = time.perf_counter()
-            src_k = cpu_k[history_id][0, 0].to(query.device, non_blocking=True)
-            src_v = cpu_v[history_id][0, 0].to(query.device, non_blocking=True)
-            h2d_ms = (time.perf_counter() - h2d_start) * 1000.0
-            total_h2d += h2d_ms
-            rope_start = time.perf_counter()
-            k_part = causal_online_rope(src_k.unsqueeze(0), one_frame_grid, freqs,
+            if pending is None:
+                pending = schedule(history_id)
+                total_enqueue += float(pending["enqueue_ms"])
+            next_pending = None
+            if rank + 1 < len(ids):
+                next_pending = schedule(ids[rank + 1])
+                total_enqueue += float(next_pending["enqueue_ms"])
+            torch.cuda.current_stream(query.device).wait_event(pending["event"])
+            t0 = time.perf_counter()
+            k_part = causal_online_rope(pending["k"].unsqueeze(0), one_frame_grid, freqs,
                                         relative_frame_indices=torch.zeros(1, dtype=torch.long, device=query.device))
-            k_part = k_part[0:1].type_as(query)
-            v_part = src_v.unsqueeze(0).type_as(query)
-            rope_ms = (time.perf_counter() - rope_start) * 1000.0
-            compute_start = time.perf_counter()
+            k_part = k_part.type_as(query)
+            v_part = pending["v"].unsqueeze(0).type_as(query)
+            rope_ms = (time.perf_counter() - t0) * 1000.0
             merge(k_part, v_part, "history", history_id)
-            compute_ms = (time.perf_counter() - compute_start) * 1000.0
-            timeline[-1].update({"chunk_rank": rank, "h2d_ms": h2d_ms,
-                                 "rope_ms": rope_ms, "compute_start_ms": compute_start,
-                                 "compute_end_ms": time.perf_counter(), "bytes": int(src_k.numel() * src_k.element_size() * 2)})
+            timeline[-1].update({"chunk_rank": rank, "h2d_enqueue_ms": pending["enqueue_ms"],
+                                 "rope_ms": rope_ms, "async_next_scheduled": next_pending is not None,
+                                 "bytes": pending["bytes"]})
+            pending = next_pending
         output = (O / L.unsqueeze(-1)).type_as(query)
         self.group11_flash_trace.append({
             "layer_id": int(layer_index), "history_ids": ids,
-            "tile_tokens": frame_seq, "h2d_ms": total_h2d,
-            "timeline": timeline,
-            "cpu_pinned": bool(all(x.is_pinned() for x in cpu_k[:len(ids)])) if ids else True,
-            "async_overlap": False,
+            "tile_tokens": frame_seq, "h2d_enqueue_ms": total_enqueue,
+            "timeline": timeline, "async_overlap": True,
+            "cpu_pinned": True,
         })
-        return output, {"mode": "flashfetch_serial", "history_ids": ids,
-                        "h2d_ms": total_h2d, "tile_tokens": frame_seq}
+        return output, {"mode": "flashfetch_chunk_async", "history_ids": ids,
+                        "h2d_enqueue_ms": total_enqueue, "tile_tokens": frame_seq,
+                        "async_overlap": True}
 
     def forward(
         self,
@@ -572,16 +783,38 @@ class CausalWanSelfAttention(nn.Module):
             self.group11_profile["model_phase_ms"]["QKV_projection"] += (time.perf_counter() - qkv_start) * 1000.0
         frame_seqlen = int(grid_sizes[0, 1].item() * grid_sizes[0, 2].item())
         self._queue_draft_q_history(q, kv_cache, layer_index, current_start, frame_seqlen)
+        # Group11.4 is call-local: never carry the previous layer/call's
+        # predicted-set activation into a new attention invocation.
+        if self.group11_fetch_mode == "next_layer_prefetch" and kv_cache is not None:
+            kv_cache["group11_4_predicted_ids_active"] = False
         online_memory_indices = self._online_memory_indices(q, kv_cache, layer_index, frame_seqlen, current_start=current_start)
         if online_memory_indices is not None:
             memory_indices = online_memory_indices
+            if self.retrieval_query_mode == "previous_q" and kv_cache is not None:
+                self._schedule_same_layer_prefetch(kv_cache, layer_index, memory_indices, q.device)
             if self.group11_fetch_mode == "next_layer_prefetch" and kv_cache is not None:
                 true_ids = [int(v) for v in memory_indices[0].detach().cpu().tolist()]
-                wasted = self._reconcile_prefetch(kv_cache, layer_index, true_ids)
+                _, state = self._prefetch_state(kv_cache)
+                predicted_ids = sorted(
+                    int(key[1]) for key in state
+                    if int(key[0]) == int(layer_index)
+                )
+                # Bootstrap layer zero uses its current-Q set.  Starting
+                # from layer one, formal Group11.4 consumes the predicted
+                # set itself; current-Q IDs remain oracle-only diagnostics.
+                if predicted_ids:
+                    memory_indices = torch.tensor(
+                        [predicted_ids], dtype=torch.long, device=q.device
+                    )
+                    kv_cache["group11_4_predicted_ids_active"] = True
+                else:
+                    kv_cache["group11_4_predicted_ids_active"] = False
                 self._schedule_next_layer_prefetch(kv_cache, layer_index, memory_indices, q.device)
                 if self.draftmap_trace:
                     self.draftmap_trace[-1]["prefetch_true_ids"] = true_ids
-                    self.draftmap_trace[-1]["prefetch_wasted_count"] = len(wasted)
+                    self.draftmap_trace[-1]["prefetch_predicted_ids"] = list(predicted_ids)
+                    self.draftmap_trace[-1]["prefetch_final_history_ids"] = [int(v) for v in memory_indices[0].detach().cpu().tolist()]
+                    self.draftmap_trace[-1]["prefetch_oracle_only"] = True
         draft_k_frames = _draft_frame_pools(k, frame_seqlen)
 
         if kv_cache is None:
@@ -888,11 +1121,18 @@ class CausalWanSelfAttention(nn.Module):
                     return x
                 
                 # --- MEMORY TOKEN RETRIEVAL (using pre-computed indices) ---
+                current_promotion_ids = self._current_q_local_promotion_ids(q, kv_cache)
+                if kv_cache is not None:
+                    kv_cache["current_q_local_promotion_ids"] = list(current_promotion_ids)
                 k_mem = None
                 v_mem = None
                 v2_handle = None
+                unified_single_wait = (self.group_runtime_mode in {"group14_v2", "group15_v2"} and memory_indices is not None and str(getattr(self, "v2_fetch_scheduler", "serial_two_wait")) == "unified_single_wait")
+                unified_result = None
+                if unified_single_wait and self.memory_size > 0 and memory_indices is not None:
+                    unified_result = self._v2_unified_sparse_materialize(q, roped_query, temp_k, temp_v, local_start_for_window, local_end_index, local_budget, frame_seqlen, kv_cache, memory_indices, grid_sizes, freqs, q.device, v, k_sink=k_sink, v_sink=v_sink)
                 
-                if self.memory_size > 0 and memory_indices is not None:
+                if self.memory_size > 0 and memory_indices is not None and not unified_single_wait:
                     fetch_start = time.perf_counter()
                     lookup_start = time.perf_counter()
                     compressed_entries = kv_cache.get("compressed_history_entries", [])
@@ -903,7 +1143,8 @@ class CausalWanSelfAttention(nn.Module):
                     if self.group_runtime_mode in {"group12_v2", "group13_v2", "group14_v2", "group15_v2"}:
                         v2_handle = self._v2_unified_fetch(
                             kv_cache, memory_indices, q.device,
-                            promotion_ids=[] if self.group_runtime_mode in {"group14_v2", "group15_v2"} else None)
+                            promotion_ids=[] if self.group_runtime_mode in {"group14_v2", "group15_v2"}
+                            else current_promotion_ids)
                     lookup_ms = (time.perf_counter() - lookup_start) * 1000.0
                     
                     if len(cpu_k_list) > 0:
@@ -938,8 +1179,21 @@ class CausalWanSelfAttention(nn.Module):
                                     cache_key = None
                                 else:
                                     prefetched = None
-                                    if self.group11_fetch_mode == "next_layer_prefetch":
+                                    if ((self.group11_fetch_mode == "next_layer_prefetch"
+                                         and kv_cache.get("group11_4_predicted_ids_active", False))
+                                            or self.retrieval_query_mode == "previous_q"):
                                         prefetched = self._consume_prefetch_or_fetch(kv_cache, layer_index, int(k_idx), bi, device)
+                                        # A repeated access to the same predicted chunk
+                                        # within one attention call may arrive through a
+                                        # different cache view. Reuse the already submitted
+                                        # entry; never issue a correction fetch.
+                                        if prefetched is None and self.group11_fetch_mode == "next_layer_prefetch" and kv_cache.get("group11_4_predicted_ids_active", False):
+                                            _, _state = self._prefetch_state(kv_cache)
+                                            _entry = _state.get((int(layer_index), int(k_idx)))
+                                            if _entry is not None:
+                                                torch.cuda.current_stream(device).wait_event(_entry["event"])
+                                                _entry["consumed"] = True
+                                                prefetched = (_entry["k"][bi, 0], _entry["v"][bi, 0])
                                     if prefetched is not None:
                                         dst_k, dst_v = prefetched
                                         src_k, src_v = dst_k, dst_v
@@ -965,10 +1219,27 @@ class CausalWanSelfAttention(nn.Module):
                                         self.group11_profile["AVOIDED_H2D_CALLS"] += 2
                                         self.group11_profile["AVOIDED_H2D_BYTES"] += int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
                                 else:
-                                    if self.group11_fetch_mode == "next_layer_prefetch":
-                                        owner, _ = self._prefetch_state(kv_cache)
-                                        owner["prefetch_correction_chunks"] = int(owner.get("prefetch_correction_chunks", 0)) + 1
-                                        owner["prefetch_correction_bytes"] = int(owner.get("prefetch_correction_bytes", 0)) + int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                    if (self.group11_fetch_mode == "next_layer_prefetch"
+                                            and kv_cache.get("group11_4_predicted_ids_active", False)):
+                                        # Formal Group11.4 has no correction fetch. If a
+                                        # repeated cache view bypassed the normal consume
+                                        # helper, reuse the already scheduled predicted
+                                        # entry directly; otherwise fail loudly.
+                                        _owner, _state = self._prefetch_state(kv_cache)
+                                        _entry = _state.get((int(layer_index), int(k_idx)))
+                                        if _entry is None:
+                                            raise RuntimeError(
+                                                "GROUP11_4_PREFETCH_MISS_NO_CORRECTION_FETCH: "
+                                                f"layer={layer_index} history_id={int(k_idx)} "
+                                                f"state_keys={sorted(list(_state.keys()))[:32]} "
+                                                f"memory_indices={[int(x) for x in memory_indices[bi].detach().cpu().tolist()]}"
+                                            )
+                                        torch.cuda.current_stream(device).wait_event(_entry["event"])
+                                        _entry["consumed"] = True
+                                        dst_k, dst_v = _entry["k"][bi, 0], _entry["v"][bi, 0]
+                                        prefetched = (dst_k, dst_v)
+                                        cache_hit = True
+                                        k_ms = v_ms = 0.0
                                     k_start = time.perf_counter()
                                     dst_k = src_k.to(device, non_blocking=True)
                                     k_ms = (time.perf_counter() - k_start) * 1000.0
@@ -1033,72 +1304,111 @@ class CausalWanSelfAttention(nn.Module):
                             self.draftmap_trace[-1]["cpu_gather_ms"] = (time.perf_counter() - gather_start) * 1000.0
                             self.draftmap_trace[-1]["h2d_ms"] = 0.0
 
-                # Complete candidate set: retrieved history followed by the
-                # resident local window. Sparse groups route this whole set.
-                k_local = roped_temp_k[:, local_start_for_window:local_end_index] if (
-                    local_budget > 0 and local_start_for_window < local_end_index) else roped_temp_k[:, :0]
-                v_local = temp_v[:, local_start_for_window:local_end_index] if (
-                    local_budget > 0 and local_start_for_window < local_end_index) else temp_v[:, :0]
-                candidate_k_parts, candidate_v_parts = [], []
-                if k_mem is not None:
-                    candidate_k_parts.append(k_mem); candidate_v_parts.append(v_mem)
-                if k_local.shape[1] > 0:
-                    candidate_k_parts.append(k_local); candidate_v_parts.append(v_local)
-                candidate_k = torch.cat(candidate_k_parts, dim=1) if candidate_k_parts else roped_temp_k[:, :0]
-                candidate_v = torch.cat(candidate_v_parts, dim=1) if candidate_v_parts else temp_v[:, :0]
-                history_candidate_chunks = int(k_mem.shape[1] // frame_seqlen) if k_mem is not None else 0
-                local_candidate_chunks = int(k_local.shape[1] // frame_seqlen)
-                local_base_frame = int(local_start_for_window // frame_seqlen)
-                sparse_meta = None
-                promotion_handle = v2_handle
+                if unified_single_wait:
+                    candidate_k, candidate_v, sparse_meta, promotion_handle = unified_result
+                    history_candidate_chunks = len(sparse_meta.get("HISTORY_SELECTED_IDS", []))
+                    local_candidate_chunks = int(candidate_k.shape[1] // frame_seqlen) - history_candidate_chunks
+                    local_base_frame = int(local_start_for_window // frame_seqlen)
+                else:
+                    # Complete candidate set: retrieved history followed by the
+                    # resident local window. For v2, the persistent local owner
+                    # is low-bit; only this call-local working set is BF16.
+                    promotion_handle = v2_handle
+                    if self.group_runtime_mode in {"group12_v2", "group13_v2"} and promotion_handle is None:
+                        current_ids = kv_cache.get("current_q_local_promotion_ids", [])
+                        promotion_handle = self._v2_promotion_fetch(kv_cache, current_ids, q.device)
+                    local_frame_ids = list(range(
+                        int(local_start_for_window // frame_seqlen),
+                        int(local_end_index // frame_seqlen))) if (
+                            local_budget > 0 and local_start_for_window < local_end_index) else []
+                    v2_local_modes = {"group12_v2", "group13_v2", "group14_v2", "group15_v2"}
+                    local_store = kv_cache.get("local_lowbit_store") if kv_cache is not None else None
+                    if local_store is not None and self.group_runtime_mode in v2_local_modes:
+                        # Sparse groups route this low-bit working set first and
+                        # overlay CPU-BF16 promotion only on retained IDs below.
+                        fallback_frames = {
+                            int(frame_id): (
+                                temp_k[:, local_start_for_window + offset * frame_seqlen:local_start_for_window + (offset + 1) * frame_seqlen],
+                                temp_v[:, local_start_for_window + offset * frame_seqlen:local_start_for_window + (offset + 1) * frame_seqlen],
+                            )
+                            for offset, frame_id in enumerate(local_frame_ids)
+                        }
+                        k_local, v_local = local_store.materialize_frames(
+                            local_frame_ids,
+                            promotion_handle.promotion if (
+                                self.group_runtime_mode in {"group12_v2", "group13_v2"}
+                                and promotion_handle is not None) else None,
+                            fallback=fallback_frames,
+                        )
+                        local_grid = grid_sizes.new_tensor([[len(local_frame_ids), grid_sizes[0, 1], grid_sizes[0, 2]]])
+                        k_local = causal_online_rope(
+                            k_local, local_grid, freqs,
+                            relative_frame_indices=torch.tensor(local_frame_ids, dtype=torch.long, device=q.device)
+                        ).type_as(v)
+                    else:
+                        k_local = roped_temp_k[:, local_start_for_window:local_end_index] if (
+                            local_budget > 0 and local_start_for_window < local_end_index) else roped_temp_k[:, :0]
+                        v_local = temp_v[:, local_start_for_window:local_end_index] if (
+                            local_budget > 0 and local_start_for_window < local_end_index) else temp_v[:, :0]
+                    candidate_k_parts, candidate_v_parts = [], []
+                    if k_mem is not None:
+                        candidate_k_parts.append(k_mem); candidate_v_parts.append(v_mem)
+                    if k_local.shape[1] > 0:
+                        candidate_k_parts.append(k_local); candidate_v_parts.append(v_local)
+                    candidate_k = torch.cat(candidate_k_parts, dim=1) if candidate_k_parts else roped_temp_k[:, :0]
+                    candidate_v = torch.cat(candidate_v_parts, dim=1) if candidate_v_parts else temp_v[:, :0]
+                    history_candidate_chunks = int(k_mem.shape[1] // frame_seqlen) if k_mem is not None else 0
+                    local_candidate_chunks = int(k_local.shape[1] // frame_seqlen)
+                    local_base_frame = int(local_start_for_window // frame_seqlen)
+                    sparse_meta = None
 
-                if self.group_runtime_mode in {"group14_v2", "group15_v2"} and self.q_sparse_ratio:
-                    from utils.persistent_draftmap import route_candidate_chunks
-                    mandatory_id = history_candidate_chunks + local_candidate_chunks - 1
-                    candidate_k, candidate_v, sparse_meta = route_candidate_chunks(
-                        roped_query, candidate_k, candidate_v, self.q_sparse_ratio,
-                        frame_seqlen, mandatory_chunk_ids=(mandatory_id,))
-                    if self.group11_profile is not None:
-                        self.group11_profile.setdefault("v2_sparse_rows", []).append(sparse_meta)
-                    selected_ids = [int(x) for x in sparse_meta["ROUTE_SELECTED_CHUNK_IDS"]]
-                    retained_local = [x - history_candidate_chunks for x in selected_ids
-                                      if x >= history_candidate_chunks]
-                    ratio = float(getattr(self, "local_kv_promotion_ratio", 0.0))
-                    count = max(0, min(len(retained_local), int(round(len(retained_local) * ratio))))
-                    route_scores = sparse_meta.get("ROUTE_CHUNK_SCORES", [])
-                    scores = {idx: float(route_scores[idx]) if idx < len(route_scores) else float(idx)
-                              for idx in retained_local}
-                    promoted_local = sorted(retained_local, key=lambda idx: (scores[idx], idx), reverse=True)[:count]
-                    promotion_handle = self._v2_promotion_fetch(kv_cache, promoted_local, q.device)
-                    sparse_meta["RETAINED_LOCAL_IDS"] = retained_local
-                    sparse_meta["PROMOTED_LOCAL_IDS"] = promoted_local
-                    sparse_meta["LOWBIT_LOCAL_IDS"] = [x for x in retained_local if x not in promoted_local]
-                    one_frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
-                    for out_pos, cand_id in enumerate(selected_ids):
-                        local_id = cand_id - history_candidate_chunks
-                        if local_id not in promotion_handle.promotion:
-                            continue
-                        pk, pv = promotion_handle.promotion[local_id]
-                        rel_frame = local_base_frame + local_id
-                        pk = causal_online_rope(pk.to(q.device, dtype=roped_query.dtype), one_frame_grid, freqs,
-                                                 relative_frame_indices=torch.tensor([rel_frame], device=q.device)).type_as(roped_query)
-                        pv = pv.to(q.device, dtype=v_local.dtype)
-                        lo, hi = out_pos * frame_seqlen, (out_pos + 1) * frame_seqlen
-                        candidate_k[:, lo:hi] = pk; candidate_v[:, lo:hi] = pv
-                elif promotion_handle is not None and promotion_handle.promotion and local_candidate_chunks:
-                    # Dense groups use the same promotion policy over all local
-                    # retained chunks; the BF16 overlay is call-local only.
-                    one_frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
-                    for local_id, (pk, pv) in promotion_handle.promotion.items():
-                        out_pos = history_candidate_chunks + int(local_id)
-                        if out_pos >= candidate_k.shape[1] // frame_seqlen:
-                            continue
-                        rel_frame = local_base_frame + int(local_id)
-                        pk = causal_online_rope(pk.to(q.device, dtype=roped_query.dtype), one_frame_grid, freqs,
-                                                 relative_frame_indices=torch.tensor([rel_frame], device=q.device)).type_as(roped_query)
-                        pv = pv.to(q.device, dtype=v_local.dtype)
-                        lo, hi = out_pos * frame_seqlen, (out_pos + 1) * frame_seqlen
-                        candidate_k[:, lo:hi] = pk; candidate_v[:, lo:hi] = pv
+                    if self.group_runtime_mode in {"group14_v2", "group15_v2"} and self.q_sparse_ratio:
+                        from utils.persistent_draftmap import route_candidate_chunks
+                        mandatory_id = history_candidate_chunks + local_candidate_chunks - 1
+                        candidate_k, candidate_v, sparse_meta = route_candidate_chunks(
+                            roped_query, candidate_k, candidate_v, self.q_sparse_ratio,
+                            frame_seqlen, mandatory_chunk_ids=(mandatory_id,))
+                        if self.group11_profile is not None:
+                            self.group11_profile.setdefault("v2_sparse_rows", []).append(sparse_meta)
+                        selected_ids = [int(x) for x in sparse_meta["ROUTE_SELECTED_CHUNK_IDS"]]
+                        retained_local = [x - history_candidate_chunks for x in selected_ids
+                                          if x >= history_candidate_chunks]
+                        ratio = float(getattr(self, "local_kv_promotion_ratio", 0.0))
+                        count = max(0, min(len(retained_local), int(round(len(retained_local) * ratio))))
+                        route_scores = sparse_meta.get("ROUTE_CHUNK_SCORES", [])
+                        scores = {idx: float(route_scores[idx]) if idx < len(route_scores) else float(idx)
+                                  for idx in retained_local}
+                        promoted_local = sorted(retained_local, key=lambda idx: (scores[idx], idx), reverse=True)[:count]
+                        promotion_handle = self._v2_promotion_fetch(kv_cache, promoted_local, q.device)
+                        sparse_meta["RETAINED_LOCAL_IDS"] = retained_local
+                        sparse_meta["PROMOTED_LOCAL_IDS"] = promoted_local
+                        sparse_meta["LOWBIT_LOCAL_IDS"] = [x for x in retained_local if x not in promoted_local]
+                        one_frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
+                        for out_pos, cand_id in enumerate(selected_ids):
+                            local_id = cand_id - history_candidate_chunks
+                            if local_id not in promotion_handle.promotion:
+                                continue
+                            pk, pv = promotion_handle.promotion[local_id]
+                            rel_frame = local_base_frame + local_id
+                            pk = causal_online_rope(pk.to(q.device, dtype=roped_query.dtype), one_frame_grid, freqs,
+                                                     relative_frame_indices=torch.tensor([rel_frame], device=q.device)).type_as(roped_query)
+                            pv = pv.to(q.device, dtype=v_local.dtype)
+                            lo, hi = out_pos * frame_seqlen, (out_pos + 1) * frame_seqlen
+                            candidate_k[:, lo:hi] = pk; candidate_v[:, lo:hi] = pv
+                    elif promotion_handle is not None and promotion_handle.promotion and local_candidate_chunks:
+                        # Dense groups use the same promotion policy over all local
+                        # retained chunks; the BF16 overlay is call-local only.
+                        one_frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
+                        for local_id, (pk, pv) in promotion_handle.promotion.items():
+                            out_pos = history_candidate_chunks + int(local_id)
+                            if out_pos >= candidate_k.shape[1] // frame_seqlen:
+                                continue
+                            rel_frame = local_base_frame + int(local_id)
+                            pk = causal_online_rope(pk.to(q.device, dtype=roped_query.dtype), one_frame_grid, freqs,
+                                                     relative_frame_indices=torch.tensor([rel_frame], device=q.device)).type_as(roped_query)
+                            pv = pv.to(q.device, dtype=v_local.dtype)
+                            lo, hi = out_pos * frame_seqlen, (out_pos + 1) * frame_seqlen
+                            candidate_k[:, lo:hi] = pk; candidate_v[:, lo:hi] = pv
 
                 k_parts = [k_sink]
                 v_parts = [v_sink]
