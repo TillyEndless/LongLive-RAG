@@ -1,0 +1,53 @@
+{
+  "validation_scope": "isolated minimal profile validation; no canonical10 and no quality rerun",
+  "static_compile": "PASS",
+  "archive_api_test": "PASS",
+  "gpu_validation": "PASS",
+  "cases": {
+    "g11_3": {
+      "runtime_json": "/data/zxl/worktrees/h2d-profiler-fix-20260929/validation_outputs/g11_3/rank0-0-0_lora_runtime.json",
+      "h2d_semantics_version": "v2",
+      "h2d_cuda_work_ms": 5610.501246988773,
+      "h2d_total_bytes": 290127052800,
+      "h2d_total_calls": 60540,
+      "flash_fetch_h2d_cuda_work_ms": 5610.501246988773,
+      "promotion_h2d_cuda_work_ms": null,
+      "promotion_h2d_host_enqueue_ms": null,
+      "promotion_h2d_bytes": null,
+      "promotion_h2d_calls": null,
+      "legacy_exposed_h2d_ms": 0.0
+    },
+    "g14": {
+      "runtime_json": "/data/zxl/worktrees/h2d-profiler-fix-20260929/validation_outputs/g14/rank0-0-0_lora_runtime.json",
+      "h2d_semantics_version": "v2",
+      "h2d_cuda_work_ms": 6.390911966562271,
+      "h2d_total_bytes": 287539200,
+      "h2d_total_calls": 60,
+      "flash_fetch_h2d_cuda_work_ms": null,
+      "promotion_h2d_cuda_work_ms": 6.390911966562271,
+      "promotion_h2d_host_enqueue_ms": 2.26642657071352,
+      "promotion_h2d_bytes": 287539200,
+      "promotion_h2d_calls": 60,
+      "legacy_exposed_h2d_ms": 0.0
+    },
+    "g15": {
+      "runtime_json": "/data/zxl/worktrees/h2d-profiler-fix-20260929/validation_outputs/g15/rank0-0-0_lora_runtime.json",
+      "h2d_semantics_version": "v2",
+      "h2d_cuda_work_ms": 6.426560014486313,
+      "h2d_total_bytes": 287539200,
+      "h2d_total_calls": 60,
+      "flash_fetch_h2d_cuda_work_ms": null,
+      "promotion_h2d_cuda_work_ms": 6.426560014486313,
+      "promotion_h2d_host_enqueue_ms": 2.3068925365805626,
+      "promotion_h2d_bytes": 287539200,
+      "promotion_h2d_calls": 60,
+      "legacy_exposed_h2d_ms": 0.0
+    }
+  },
+  "semantic_notes": [
+    "Group11.3 async flash H2D is reported as deferred CUDA event work, not EXPOSED_H2D_MS.",
+    "Group14/15 promotion H2D reports CUDA work and host enqueue separately.",
+    "No per-call CUDA synchronize was added; one deferred finalize synchronization is used at end-of-workload.",
+    "Legacy EXPOSED_H2D_* values are preserved for compatibility."
+  ]
+}

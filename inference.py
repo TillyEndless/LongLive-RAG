@@ -383,6 +383,27 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
 
             # Corrected Group 11--15 machine-readable runtime contract.
             import json
+            # Resolve deferred CUDA event timing once after the workload.
+            for block in getattr(pipeline.generator.model, "blocks", []):
+                attn = getattr(block, "self_attn", None)
+                if attn is not None and hasattr(attn, "finalize_flash_fetch_timing"):
+                    attn.finalize_flash_fetch_timing()
+            h2d_p = getattr(pipeline.generator.model, "group11_profile", None)
+            if isinstance(h2d_p, dict):
+                for cache in getattr(pipeline, "kv_cache1", []) or []:
+                    archive = cache.get("compressed_history_archive")
+                    if archive is not None and hasattr(archive, "finalize_h2d_timing"):
+                        timing = archive.finalize_h2d_timing()
+                        h2d_p["PROMOTION_H2D_CUDA_WORK_MS"] = float(h2d_p.get("PROMOTION_H2D_CUDA_WORK_MS", 0.0)) + float(timing["cuda_work_ms"])
+                        h2d_p["PROMOTION_H2D_HOST_ENQUEUE_MS"] = float(h2d_p.get("PROMOTION_H2D_HOST_ENQUEUE_MS", 0.0)) + float(timing["host_enqueue_ms"])
+                        h2d_p["PROMOTION_H2D_BYTES"] = int(h2d_p.get("PROMOTION_H2D_BYTES", 0)) + int(timing["bytes"])
+                        h2d_p["PROMOTION_H2D_CALLS"] = int(h2d_p.get("PROMOTION_H2D_CALLS", 0)) + int(timing["calls"])
+                names = ["DEMAND_FETCH", "PREFETCH", "FLASH_FETCH", "CACHE_INIT", "PROMOTION"]
+                h2d_p["H2D_CUDA_WORK_MS"] = float(sum(float(h2d_p.get(f"{name}_H2D_CUDA_WORK_MS", 0.0)) for name in names))
+                h2d_p["H2D_TOTAL_BYTES"] = int(sum(int(h2d_p.get(f"{name}_H2D_BYTES", 0)) for name in names))
+                h2d_p["H2D_TOTAL_CALLS"] = int(sum(int(h2d_p.get(f"{name}_H2D_CALLS", 0)) for name in names))
+                h2d_p["H2D_WORK_VALID"] = True
+                h2d_p["H2D_EXPOSED_WAIT_VALID"] = False
             model_runtime = getattr(pipeline.generator.model, "group_runtime_trace", [])
             flash_trace = []
             for block in getattr(pipeline.generator.model, "blocks", []):
@@ -463,6 +484,17 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
                     "SELF_ATTN_WRAPPER_S": (None if profile.get("SELF_ATTN_WRAPPER_MS") is None
                                              else float(profile.get("SELF_ATTN_WRAPPER_MS")) / 1000.0),
                     "EXPOSED_H2D_S": float(profile.get("EXPOSED_H2D_MS", 0.0)) / 1000.0,
+                    "H2D_SEMANTICS_VERSION": str(profile.get("H2D_SEMANTICS_VERSION", "v1_legacy")),
+                    "H2D_TOTAL_BYTES": int(profile.get("H2D_TOTAL_BYTES", 0)),
+                    "H2D_TOTAL_CALLS": int(profile.get("H2D_TOTAL_CALLS", 0)),
+                    "H2D_CUDA_WORK_S": float(profile.get("H2D_CUDA_WORK_MS", 0.0)) / 1000.0,
+                    "H2D_HOST_ENQUEUE_S": float(profile.get("H2D_HOST_ENQUEUE_MS", 0.0)) / 1000.0,
+                    "H2D_EXPOSED_WAIT_S": (None if profile.get("H2D_EXPOSED_WAIT_MS") is None else float(profile.get("H2D_EXPOSED_WAIT_MS")) / 1000.0),
+                    "H2D_HIDDEN_S": (None if profile.get("H2D_HIDDEN_MS") is None else float(profile.get("H2D_HIDDEN_MS")) / 1000.0),
+                    "FLASH_FETCH_H2D_CUDA_WORK_S": float(profile.get("FLASH_FETCH_H2D_CUDA_WORK_MS", 0.0)) / 1000.0,
+                    "FLASH_FETCH_H2D_HOST_ENQUEUE_S": float(profile.get("FLASH_FETCH_H2D_HOST_ENQUEUE_MS", 0.0)) / 1000.0,
+                    "PROMOTION_H2D_CUDA_WORK_S": float(profile.get("PROMOTION_H2D_CUDA_WORK_MS", 0.0)) / 1000.0,
+                    "PROMOTION_H2D_HOST_ENQUEUE_S": float(profile.get("PROMOTION_H2D_HOST_ENQUEUE_MS", 0.0)) / 1000.0,
                     "UNIFIED_LATENCY_PROFILE": profile.get("UNIFIED_LATENCY_PROFILE", {
                         "enabled": False, "records": [], "synchronization": "none"
                     }),

@@ -1178,6 +1178,8 @@ class CausalWanSelfAttention(nn.Module):
             "stock_flashattn_used": bool(use_stock_flashattn),
             "fetch_stream_handle": int(fetch_stream.cuda_stream),
             "compute_stream_handle": int(compute_stream.cuda_stream),
+            "h2d_calls": int(2 * len(staged_k)),
+            "h2d_bytes": int(sum(int(k.numel() * k.element_size() + v.numel() * v.element_size()) for k, v in zip(staged_k, staged_v))),
         })
         return output, {"mode": execution_mode, "history_ids": ids,
                         "h2d_ms": "CUDA_EVENT", "tile_tokens": frame_seq,
@@ -1208,6 +1210,12 @@ class CausalWanSelfAttention(nn.Module):
             history_count = max(len(row.get("timeline", [])) - 1, 1)
             for tile in row.get("timeline", []):
                 tile["h2d_ms"] = copy_ms / history_count if tile.get("partition") == "history" else 0.0
+            if self.group11_profile is not None:
+                p = self.group11_profile
+                p["FLASH_FETCH_H2D_CUDA_WORK_MS"] = float(p.get("FLASH_FETCH_H2D_CUDA_WORK_MS", 0.0)) + copy_ms
+                p["FLASH_FETCH_H2D_HOST_ENQUEUE_MS"] = float(p.get("FLASH_FETCH_H2D_HOST_ENQUEUE_MS", 0.0)) + float(sum(float(t.get("host_copy_enqueue_ms", 0.0)) for t in row.get("timeline", [])))
+                p["FLASH_FETCH_H2D_CALLS"] = int(p.get("FLASH_FETCH_H2D_CALLS", 0)) + int(row.get("h2d_calls", 0))
+                p["FLASH_FETCH_H2D_BYTES"] = int(p.get("FLASH_FETCH_H2D_BYTES", 0)) + int(row.get("h2d_bytes", 0))
         self._flash_event_records.clear()
 
     def forward(

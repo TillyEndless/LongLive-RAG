@@ -91,8 +91,11 @@ class CompressedHistoryArchive:
         self.last_metadata: dict[str, Any] = {}
         self.last_transient_bf16_bytes = 0
         self.last_promotion_bytes = 0
+        self.last_promotion_calls = 0
         self.last_dequant_bytes = 0
         self.last_promotion_enqueue_ms = 0.0
+        self.last_promotion_cuda_work_ms = 0.0
+        self._promotion_event_records = []
         self.last_dequant_enqueue_ms = 0.0
         self.last_join_wait_ms = 0.0
         self.last_materialization_host_ms = 0.0
@@ -224,8 +227,11 @@ class CompressedHistoryArchive:
         self.last_h2d_ms = 0.0
         self.last_h2d_calls = 0
         self.last_promotion_bytes = 0
+        self.last_promotion_calls = 0
         self.last_dequant_bytes = 0
         self.last_promotion_enqueue_ms = 0.0
+        self.last_promotion_cuda_work_ms = 0.0
+        self._promotion_event_records.clear()
         self.last_dequant_enqueue_ms = 0.0
         self.last_join_wait_ms = 0.0
         materialize_start = time.perf_counter()
@@ -234,13 +240,20 @@ class CompressedHistoryArchive:
             promotion_stream = torch.cuda.Stream(device=device)
             dequant_stream = torch.cuda.Stream(device=device)
             phase_start = time.perf_counter()
+            promotion_start = torch.cuda.Event(enable_timing=True)
+            promotion_end = torch.cuda.Event(enable_timing=True)
             with torch.cuda.stream(promotion_stream):
+                promotion_start.record(promotion_stream)
                 for p in sorted(positions):
                     rec = self.records[ids[p]]
                     k_out[p] = rec.k_payload.to(device=device, dtype=torch.bfloat16, non_blocking=True)
                     v_out[p] = rec.v_payload.to(device=device, dtype=torch.bfloat16, non_blocking=True)
                     self.last_h2d_calls += 2
+                    self.last_promotion_calls += 2
                     self.last_promotion_bytes += int(rec.k_payload.numel() * rec.k_payload.element_size() + rec.v_payload.numel() * rec.v_payload.element_size())
+                promotion_end.record(promotion_stream)
+            self._promotion_event_records.append((promotion_start, promotion_end))
+            self.last_promotion_enqueue_ms = (time.perf_counter() - phase_start) * 1000.0
             promotion_event = torch.cuda.Event(); promotion_event.record(promotion_stream)
             phase_start = time.perf_counter()
             with torch.cuda.stream(dequant_stream):
@@ -268,9 +281,17 @@ class CompressedHistoryArchive:
                 rec = self.records[history_id]
                 if p in positions:
                     phase_start = time.perf_counter()
+                    promotion_start = torch.cuda.Event(enable_timing=True) if device.type == "cuda" else None
+                    promotion_end = torch.cuda.Event(enable_timing=True) if device.type == "cuda" else None
+                    if promotion_start is not None:
+                        promotion_start.record(torch.cuda.current_stream(device))
                     k_out[p] = rec.k_payload.to(device=device, dtype=torch.bfloat16, non_blocking=True)
                     v_out[p] = rec.v_payload.to(device=device, dtype=torch.bfloat16, non_blocking=True)
+                    if promotion_end is not None:
+                        promotion_end.record(torch.cuda.current_stream(device))
+                        self._promotion_event_records.append((promotion_start, promotion_end))
                     self.last_h2d_calls += 2
+                    self.last_promotion_calls += 2
                     self.last_promotion_bytes += int(rec.k_payload.numel() * rec.k_payload.element_size() + rec.v_payload.numel() * rec.v_payload.element_size())
                     self.last_promotion_enqueue_ms += (time.perf_counter() - phase_start) * 1000.0
                 else:
@@ -314,6 +335,13 @@ class CompressedHistoryArchive:
             "SOURCE_BY_ID": {str(i): ("CPU_BF16" if i in promoted_ids else "GPU_LOWBIT_DEQUANT") for i in ids},
         }
         return list(k_out), list(v_out), dict(self.last_metadata)
+
+    def finalize_h2d_timing(self):
+        if self._promotion_event_records:
+            torch.cuda.synchronize()
+            self.last_promotion_cuda_work_ms = sum(float(start.elapsed_time(end)) for start, end in self._promotion_event_records)
+            self._promotion_event_records.clear()
+        return {"cuda_work_ms": float(self.last_promotion_cuda_work_ms), "host_enqueue_ms": float(self.last_promotion_enqueue_ms), "bytes": int(self.last_promotion_bytes), "calls": int(self.last_promotion_calls)}
 
     def total_bytes(self) -> int:
         return sum(r.persistent_bytes() for r in self.records)
