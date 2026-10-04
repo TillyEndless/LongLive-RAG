@@ -52,7 +52,7 @@ class CausalInferencePipeline(torch.nn.Module):
         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
         # WanDiffusionWrapper init.
         model_args_clean = dict(getattr(args, "model_kwargs", {}))
-        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id", "group11_fetch_mode"]:
+        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id", "group11_fetch_mode", "physical_kv_cache_frames"]:
             model_args_clean.pop(key, None)
 
         self.generator = WanDiffusionWrapper(
@@ -238,7 +238,11 @@ class CausalInferencePipeline(torch.nn.Module):
         local_attn_cfg = getattr(self.args.model_kwargs, "local_attn_size", -1)
         memory_size_cfg = getattr(self.args.model_kwargs, "memory_size", 0)
         kv_policy = ""
-        if memory_size_cfg > 0 and local_attn_cfg != -1:
+        physical_cache_cfg = getattr(self.args.model_kwargs, "physical_kv_cache_frames", None)
+        if physical_cache_cfg is not None:
+            kv_cache_size = int(physical_cache_cfg) * self.frame_seq_length
+            kv_policy = f"physical4+cpu_offload, size={physical_cache_cfg} frames"
+        elif memory_size_cfg > 0 and local_attn_cfg != -1:
             kv_cache_size = local_attn_cfg * self.frame_seq_length
             kv_policy = f"int->local+cpu_offload, size={local_attn_cfg} frames"
         elif local_attn_cfg != -1:

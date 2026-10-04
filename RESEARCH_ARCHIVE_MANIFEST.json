@@ -1,0 +1,2294 @@
+{
+  "generated": "2026-10-05",
+  "archive_branch": "research/archive-20261005-bb-ao",
+  "source_root": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao",
+  "files": [
+    {
+      "path": ".gitignore",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/.gitignore",
+      "sha256": "7ca83e770e72b6c03622e8d63d05749557631a62a669605fe8efd14f5003b07c",
+      "bytes": 1267
+    },
+    {
+      "path": "ARCHIVE_README.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/ARCHIVE_README.md",
+      "sha256": "3a79bf00b7ae4f42b6c72421f37a14af25b019dd008b71386eb6c5448300381b",
+      "bytes": 340
+    },
+    {
+      "path": "LICENSE",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "bytes": 11357
+    },
+    {
+      "path": "README.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/README.md",
+      "sha256": "e16f30689b70d1232cf43c6d9942b6867dad3c68e37a8d18d6cf6ddda64eb135",
+      "bytes": 10908
+    },
+    {
+      "path": "ae/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/ae/__init__.py",
+      "sha256": "c29d84bba7e73d71e5100ce85c4bfd097948d1640094feafd7e88a8139cb406e",
+      "bytes": 97
+    },
+    {
+      "path": "ae/config.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/ae/config.py",
+      "sha256": "2ed856841395612b29c12e54424c3321a81db69f224c35e252d28dae80326462",
+      "bytes": 7288
+    },
+    {
+      "path": "ae/configs/ae_delta.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/ae/configs/ae_delta.yaml",
+      "sha256": "5f928bcbbb8bdf9d3fad3bbd53f42eacf593b7266a6b8708b143e090c1215693",
+      "bytes": 1496
+    },
+    {
+      "path": "ae/configs/base_ae.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/ae/configs/base_ae.yaml",
+      "sha256": "64cea9245c43f6707867ba760f8cc8db80af19a7ddeb3aaa7830ec89055b5a66",
+      "bytes": 949
+    },
+    {
+      "path": "ae/dataset.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/ae/dataset.py",
+      "sha256": "249f192eeced8b3daef49ec65bffb183721c22508de7db8ee6b9a68be1af8f8c",
+      "bytes": 2175
+    },
+    {
+      "path": "ae/model.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/ae/model.py",
+      "sha256": "f8b037ba4edabe0df348a94b3094166fe7c4bbaa00354d68b537ea36a2298baa",
+      "bytes": 11332
+    },
+    {
+      "path": "ae/train.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/ae/train.py",
+      "sha256": "9be5bcb4ed99049fa7d3932331f9ae391b0496db7a27286fd1abe67565ea65a3",
+      "bytes": 16205
+    },
+    {
+      "path": "assets/demo/native_1.mp4",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/assets/demo/native_1.mp4",
+      "sha256": "40cfec0217ddea79350d14e206187f5c0abea8370ead3272d7f13ce4c914fce2",
+      "bytes": 3982165
+    },
+    {
+      "path": "assets/demo/native_2.mp4",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/assets/demo/native_2.mp4",
+      "sha256": "689cf3661e0989b936dd729751c505f9865eb64c6ad0659f0064c594551b97ef",
+      "bytes": 4148573
+    },
+    {
+      "path": "assets/demo/native_ours_1.mp4",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/assets/demo/native_ours_1.mp4",
+      "sha256": "b1868b82c1a01fb05cecdae41efa868415ce7e4afeb3e4fffd4de9556ea4ad5f",
+      "bytes": 3816416
+    },
+    {
+      "path": "assets/demo/native_ours_2.mp4",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/assets/demo/native_ours_2.mp4",
+      "sha256": "3e631d740d3f96ff59f7751d83f9d1879ffa55302b2be14276048112bdd9a1a8",
+      "bytes": 3834062
+    },
+    {
+      "path": "assets/fig_framework.png",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/assets/fig_framework.png",
+      "sha256": "0cfda349a7300e2254a2d4338fa4f0a437768728579a0d87d344c0d6e43311ed",
+      "bytes": 373324
+    },
+    {
+      "path": "assets/longliverag-logo.png",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/assets/longliverag-logo.png",
+      "sha256": "e5eb55a4d721c0e9580f90b795c3697cd34445d6fa8d4360144364398e158780",
+      "bytes": 69676
+    },
+    {
+      "path": "configs/LEGACY_RATIO_CONFIGS.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/LEGACY_RATIO_CONFIGS.md",
+      "sha256": "25e6351d30828a730ac7258d6ed2a1d2425a12f13f76de854fe0d67704837831",
+      "bytes": 665
+    },
+    {
+      "path": "configs/causal_forcing_latentmem.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/causal_forcing_latentmem.yaml",
+      "sha256": "aeb709307d347fada87ecf718fdc3e2f80f2ae7e7cd7a0749cc3e9aa8e763e6d",
+      "bytes": 819
+    },
+    {
+      "path": "configs/causal_forcing_native.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/causal_forcing_native.yaml",
+      "sha256": "79d23c3d0df7a93425311fcaee3e9fcf1ab51d47d27880475d2a1ed5bb4f604e",
+      "bytes": 571
+    },
+    {
+      "path": "configs/final_group11_bounded.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/final_group11_bounded.yaml",
+      "sha256": "44dde0b2e32253e2b0abda76e27e9f2b98db9680063fee0b4becc7ab8436a173",
+      "bytes": 1058
+    },
+    {
+      "path": "configs/final_group11_gpu1.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/final_group11_gpu1.yaml",
+      "sha256": "205a09b0aa2b19ba7527f82da404c08b2d28e6107937d9fa269bb5386c5550e4",
+      "bytes": 1065
+    },
+    {
+      "path": "configs/flashfetch_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/flashfetch_case01.yaml",
+      "sha256": "948dffee4682e6ba8e2d565fca20a4c7c6770f4a3a8f68893f92c3dc9d8ec627",
+      "bytes": 1012
+    },
+    {
+      "path": "configs/g11_1.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/g11_1.yaml",
+      "sha256": "43ffe72af61608eb7b0b772e9986cae0ed4e5554f6057c4796f5d6d25062d0f9",
+      "bytes": 1085
+    },
+    {
+      "path": "configs/g11_1_bb_ao_physical4_f120.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/g11_1_bb_ao_physical4_f120.yaml",
+      "sha256": "3120ee1446c91118a46459eb5bef33377134bd28f21a21a7dda6aec55a3757c4",
+      "bytes": 1183
+    },
+    {
+      "path": "configs/g11_1_bb_ao_physical4_f3.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/g11_1_bb_ao_physical4_f3.yaml",
+      "sha256": "45c9a58d5b66d6cc235385228b1fe741f39f281433722181874e4c3b58b33871",
+      "bytes": 1165
+    },
+    {
+      "path": "configs/g11_1_bb_ao_physical4_f30.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/g11_1_bb_ao_physical4_f30.yaml",
+      "sha256": "a026fdef903f8f0be3cf5edeae90306fff16a23a3372a0134b14d63ea8226c18",
+      "bytes": 1168
+    },
+    {
+      "path": "configs/g11_1_bb_ao_physical4_f6.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/g11_1_bb_ao_physical4_f6.yaml",
+      "sha256": "971044af5997d91a01b2d9cbb048b1f002d8716d50c79fe9ee1b97bd6b0801d0",
+      "bytes": 1145
+    },
+    {
+      "path": "configs/generate_latent.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/generate_latent.yaml",
+      "sha256": "0c293d0c778b759fdc701ce8b98fef5f01e4df2fac425016e1740ce00991f16a",
+      "bytes": 810
+    },
+    {
+      "path": "configs/group11_15_reference/group11_draftmap_online_w12_10case.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group11_draftmap_online_w12_10case.yaml",
+      "sha256": "f6b5c0f1e6a5da57ccfb72be712054af02d5911ab78b08464e3b06405aea2b26",
+      "bytes": 965
+    },
+    {
+      "path": "configs/group11_15_reference/group11_draftmap_online_w12_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group11_draftmap_online_w12_case01.yaml",
+      "sha256": "e4f1ce5818af6fedc9d5ffc68e92ee0761f1d62e259232fc5af01e787927eeb7",
+      "bytes": 953
+    },
+    {
+      "path": "configs/group11_15_reference/group11_draftmap_online_w12_case01_tracefix.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group11_draftmap_online_w12_case01_tracefix.yaml",
+      "sha256": "7ccbadc557a3c95b7e389bea2c4a432ab3341f9077d3d1a7ca14ee710292e16b",
+      "bytes": 967
+    },
+    {
+      "path": "configs/group11_15_reference/group11_draftmap_rag_w12.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group11_draftmap_rag_w12.yaml",
+      "sha256": "5ff09a01acd4ec027b48c314a468f6d074010f53b759ee3cd2a2a5b7231465c5",
+      "bytes": 1010
+    },
+    {
+      "path": "configs/group11_15_reference/group11_h200_smoke.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group11_h200_smoke.yaml",
+      "sha256": "63fd20aad6b1e8691d55d61b20e38f5f2e96182ba22f37d09e723c70d1de7774",
+      "bytes": 993
+    },
+    {
+      "path": "configs/group11_15_reference/group11_h200_smoke_small.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group11_h200_smoke_small.yaml",
+      "sha256": "bb42811a5233afd1879bb6024b66b1b34523a99fdafb19f3ec09cb731ce52820",
+      "bytes": 896
+    },
+    {
+      "path": "configs/group11_15_reference/group11_memory_remeasure.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group11_memory_remeasure.yaml",
+      "sha256": "a38a65843f47680680696df478029684b92454211d52638fd8334ce67483d304",
+      "bytes": 874
+    },
+    {
+      "path": "configs/group11_15_reference/group12_draftmap_native_smoke.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group12_draftmap_native_smoke.yaml",
+      "sha256": "f02522b04788a7da8714c3fb932f2c221f671f71d2deb921ea3d83a3439a8ab9",
+      "bytes": 926
+    },
+    {
+      "path": "configs/group11_15_reference/group12_draftmap_native_w12.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group12_draftmap_native_w12.yaml",
+      "sha256": "5faeb5972ee1117f17e976d5580bc4ea15f432c72b9b10914480af447aae3ca6",
+      "bytes": 923
+    },
+    {
+      "path": "configs/group11_15_reference/group12_native_8bit_smoke.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group12_native_8bit_smoke.yaml",
+      "sha256": "78e0ce15967389d22d5115415ed3a497d0811519940e041f717e2fb18f8af4ed",
+      "bytes": 908
+    },
+    {
+      "path": "configs/group11_15_reference/group12_native_8bit_w12.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group12_native_8bit_w12.yaml",
+      "sha256": "1edadb48fe8b68a749c49a9c73634ce06617f6bac30bb7fcd634e19e309ee5c4",
+      "bytes": 905
+    },
+    {
+      "path": "configs/group11_15_reference/group13_draftmap_native_smoke.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/group13_draftmap_native_smoke.yaml",
+      "sha256": "e34843a149d786b2d8b755d8f898a1f361210000b58cf3d3420b34108efb84c5",
+      "bytes": 890
+    },
+    {
+      "path": "configs/group11_15_reference/h200_group11_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/h200_group11_case01.yaml",
+      "sha256": "21f4e3ce652c36ad69560143a33aac9206647bf7255e80a40a3785934ff95b91",
+      "bytes": 1047
+    },
+    {
+      "path": "configs/group11_15_reference/h200_group12_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/h200_group12_case01.yaml",
+      "sha256": "992b6b6bce9980dab9479e9f6607a6ffaf59b24fd2d0f03499fa3e6541fafc51",
+      "bytes": 904
+    },
+    {
+      "path": "configs/group11_15_reference/h200_group13_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/h200_group13_case01.yaml",
+      "sha256": "9aeb10f2557707c33660a2934a2f49f6f1cdfb7f0ebc67babf1c3ce9867b2bcb",
+      "bytes": 904
+    },
+    {
+      "path": "configs/group11_15_reference/h200_group14_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/h200_group14_case01.yaml",
+      "sha256": "815ac26935ae698a89c32ff73babeac84e07d043adecded155bf139271fa2310",
+      "bytes": 904
+    },
+    {
+      "path": "configs/group11_15_reference/h200_group14_case01_INVALID_OLD_SEMANTICS_DIAGNOSTIC_ONLY.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/h200_group14_case01_INVALID_OLD_SEMANTICS_DIAGNOSTIC_ONLY.yaml",
+      "sha256": "815ac26935ae698a89c32ff73babeac84e07d043adecded155bf139271fa2310",
+      "bytes": 904
+    },
+    {
+      "path": "configs/group11_15_reference/h200_group15_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/h200_group15_case01.yaml",
+      "sha256": "c453e46628483ab32ecd022b3bccbc9c7d9de1df5fbd16c5748f382911e7f848",
+      "bytes": 904
+    },
+    {
+      "path": "configs/group11_15_reference/persistent_kint8_vfp8_smoke.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/persistent_kint8_vfp8_smoke.yaml",
+      "sha256": "a3d10db12126a9f19b7a7bbbc7ff424caf2f2e449c1f5a82f606163071e6c19c",
+      "bytes": 851
+    },
+    {
+      "path": "configs/group11_15_reference/persistent_kint8_vfp8_w12.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/persistent_kint8_vfp8_w12.yaml",
+      "sha256": "966f4834c6e9a3cc824f55532e9a23c68e255c91d4fe0bb7af932a23eb67a19f",
+      "bytes": 897
+    },
+    {
+      "path": "configs/group11_15_reference/persistent_kint8_vfp8_w6.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_15_reference/persistent_kint8_vfp8_w6.yaml",
+      "sha256": "7859f3e6430fab3e98a341cad620e8e8cbe29a776478fd49be03c7b99e0224b8",
+      "bytes": 894
+    },
+    {
+      "path": "configs/group11_4_next_layer_prefetch_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group11_4_next_layer_prefetch_case01.yaml",
+      "sha256": "d8d943650108fd526d13c9f2445456a0c1d11ebe3896d04f56be1eecdea4784e",
+      "bytes": 1009
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case01.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case01.txt",
+      "sha256": "487dcc588af31757f2d50768657ca13d45268446b037e03b7933119289becd90",
+      "bytes": 467
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case02.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case02.txt",
+      "sha256": "627d8a3da07135710a75c053688b7cbf1dbfc1a64d46da0b5dc7c39265f0a65f",
+      "bytes": 381
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case03.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case03.txt",
+      "sha256": "bbea021f3fd477249e23ae85034e8ab72e69892150c2c770ff52ae0f8ce1aca8",
+      "bytes": 377
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case04.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case04.txt",
+      "sha256": "d1394b6f6461548b49a08973db07ab12372db229b474d83afe7f2d3d58201207",
+      "bytes": 479
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case05.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case05.txt",
+      "sha256": "d1948649528381a48d2b573046d13503087f333fb8ec93759d1c8f9f36384114",
+      "bytes": 378
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case06.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case06.txt",
+      "sha256": "8be49ac8c2dd7219829d49d318a811a2d694e6ab527dda355e0255a6d16df599",
+      "bytes": 245
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case07.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case07.txt",
+      "sha256": "269bde51618c3fc2450cabe78c4d3abdbedc77a3a54aecb8960011d4d4f4ea0c",
+      "bytes": 312
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case08.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case08.txt",
+      "sha256": "a09865166b0997c266aba57652c2f62dc5dabdefa13953e6385bf314d0da52ab",
+      "bytes": 396
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case09.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case09.txt",
+      "sha256": "b78d3758d22c241af796d4fdebe70c02da841e5a231d4dccf697a269e98a198c",
+      "bytes": 225
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/case10.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/case10.txt",
+      "sha256": "967cde0dd26a96a2e64d74b6557a5492a28ffcc290c6bcb8680be4d4c4a35b28",
+      "bytes": 351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case01.yaml",
+      "sha256": "5a02b01453f9a73b52643a7d6b2d931b82f3cb3e8de50ed9662100693e5a7f6d",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case02.yaml",
+      "sha256": "c655fbdf257502b5cf39ee526573631ef6435219f15ca12e3e42c91ae7c57854",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case03.yaml",
+      "sha256": "8f5be8f9a6502f664d80f0d6241f181fd2f65e19c2fa63874e1e152ab7d576c6",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case04.yaml",
+      "sha256": "9f59608bbc5ae699381055320a330eb8a230eb4de7e5102f4fe29fddec91b03d",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case05.yaml",
+      "sha256": "0fd0dfbc361331a9ecb2775fda7b5aae6c0f0f7fa181e8b5d016fd0af0f0a1ea",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case06.yaml",
+      "sha256": "1ba10ec78ee8cbb3995a3f4535c828a0ed4ddc2911c4335929024736ada67db8",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case07.yaml",
+      "sha256": "5c94fb94592d4032227a9d093146da9249c4600b61b0c0a9bc800023011e9a17",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case08.yaml",
+      "sha256": "752629de89d70082059c7c8db2f641f74989ac259f0d5c7d55f0902cd9cd6f3d",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case09.yaml",
+      "sha256": "e8085b15dbac650c33a2ce8304eeb2dee684ec15c5226320531c0759577719d2",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group12_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group12_case10.yaml",
+      "sha256": "bbc232e4c1110c9962de1288dbb08a29a2681b84ecd5b85646c8392abc8622c5",
+      "bytes": 1286
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case01.yaml",
+      "sha256": "44b9bfacd5f685c08c08c528da7c47caebfb57a47cb0b655406021c85d295bfa",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case02.yaml",
+      "sha256": "99b02e19e831f7b6c38a64804d495770b4e9a16deab3bac0def5f17da4ffe1b3",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case03.yaml",
+      "sha256": "e774da661bcb7658ee0d4286015f76fc536b671221c04e1287dee1ae0c69c078",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case04.yaml",
+      "sha256": "85f1ae227befffb725593eca6e7a45377c906596681f7c2774fbe7103bdd04dd",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case05.yaml",
+      "sha256": "fb11d2fa1c04da04d49e6113fe987e8bb068b9d9acbbe2d210f71c6c4d3f2396",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case06.yaml",
+      "sha256": "549164b8b4e5cb8fd865551f5ad89cc9878871bda152e9dadbf2b08b710e3fcd",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case07.yaml",
+      "sha256": "177ce3e3cc16491097ee8c8fdb86e458f352fd1050b28c5c4ac00cd805b3179e",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case08.yaml",
+      "sha256": "19a439a11a4b0663580b767116a202552e16d4717d7ab5b2699b03bc9f42eb59",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case09.yaml",
+      "sha256": "b35bcab33981d3285a96c7ae8dde6e3ff485a07a2188c9c817f7e1e7e695121c",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group13_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group13_case10.yaml",
+      "sha256": "7486357e979966140543414969378b20bd0c482c2bc6701d4f2122c25ac77ad8",
+      "bytes": 1284
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case01.yaml",
+      "sha256": "04296b9441252ea63623d0368f18814ea4113850a119cdeb9f02ffca26e73bb3",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case02.yaml",
+      "sha256": "f4df9afd2ff899ff6d9d8cdb8a5bd20acb2d902875d4a0dfc78adab51cc1a20b",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case03.yaml",
+      "sha256": "890ec49ea715674aa322b8b9bcd838767966b172a3224e2cdfd65deb93be5ec4",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case04.yaml",
+      "sha256": "9ff4d35e7462ea3af0708bd8fb124f7902031d5f0b290a64361fe7b17fcf8131",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case05.yaml",
+      "sha256": "0c737489283ae06dcb3e3a2f5775259ad9b85ee47d9c5c62a58c931a99e6dcf6",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case06.yaml",
+      "sha256": "1871c799f91eed50d643b039a8dfb500b262fd74dd4a180495bee3c8beb58607",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case07.yaml",
+      "sha256": "a496b1f0f09f9cb2748e24e408e068142fc0a2d2855e8be91f8738c4b9f6af01",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case08.yaml",
+      "sha256": "a486729f6d38fc868a45e61a80949eb66bab20ca7c98f4f47df9fa1a8413099d",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case09.yaml",
+      "sha256": "db4f73b41abe42b84c8240a3043954c98654a0fd6cab069ec667665275be2734",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse05_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse05_case10.yaml",
+      "sha256": "37701fdd766549feb8b25199a1c6d52c54fe1e182365e3feb9fca6849c4341b9",
+      "bytes": 1357
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case01.yaml",
+      "sha256": "0d764a94dfcc898c85a552f5b39b89e83f22704f8a9d7f1c710c3d4f66dd2455",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case02.yaml",
+      "sha256": "af574677dc32c0ef5b496f6651790110c7eb81178c98f23188d992894f51814f",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case03.yaml",
+      "sha256": "af38188da414d557a8a57bb722aa3bb02cae96f6fbd801042568f3c7d75227e4",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case04.yaml",
+      "sha256": "62178c450e1475cea5126d1c5e1937d54afd4d7a63e25d2978dc0d554683fa19",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case05.yaml",
+      "sha256": "04bd236af6f37a74268c8518774164a051913d9427c73bdc6c6489228e2ae182",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case06.yaml",
+      "sha256": "83d77fa4d24a363e098b8984d830cecc94a0bfc4c12c5f1e02cac44a8b292fed",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case07.yaml",
+      "sha256": "1a73584edcb772435157c717d5c08f8cc1bc22a3ec0eac6d3f0eb1a538bf51a2",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case08.yaml",
+      "sha256": "c3c29dfc7a131bfcc7fdfa670aec8b6d1bf014c20a65115fd8528c043d426ea3",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case09.yaml",
+      "sha256": "55f0edadfe0a1f73ab35d5ad126bd63647961b515a96c7dd17ce1af25e882473",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse10_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse10_case10.yaml",
+      "sha256": "a9c2af3c4daa1c0e96b8a1a92ff62d3820f7c7519b30b371fc4d8316828b8537",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case01.yaml",
+      "sha256": "e9ea34ad27a6ae61d91b2dd86504613f1eb5bd105aff4de331b73dc487836660",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case02.yaml",
+      "sha256": "713b7995e261845f435f89fcb609ce8696aeeaa77569aa0f078488a918623f2c",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case03.yaml",
+      "sha256": "9a864552afe4eebcf78cb2c718748f067dbc991f56b8d561283cd20a309a4a25",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case04.yaml",
+      "sha256": "8d63f7abd14fa7b7943b8d07930ec0cfa60c03d0e0712f6003f8b94cc88dd164",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case05.yaml",
+      "sha256": "431a0c8648db993e114fbc1a2f93b42284660bf0e888ce427680587ff6b48df8",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case06.yaml",
+      "sha256": "e60244d0aac7cdddf0c64488cf0a8230ebc732d25ac9e93967ad7c959d19a69f",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case07.yaml",
+      "sha256": "6c62ef7a8a1a28b22c89d7829c7da4a357a425b9867d674304169137cc77eb0b",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case08.yaml",
+      "sha256": "82bfaff9fa433fdd432e487205f0fb622be395cebea00e1cdca3159a8001d20b",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case09.yaml",
+      "sha256": "073a19d2c037823cd0d7f4b75b58031d8f45774b66493d98b7f2f10cd44dcf6c",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse20_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse20_case10.yaml",
+      "sha256": "531be10babf99792432dcb3e309e830a5af111466c8fd05d049e6ee4d93f4a9c",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case01.yaml",
+      "sha256": "697dc7979991cd74d3b73a844d899ab76815f436c3b18890322a99993c20b93a",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case02.yaml",
+      "sha256": "499152dffa40465a7780b1cac79e080c15f1a18e8a027bcf43150f6c62ed8b4c",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case03.yaml",
+      "sha256": "6f02baf7725333e9af78ac2ab32a7deddefc769854f0a431792b06f13b26c728",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case04.yaml",
+      "sha256": "e34c1a12c9bb03368a0cc9f8e83226c5a94b56df2866db33bd9183a750989c7d",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case05.yaml",
+      "sha256": "77d05a5bb4ac46d69ddb1ff9300f8faf13c9e9e21d45d0c5000ffe41861c5da3",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case06.yaml",
+      "sha256": "5478335531aee90777f65d54f01e599be78e621c234bedb4ae6309d7f4ea0f89",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case07.yaml",
+      "sha256": "0bee0c148f3d005737aff380935d47022004cc349ded9f9a33bbbe35fa974239",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case08.yaml",
+      "sha256": "42baf3132f820b36be03eff1809452d8b32387b3764247df85aa18c6024a0340",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case09.yaml",
+      "sha256": "c4e2608825d7a87c084239045a9def38e42e0b9de1c3690a6c76c84cc192bb86",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group14_sparse30_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group14_sparse30_case10.yaml",
+      "sha256": "44267df6f98323ad454713e7db01d54da67f7c2444f13d63782dc6ec136658b9",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case01.yaml",
+      "sha256": "12c705b5139e5b1cc89a33df58344f71b014fac94ec1ce9ec492009ddfd551d7",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case02.yaml",
+      "sha256": "e68ae181bd20d469a9e168b9809cf5b923470dc86efac266ad485ef1734d6d06",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case03.yaml",
+      "sha256": "bd1a4c2466b111320976d5320396bf4b60003fdf53ddd306881378ded5be90b1",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case04.yaml",
+      "sha256": "f778d09723fe04ec63489e81c94a4d750a48cc9f145c8dcfc948551dc4563ba0",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case05.yaml",
+      "sha256": "2b740c7aabd9c771342407c526aa1fe7a844606f19c72970b56eb7d880d934f8",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case06.yaml",
+      "sha256": "1746e564fad2303ffed35391cc5223cd65186d9d1cc03c0993b4a68203a4cae7",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case07.yaml",
+      "sha256": "87d9f9bd035e1c5f6199df9b94e5b9c3616c3695eca1575d3c6703ab1ee3da72",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case08.yaml",
+      "sha256": "e8bed992eeebc88b70fb8fe0057e215b498bb1a01d7fcde5bf048acfa1c493a4",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case09.yaml",
+      "sha256": "ec2221481e14eabcc2c4e6aa5d884471b28912ccdcdb14da2eb2f645cc88cf08",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse05_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse05_case10.yaml",
+      "sha256": "95aa0c2bf978594fd1252d0937fc2448acdce621b8cbadd7843fb241915fc03f",
+      "bytes": 1352
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case01.yaml",
+      "sha256": "33812839487bc8de8fa9a48d9b09213e1bef0bae79d90285367127460007d84c",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case02.yaml",
+      "sha256": "9829d24dc110a5086bfc7a1d1d6e41386e180843e8926bb354276ce399e0782c",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case03.yaml",
+      "sha256": "e9446ee14a212f15346ed2b643708334920b90e15a849946c2cda0ca2bbba50e",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case04.yaml",
+      "sha256": "27f817557301e8c55be2f0e1096ea4945a25a46b31f5118b6612437c942251ec",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case05.yaml",
+      "sha256": "edb9d91b1e8efdfb7a260adb5b0f2341e5e165db7b2afdaca15bd23ce8cd270f",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case06.yaml",
+      "sha256": "604931de267bbffa733a7ad32fb89cac646d4eac3aab09ee9d1c4ca6f395a851",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case07.yaml",
+      "sha256": "0e0ba0e3648611bcf8dcc33300b6452a1670b967e88c612e9dbd1ba4f315d34c",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case08.yaml",
+      "sha256": "206cdf6bbe22779604bf92f1f498558765f44a4dd330553e0f3fa2bba2a97944",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case09.yaml",
+      "sha256": "504aec60e9f24e4b7c7e46aade8a8c66a50826ccc519dc57e2346d7d114df9d9",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse10_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse10_case10.yaml",
+      "sha256": "ec0b1b4178e2c8fcd63b3ba4e63f3c285dde7a0017c57e1002fddca60dbc559e",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case01.yaml",
+      "sha256": "cc3852d4fdbddcde7d9160be9d16c60e3739ab5e37321182ddcf5ddec62434ed",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case02.yaml",
+      "sha256": "2c82c4053a9ea29e6649ba04594db285412beb3187da813d2f961ee9a4c39673",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case03.yaml",
+      "sha256": "064036ac3d4931e7e4eb4ed3045b92226a161fcd4679693c419a3904369e4af0",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case04.yaml",
+      "sha256": "819436d5e5dd7b659e345879350b831014ec05b42e8b5591af3f9e82a7cf83c7",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case05.yaml",
+      "sha256": "bc2fbed86ff0678aa7734102e7befac93988a97daad0729c08257acb8d30426e",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case06.yaml",
+      "sha256": "9c863d256078c3cc77745df188e15868a002bb1c20d1df45cda190c0560c422d",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case07.yaml",
+      "sha256": "b8ba9f0c6caac75c4256c739c5a5260b67f420108a0b83220d5ca0a86eb81083",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case08.yaml",
+      "sha256": "c1feacd5ed4174f403fd856a5c839f1410cf03484c4da993eaa9e46e532ec8d9",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case09.yaml",
+      "sha256": "75f0c4974ca3dc977fce933eef16c0f2f5513089fba8f441e0eab846583c4589",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse20_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse20_case10.yaml",
+      "sha256": "9b5e5082c658dd5a5bb70dc9d1b68fbdb60cd6bb0d549f925b4141c53eaf5116",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case01.yaml",
+      "sha256": "b1882d3b231fde576d23509ea5395abf6706b160f59d7d3fa451caf6abc82c07",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case02.yaml",
+      "sha256": "baa9d7733606e9dd5a84cc4fcbb96f0996c3873515453c226ed5438931d4189b",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case03.yaml",
+      "sha256": "0d586186749571336f5c0f9fbcdfe16f4da3e93f4c13d6651c659af8b7396f7d",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case04.yaml",
+      "sha256": "5119dd4936d628775a69a7468154cbc2e0419d0f67986408ced080c9831df93c",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case05.yaml",
+      "sha256": "8a6e5b34c06217daaba7dbe4c5ee54a9733918dd89f46ced94bc10d5695b120c",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case06.yaml",
+      "sha256": "7a9541185ff5750f9aa445d05b8c31ec3f69953308e4d23df2331a034b52e12f",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case07.yaml",
+      "sha256": "f6cab589f175bbd3eb738885b01ed49cd116f1bccec032e95a7eb102c8e8606c",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case08.yaml",
+      "sha256": "52316da33c625a4cdda03e7429280dbc2c80b71d4777ed0f47fa7e2057c622c6",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case09.yaml",
+      "sha256": "613274f23e8158cc5d667617c6cc20c2e73d23eb14e5e574420aae62bdad5568",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/group15_sparse30_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/group15_sparse30_case10.yaml",
+      "sha256": "faeba44c4b3d47914b14ebd68f64082dea89c61a29ad25a983322bfb050954a9",
+      "bytes": 1351
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/persistent_smoke_group12.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/persistent_smoke_group12.yaml",
+      "sha256": "258fce93da3d95a6c9384dec50b247d2df3cd9934e27cb5e7daafca97eef3968",
+      "bytes": 1302
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/persistent_smoke_group13.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/persistent_smoke_group13.yaml",
+      "sha256": "56405a883612ed8c3ad9a0d5404a7ab0312a8cdd006fa8fa8f5697f43841e5e3",
+      "bytes": 1300
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/persistent_smoke_group14_sparse20.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/persistent_smoke_group14_sparse20.yaml",
+      "sha256": "efb708fabfbf846f256cc1d59bac144b8fab98b6c1e2c07de406c98380cd5197",
+      "bytes": 1372
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/smoke_gpu0_group15_sparse20_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/smoke_gpu0_group15_sparse20_case01.yaml",
+      "sha256": "7cac2f87a1cbbe87d39a39d2914807c252438a83a38667e43467f20d628c5186",
+      "bytes": 1361
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/smoke_gpu0_retry_group15_sparse20_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/smoke_gpu0_retry_group15_sparse20_case01.yaml",
+      "sha256": "e1605b8dbc0523336a9b3d35a5d88251101e36f73ea9f6bd282d7b2accf619e6",
+      "bytes": 1367
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/smoke_group12_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/smoke_group12_case01.yaml",
+      "sha256": "a0979e6c75297560d7cc66c4ca1e13fb4782d672d73ec2d714416a285ad2342c",
+      "bytes": 1291
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/smoke_group13_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/smoke_group13_case01.yaml",
+      "sha256": "d6c169471521d1b82b9ef4944f321d90d6f06ac30be5b0ba7c1dfd280af94b79",
+      "bytes": 1289
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/smoke_group14_sparse20_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/smoke_group14_sparse20_case01.yaml",
+      "sha256": "6b35e1067878de8e9f4ce76a6730f7b036533edf5451a34174c72de9f8264db1",
+      "bytes": 1361
+    },
+    {
+      "path": "configs/group12_15_corrected_campaign/smoke_group15_sparse20_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_corrected_campaign/smoke_group15_sparse20_case01.yaml",
+      "sha256": "ecb3d069ac28465ace99435f4e3a02ff06c4debff82d8756cc4cbfea914d3672",
+      "bytes": 1356
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case01.yaml",
+      "sha256": "1dfba8ed5c815c6b8e89eef7556d998f429b837ee878e8fa8af18e99a70034f2",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case02.yaml",
+      "sha256": "7a5ca66edce0e0e492bee02c13349d1dc2bd363437aec6395f34d31831a6967c",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case03.yaml",
+      "sha256": "2bd77185205422877d4e7f2b9f5f9ee3be91ad7e03dea6122fce21b202191192",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case04.yaml",
+      "sha256": "9a285f3f0b719984c4a761407944a3bef23087e327d03b64ce2f2b62c43dd073",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case05.yaml",
+      "sha256": "cd76fce842f808438a43555854643bffce368ef1b0e4763e92e735af2440adc7",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case06.yaml",
+      "sha256": "2bf1d3f993e779ac6682eec8ae9826d1947449f2fdc47d2fa5ef6b742710cc10",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case07.yaml",
+      "sha256": "05d4ae61b96956067b4982705c956f9e2963e56235baef121f86d11b8e5ff4ec",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case08.yaml",
+      "sha256": "84b47e1f6c9a20ff53176cbf95f9aea2c6bebd2fdfd17d62be4b2a8426505c8e",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case09.yaml",
+      "sha256": "57d3b9de178b126755bc9480e2a4545150543a60753d4acb49d8823d4c990d20",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group12_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group12_case10.yaml",
+      "sha256": "470744993a8077250765f0a2a75dfab007ceb3a9c2d92899ee8530f9ce594692",
+      "bytes": 1420
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case01.yaml",
+      "sha256": "0018c9a5f93e54816c3893c71f28cbbb0b7928be5a63e60e98158a84e39d25dd",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case02.yaml",
+      "sha256": "9425c6474beba5fdf746fc10e246d62fe99515fa39d8b2667c6d6a38bd8219d5",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case03.yaml",
+      "sha256": "66d9e550116eee53dcd338263bc48c950205c06952947a50a0a8c7a1789137d1",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case04.yaml",
+      "sha256": "422b8fbc0379458e0be53f839906f7ae593dd75da60f18d4a48de6fafa84ecc6",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case05.yaml",
+      "sha256": "a2d64ad0d9117b12302716beb810d889e539b8d2d7b02249e7adca9f044fc1d9",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case06.yaml",
+      "sha256": "8459e85cc62654c1f4c4f8519d8c7a1c48d1007e777ecb611e4c2bf0c5e0a35f",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case07.yaml",
+      "sha256": "6d7f9da4743753ff8299619bc84d4d552f755c81e648d1f2653176dd860334e8",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case08.yaml",
+      "sha256": "8b2ad58ff095516e8dabb9429762bc6c66f32c8aa3ad4b44341c00d6469c5c21",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case09.yaml",
+      "sha256": "c85f864262b285cd7f4a5c759c34771e3d337101ab8bd6fb8e1eedc685cf30c0",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group13_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group13_case10.yaml",
+      "sha256": "51641ed20df58b213c529c677aa152a7ac848a5f4a175dcda8085699bab0ccd1",
+      "bytes": 1418
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case01.yaml",
+      "sha256": "bac551103549718915a07c48b66fb4a51cbb1c932a0090e14cc4aa19077d55af",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case02.yaml",
+      "sha256": "36d2cb8969c77eaebdaeb77f062b92f718d04fc0145402782738c341f0031784",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case03.yaml",
+      "sha256": "3b5fb5d9e3be0a73f0c11999a7b6dfd79e346038f4f3e1730a896bd0452659dd",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case04.yaml",
+      "sha256": "4c7f452486cb6860fc6c8a08beecfaf215ca9d1b8f5252b30cb66ebf9879b7af",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case05.yaml",
+      "sha256": "638cc896fa4be8a360533483313a222a1cb1db94c481b24fa24775fd822cec22",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case06.yaml",
+      "sha256": "0c3a2e6072387bd21be7c4ebfa956bcf2bc1f71d1d706d5e376b7a76e034fc41",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case07.yaml",
+      "sha256": "5d6ee40f44cbc94d82943d44d7a24a0e698670bd3a2d145586678e43a23891b1",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case08.yaml",
+      "sha256": "a000582b3e7e685c4a3205ae112e3a372b149c28285c4567a0a54dbce2ffe7ad",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case09.yaml",
+      "sha256": "628b7992562d35ca6d283e1747e1564b304e24b15bf05d7ca6a2d89ff3485369",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse05_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse05_case10.yaml",
+      "sha256": "b583d33a032cdbfadb3f694e7a05c77402b2f95427aae2d418723c060c9b98a8",
+      "bytes": 1491
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case01.yaml",
+      "sha256": "4f79ce1a4dc153272f9887eb3083a964976d5fbb27483ac88e98bed164d32420",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case02.yaml",
+      "sha256": "0b474b81b1c9494860f636927a5fc72a79f1a6a9f4338f10d0e74ee36d542a54",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case03.yaml",
+      "sha256": "dc0d130aa766306a3fa58195dd5bcf40ddfa72fb0fb351f01fb53c6ef1b6bd41",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case04.yaml",
+      "sha256": "b442ac125177e782f6b60c46579e305ea9f1a560192a200ceb6567750dede361",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case05.yaml",
+      "sha256": "82dabda120bf8ef59d19321a20e3f4e538130ccdb9f85fe09bc84b51ad3dd544",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case06.yaml",
+      "sha256": "2261bcce33542a0671d1c48c735cbc97fe323c18249efe189b18aeedeafc9dec",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case07.yaml",
+      "sha256": "1c8dac0ce37b541e4805f945b046e33849c94fa1998e07dc32692c3d1620bc8b",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case08.yaml",
+      "sha256": "01b528bb2bccafb83b5afb6f296408b5f6b47da05860670d0e0b281b76e7b58b",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case09.yaml",
+      "sha256": "fda67e400561a2196aeff612148eef9a2d24439aeef00ff39618777c56dc5fd7",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse10_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse10_case10.yaml",
+      "sha256": "d58bd6a7ae6636e9c0a6f6e0bd39a32404ce18d2525d9da7dab0b9e0049341ce",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case01.yaml",
+      "sha256": "7a42df07e3fe7dd0fc62b2268380584de558c31aad7204aee9bdc1d4f108f813",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case02.yaml",
+      "sha256": "d602a4faecf440707ba758275fe1721f5b7b259b250fa32323383a2ef548643a",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case03.yaml",
+      "sha256": "df41c32b0ebce9a7ac01924897d8d28e04065c15f0ca567863940a6d7f31295f",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case04.yaml",
+      "sha256": "8c43ac16c1e860302249a0d27edeb46eab0a7ccf914156dcf8d5cadc4482721a",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case05.yaml",
+      "sha256": "c880c902a44473b016477f661400f7b363e22ded89b5eb976240f311d8485a04",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case06.yaml",
+      "sha256": "140b2a6fca729dd0c656a2e336110e285f35f71e31592b43345a94651ce070ec",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case07.yaml",
+      "sha256": "e4ac4edfe74bbe62656f3dc3f7f6916ee62c0f8cecde13e41b949221d9929c40",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case08.yaml",
+      "sha256": "1d94a070c6e095674c90ef56d58186e7007f3429dcc061beee696527c4a06db8",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case09.yaml",
+      "sha256": "a8d80dd704e9980fcf331d17e7659ed67869e247f044ee2fe6cbacc2f1e83451",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse20_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse20_case10.yaml",
+      "sha256": "7920e4334db778774901bf2d640204e0a88aef6038499339e338f8ddd1d86447",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case01.yaml",
+      "sha256": "9e6aa8a32391ebc2b34af41dd858801484e6d3b7c39e2d33e591347af8427dfe",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case02.yaml",
+      "sha256": "264a482edd902b251e28872902833826773cf013a83da1ec54700e2784d26ddf",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case03.yaml",
+      "sha256": "3252cc7a9e3b36f53ec99179f57528f760b8ec860616419d85f401c37075e58c",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case04.yaml",
+      "sha256": "6c0eb0d203a0c7f4c9941e00a793ff4d8898118362575b30eae9ceabea941c2d",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case05.yaml",
+      "sha256": "82f5cdf27da538a149c7cf2d84c0c52f4e94d7a8dde398380d95e080e4609e97",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case06.yaml",
+      "sha256": "0bbf7a7636ded7df2680adfcf86dcae9583f905e6f753cdd43635760b199fac3",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case07.yaml",
+      "sha256": "2816d465db293e3394f1d14aa81044cd4500254036cff8347a9118654b31c2d5",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case08.yaml",
+      "sha256": "239a4f9d323af12d7154bd712979733265b9263c05ecf3fdc6dfa1f3f2a9dbc8",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case09.yaml",
+      "sha256": "e1d9c28c5a41b10fb6ced295db9267c354a93ec23c7578943368735670b45a1b",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group14_sparse30_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group14_sparse30_case10.yaml",
+      "sha256": "f237d8e739563e4d16119b7b6139fa1509c2e6180d8252a8df6fbf19c186fbe3",
+      "bytes": 1490
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case01.yaml",
+      "sha256": "63d5e10c14ee2531a3b96203bc4eb80fb5cdc13832707d2f8a85b96cade02ac0",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case02.yaml",
+      "sha256": "ab83f453a2eef57a176065ae6e565d89b3dd41a6c4c86dc8f71c5d2082e79bbd",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case03.yaml",
+      "sha256": "2e10bf02991311014314c6df4dddfce60e02b2499a0b0c0e39533d64f356a27b",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case04.yaml",
+      "sha256": "1b571eb135f5997168d2de956bf2f9c8c2b4adabe04767d17521ea66fba8a477",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case05.yaml",
+      "sha256": "d538f9cd6e71c1431e01f4935c28ed45237fe7ac80ac59c25ee950a98ee5c176",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case06.yaml",
+      "sha256": "2db7448636ec898131a794311802467890ff4dbf81b1262a85643c6b24d0a3a9",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case07.yaml",
+      "sha256": "12905e9c174989163eeaeb1b859549f4ed064648558bf92895da74a94953777b",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case08.yaml",
+      "sha256": "58866607fc33dfc882afdb3f5bcf907fc5ead23b935234ad8f3e66683621cd1e",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case09.yaml",
+      "sha256": "252c82fff51b0167b46839176122b1ed47f8a155ebed50bd1657c0d8b6dd9c62",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse05_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse05_case10.yaml",
+      "sha256": "ccc1fd04b6015c39dffce76938722f839355de7000132106063e9702ca5a0c51",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case01.yaml",
+      "sha256": "61465cded09507daa943da4f81c62b3175fc3b1e238538c5327d9a0d3eecd291",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case02.yaml",
+      "sha256": "6232f3f16d028c20da99b24b12d7f35f06e48dd4afb5be214a1c2d07699d1765",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case03.yaml",
+      "sha256": "11e8c54f32b0ad773a7cfabe11bbae810d82da95216819ac9771d456d110bd88",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case04.yaml",
+      "sha256": "7474816b49ac5ecd5d0947f2a124d36558757c38e00d1548ac31a039db9c4435",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case05.yaml",
+      "sha256": "9b98f161035fc59cc2f32a7a71c2b2407d022c6e9071b3a908a5f33020df4fe9",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case06.yaml",
+      "sha256": "4e01d8b98e77e396e9620cf5ef15f5865ddbe3aaf0ea554e40a474906b6e4942",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case07.yaml",
+      "sha256": "7d29e8746506b50bdff4f29583fef63280b0e1ca1cea5e13fcc961ef9b4b8edd",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case08.yaml",
+      "sha256": "99119ccac36134d61321051215fb7888060bf42158d519ef43a668862b5f2c0b",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case09.yaml",
+      "sha256": "8b92301400902ad2a95668c784f3d1eac90a01dfa59dd11058d1234d398c3e2d",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse10_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse10_case10.yaml",
+      "sha256": "93f82266588b8eb4ef8b8f16e6792f63ab2f7f45f44182da87f14eee618c754b",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case01.yaml",
+      "sha256": "e3c8d67af1824f8c14eeee05902b0d94e4af241bad09b92367751752574b129d",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case02.yaml",
+      "sha256": "07fbd5e728d44e390dbd1db6e47f08ebf2bfb2cde4918ffddd244042680f1ed3",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case03.yaml",
+      "sha256": "8258999d19056e8924a0c2b7c021122d0309796ce70a58116fe31c1f3864bdb2",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case04.yaml",
+      "sha256": "21b775873a7a4c81eb861f8f5df7efe24d022334c6ec7f184cfe5934b475cefb",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case05.yaml",
+      "sha256": "2b1397202861d5eeee55e0c337677c504228b4a2cbe1c3f6872de933b745d96d",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case06.yaml",
+      "sha256": "f99f0fc7cbed2a30f6e62c04fe5095133897e8f30bc1f8f5be64aab568f04dd4",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case07.yaml",
+      "sha256": "23210c68587464608a674900c9160c8bfd5681e2dc016f6dc6253ba9dcb14ed6",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case08.yaml",
+      "sha256": "959e849b16179c99cdb774176b613076780201237d27dd9a1c42a6009776d54b",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case09.yaml",
+      "sha256": "9b5ca3eff7f43f08bf67a82533412eeb56f20270cfe392555c83bdc529f2a625",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse20_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse20_case10.yaml",
+      "sha256": "e62828502b328b64b75eacbd132f9fc92cc11f2e5cd6cce1800b680cb3f17a89",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case01.yaml",
+      "sha256": "f058ef0aa9ed91414504b80dc3ad67062f731b7f7a03702c0e9448092a48aa77",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case02.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case02.yaml",
+      "sha256": "53d4a7c80ce5d77dd4ef1f295871904e365674a74e541964ca7626f842d7375e",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case03.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case03.yaml",
+      "sha256": "b20c9a173bef99a5b9503c88b311473a093994edf77225f6d666cf47e57ad930",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case04.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case04.yaml",
+      "sha256": "7355babb69c5953bcaf578a91eed0f150a40a258da99a1fdda55b912c9f0bb62",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case05.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case05.yaml",
+      "sha256": "428b1da524cd4ebf704270464c2c3df9c68361b27baaa894a36dfbdcf9ff2dd6",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case06.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case06.yaml",
+      "sha256": "5325d276b5d9a8e32273f9908426b099c2af27fcf57e3aa623e40587d2e5d9b7",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case07.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case07.yaml",
+      "sha256": "7f78c41219e1ff86585dee15432ec31d3e7916231814183a03301adc47b29342",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case08.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case08.yaml",
+      "sha256": "357bfc141c171436d11205b1fb641418f324548920619ee83e84290a4bb7a6e0",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case09.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case09.yaml",
+      "sha256": "0dd96351c40a8d5c9aea458ad0573b5c1c2f7f35a6f6e9835b3d083077550a06",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/group12_15_persistent_campaign/group15_sparse30_case10.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/group12_15_persistent_campaign/group15_sparse30_case10.yaml",
+      "sha256": "c4bf29bcfe58b39e32edd7b0dcf511ecc512e751a3470bc65c3ecc4d993a08f8",
+      "bytes": 1485
+    },
+    {
+      "path": "configs/longlive_latentmem.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/longlive_latentmem.yaml",
+      "sha256": "8c39046b3ba098b9a942bf6d67681aa6f02233430b7b2879d1f59b1177138fb2",
+      "bytes": 953
+    },
+    {
+      "path": "configs/longlive_native.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/longlive_native.yaml",
+      "sha256": "4ad9ca930038061c80e02d1ff45e01fa11db17716b78db6d038b67ccbe5b9531",
+      "bytes": 705
+    },
+    {
+      "path": "configs/qprev_case01.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/qprev_case01.yaml",
+      "sha256": "c5780e8b5e302fa11a6315325cbf26be92f2dd6208917e0da602380a22a4c46e",
+      "bytes": 1108
+    },
+    {
+      "path": "configs/self_forcing_latentmem.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/self_forcing_latentmem.yaml",
+      "sha256": "aad2004e734c68b3715f88b6dcddac5711eb3354f835fa3ecb820f63aece0ba5",
+      "bytes": 812
+    },
+    {
+      "path": "configs/self_forcing_native.yaml",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/self_forcing_native.yaml",
+      "sha256": "fe664b72dfc6e3bfcffa61fd705c4962e592fb3e054cfba8049b719da2ea75da",
+      "bytes": 564
+    },
+    {
+      "path": "configs/unified_evaluation/native_w12_case01_reuse.json",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/unified_evaluation/native_w12_case01_reuse.json",
+      "sha256": "0441c38bdb1bddc09b3e7d2ac6bed5a266b49391ba3a6bc765a00586dedfb632",
+      "bytes": 1486
+    },
+    {
+      "path": "configs/unified_evaluation/native_w6_case01_reuse.json",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/configs/unified_evaluation/native_w6_case01_reuse.json",
+      "sha256": "3a4eec36079aeb9e36e9aca432d8c62cb962651062ec2477e682b7b8a503f73e",
+      "bytes": 1479
+    },
+    {
+      "path": "docs/unified_evaluation_pipeline.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/docs/unified_evaluation_pipeline.md",
+      "sha256": "023673c648f280a785102a5e9d209ac195b72efee93cb5519167ddb273e30462",
+      "bytes": 1707
+    },
+    {
+      "path": "evaluation/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/evaluation/__init__.py",
+      "sha256": "7a55a18e66e0043309cb7ba0d72fc4fea9a9d1c2d6e2f4d3339a92c56c626d86",
+      "bytes": 49
+    },
+    {
+      "path": "evaluation/aggregate_table.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/evaluation/aggregate_table.py",
+      "sha256": "47ff42800b018f7ec2d95a26aa64b72f2fc3d1af9169c2c84d14b78e7e59e205",
+      "bytes": 426
+    },
+    {
+      "path": "evaluation/unified_pipeline.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/evaluation/unified_pipeline.py",
+      "sha256": "08d05f2c02d1ee1b63a951f88fda3d25f235ee2621a0b2ee0f15330a7510f940",
+      "bytes": 7674
+    },
+    {
+      "path": "fouroversix/quantize/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/quantize/__init__.py",
+      "sha256": "e2f04399b4cd7fc0d74c280fc544f15cdd0b694f8f6a5a2f80ce432a4ccd7efe",
+      "bytes": 247
+    },
+    {
+      "path": "fouroversix/quantize/backend.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/quantize/backend.py",
+      "sha256": "0dedfde50f806dd40c89902517bca1df6279646e9439f7ac61acd959e400b7cf",
+      "bytes": 1861
+    },
+    {
+      "path": "fouroversix/quantize/config.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/quantize/config.py",
+      "sha256": "c217f152494321be794c98e2d7b268b6d1da73d5787750f7f9f40787fd2f6e28",
+      "bytes": 2068
+    },
+    {
+      "path": "fouroversix/quantize/frontend.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/quantize/frontend.py",
+      "sha256": "cd63485a4aeb189f152e321d5897d3a3c9ad030332509722b72f0eb4372378cb",
+      "bytes": 4342
+    },
+    {
+      "path": "fouroversix/quantize/pytorch/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/quantize/pytorch/__init__.py",
+      "sha256": "5de37c312e6af17efd14331a3b742c28eebd9b290e508299d402e23e69e6f15b",
+      "bytes": 82
+    },
+    {
+      "path": "fouroversix/quantize/pytorch/backend.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/quantize/pytorch/backend.py",
+      "sha256": "32184f56ae143bb652e12e7dcf38c24e7bdf4d0bfaab7b6681a4573b8d1de511",
+      "bytes": 3479
+    },
+    {
+      "path": "fouroversix/quantize/pytorch/reference.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/quantize/pytorch/reference.py",
+      "sha256": "c5038167ad3abda726f3b01823ab9a16fb3452ae7fdbda058ebc29819a2a0b95",
+      "bytes": 11387
+    },
+    {
+      "path": "fouroversix/quantize/quantized_tensor.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/quantize/quantized_tensor.py",
+      "sha256": "dfbcf0760460d388ac8c1a1564a58df1bdbb4e0fabdab5328bd96ec027778e86",
+      "bytes": 8160
+    },
+    {
+      "path": "fouroversix/quantize/utils.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/quantize/utils.py",
+      "sha256": "5ee154c2f6570e5df4285d6f63f8a5d441b7e9d2b7f325ef24c8f95cbc7154a6",
+      "bytes": 3238
+    },
+    {
+      "path": "fouroversix/utils.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/fouroversix/utils.py",
+      "sha256": "1d870c6252902fbd01f31bfd2ca35b31cfeb5c831b5a3bfe07971f35553494d9",
+      "bytes": 3813
+    },
+    {
+      "path": "generate_latent.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/generate_latent.py",
+      "sha256": "4b7730c5395d7500694198f06966ddddacd7a53a5cade9454d5eba7d5bb50237",
+      "bytes": 13724
+    },
+    {
+      "path": "generate_latent.sh",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/generate_latent.sh",
+      "sha256": "c711dff2ca5db22e081382fde95be72bada0b4d17bde9d1e3b80be89aa0b6932",
+      "bytes": 1698
+    },
+    {
+      "path": "group11_15_remote_handoff.json",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/group11_15_remote_handoff.json",
+      "sha256": "759043dfbbb5eeb560245dafe03ebabbf9c2d365ab127edd3f5c7f1379bd3899",
+      "bytes": 1448
+    },
+    {
+      "path": "group11_15_remote_handoff.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/group11_15_remote_handoff.md",
+      "sha256": "d5fd5d6271952aeddd92e40be309c20b89b0d5b9c7af82110a344bda7d369c0e",
+      "bytes": 2880
+    },
+    {
+      "path": "group11_4_static_contract.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/group11_4_static_contract.py",
+      "sha256": "5aa6575cae6dffd0031f7da258c4bcf70c0f39f67cd4673a2ebb3cad730750d3",
+      "bytes": 1577
+    },
+    {
+      "path": "inference.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/inference.py",
+      "sha256": "6552d5562ec8ef1f5162483b75dce59fafb96299888b79da822fa29bd7e91d02",
+      "bytes": 27169
+    },
+    {
+      "path": "inference.sh",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/inference.sh",
+      "sha256": "1221ee33079ae8d9b02d040ea2c5d4b53085a2882e649b33df8c5b5d3062c5c4",
+      "bytes": 1977
+    },
+    {
+      "path": "pipeline/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/pipeline/__init__.py",
+      "sha256": "b2a8af3e74f8746224bf295a12674601b16aa12a03877cd39066e3aa8f7492dd",
+      "bytes": 100
+    },
+    {
+      "path": "pipeline/causal_inference.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/pipeline/causal_inference.py",
+      "sha256": "4b17ca6c4b9af0f541e30ef56b80f6eb0ec17c524c0391cb47d7cbee8e3c36db",
+      "bytes": 29013
+    },
+    {
+      "path": "reports/LEGACY_RATIO_RESULTS.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/LEGACY_RATIO_RESULTS.md",
+      "sha256": "71ed6cb23ca9c12af91b35a04bb8222bb16f416a0f6d4d95578e69cdeff3e895",
+      "bytes": 485
+    },
+    {
+      "path": "reports/group11_15_reference/draftmap_rag_group11_implementation.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_15_reference/draftmap_rag_group11_implementation.md",
+      "sha256": "9c236e02a91d673518320ad11750c0fc906eb46dec1d2190181919eedef8f25d",
+      "bytes": 2127
+    },
+    {
+      "path": "reports/group11_15_reference/draftmap_rag_group11_insertion_point.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_15_reference/draftmap_rag_group11_insertion_point.md",
+      "sha256": "ba46051bde04e1147f2d0402f766d054ac26ee2331c3f33f0c27512271ac7fb6",
+      "bytes": 4542
+    },
+    {
+      "path": "reports/group11_15_reference/group11_all_gpu_draft_quality_sanity.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_15_reference/group11_all_gpu_draft_quality_sanity.md",
+      "sha256": "7960d169337637dae52ed158ac4b1b4f0bf5a73601387f8349026d4d28d8981e",
+      "bytes": 3039
+    },
+    {
+      "path": "reports/group11_15_reference/group11_all_gpu_retrieval_equivalence_audit.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_15_reference/group11_all_gpu_retrieval_equivalence_audit.md",
+      "sha256": "0a8ac680012dbb05133d495a9546ffe3d125e06cb1a4da8d8d1a897568dba540",
+      "bytes": 8982
+    },
+    {
+      "path": "reports/group11_15_reference/group12_19_corrected_campaign.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_15_reference/group12_19_corrected_campaign.md",
+      "sha256": "bd5ea50662bc6152931de50b9c457d54418a478394355ca26f7a5d16b72e9364",
+      "bytes": 1690
+    },
+    {
+      "path": "reports/group11_15_reference/group12_19_draft_memory_audit.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_15_reference/group12_19_draft_memory_audit.md",
+      "sha256": "139596f62eff1e8c2123a201ed64a2405cb6990ddefd42fded5e954a45f86358",
+      "bytes": 2684
+    },
+    {
+      "path": "reports/group11_15_reference/group12_19_execution_contract_audit.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_15_reference/group12_19_execution_contract_audit.md",
+      "sha256": "0b08ca7b025e8900230c98362524defdf0cb466fd3f4a39eaccc01ebea90c5f5",
+      "bytes": 3987
+    },
+    {
+      "path": "reports/group11_15_reference/runtime_memory_measurement_method.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_15_reference/runtime_memory_measurement_method.md",
+      "sha256": "b518337bba324df8ea1cbbe0c02d2472efffadae8dc4f91b753b5cb5484c1153",
+      "bytes": 1879
+    },
+    {
+      "path": "reports/group11_15_remote_handoff.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_15_remote_handoff.md",
+      "sha256": "7741d14f4d5a4bcf8269614fa62bdb504b53a9af253cae7c2d968627fd5273ca",
+      "bytes": 1169
+    },
+    {
+      "path": "reports/group11_4_prefetch_static_validation.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/group11_4_prefetch_static_validation.md",
+      "sha256": "f5d8084f7800e9b7d2193b8606c0a1307d434dffd829620b52e2140d523d3417",
+      "bytes": 1519
+    },
+    {
+      "path": "reports/phase_bbao4_formal_f120.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/reports/phase_bbao4_formal_f120.md",
+      "sha256": "e92f10801bd9d3113472e988b3c167ce5f834054e1cbb2d4bb49926183221ee9",
+      "bytes": 3136
+    },
+    {
+      "path": "requirements.txt",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/requirements.txt",
+      "sha256": "d6419f0943a4d324b25bf0bf4283c52f7e2a00f6dfd5645056fb00b1a1e01b23",
+      "bytes": 719
+    },
+    {
+      "path": "results/group11_15_remote_handoff.json",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/results/group11_15_remote_handoff.json",
+      "sha256": "c516cb63c1b7c011f2e5a9fe4a67a8397e6c2d28afd46791dc46551d28126e93",
+      "bytes": 494
+    },
+    {
+      "path": "results/phase218bb_ao4_f120/case_01/bb_ao4_f120_compact_summary.json",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/results/phase218bb_ao4_f120/case_01/bb_ao4_f120_compact_summary.json",
+      "sha256": "eeb9e5b880d6fe30c602fba7c5189392d1f54c58c83e0d8b97f66dc6bd4834f5",
+      "bytes": 5938
+    },
+    {
+      "path": "results/phase218bb_ao4_f120/case_01/bb_ao4_f120_video_integrity.json",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/results/phase218bb_ao4_f120/case_01/bb_ao4_f120_video_integrity.json",
+      "sha256": "5fb5af1a56ba743a346a9121d83619a24a54164093673e251bd4c2b1ecdc6137",
+      "bytes": 3466
+    },
+    {
+      "path": "results/phase218bb_ao4_f120/case_01/rank0-0-0_lora_memory_measurement.json",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/results/phase218bb_ao4_f120/case_01/rank0-0-0_lora_memory_measurement.json",
+      "sha256": "212cfa22a4e95f18aa94e37cf6c456f945120170cf501c2bc4bf94cc4e7b07fd",
+      "bytes": 1478
+    },
+    {
+      "path": "results/phase218bb_ao4_f120/run.log",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/results/phase218bb_ao4_f120/run.log",
+      "sha256": "f46f119f47b9446a9ec087820cdae94e6c4419de8525876834fba9790762467f",
+      "bytes": 8787
+    },
+    {
+      "path": "scripts/aggregate_final_events.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/aggregate_final_events.py",
+      "sha256": "89d7173e8777b2cd4b1eec49ad6727183b5de7606be6cbc7a5def74fed07135c",
+      "bytes": 7037
+    },
+    {
+      "path": "scripts/build_group11_profile_v2.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/build_group11_profile_v2.py",
+      "sha256": "d5f3a96cffa11328101f4ab88256adfad7f82b40f01f44ff69415b18ed3cc314",
+      "bytes": 8199
+    },
+    {
+      "path": "scripts/evaluate_all_canonical_aligned.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/evaluate_all_canonical_aligned.py",
+      "sha256": "050b6a4e0afca5ff90adbaa2936da5e5e5f3566c7675870d738a372c2624df31",
+      "bytes": 5280
+    },
+    {
+      "path": "scripts/evaluate_corrected_sparse.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/evaluate_corrected_sparse.py",
+      "sha256": "1e6eb530d99a54024ab098bb2e857095b562e8419a40f44f805ddd042bd46b21",
+      "bytes": 7639
+    },
+    {
+      "path": "scripts/evaluate_group11_1_rerun.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/evaluate_group11_1_rerun.py",
+      "sha256": "89892060c638c5c3a2af1d8947796796cae065108ad343a3f9a477265a86e1d1",
+      "bytes": 3361
+    },
+    {
+      "path": "scripts/evaluate_group12_15_corrected.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/evaluate_group12_15_corrected.py",
+      "sha256": "402022b7d37a15cb32f4efb2088b6bf798b7f047584b6a72fea8c4b1bdc7d61d",
+      "bytes": 7897
+    },
+    {
+      "path": "scripts/evaluate_group14_full10_audit.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/evaluate_group14_full10_audit.py",
+      "sha256": "10899b62952ef95f05d43ed6d5103e87eedb1fc8aab440c956d5904cc97b2330",
+      "bytes": 3233
+    },
+    {
+      "path": "scripts/evaluate_group15_full10.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/evaluate_group15_full10.py",
+      "sha256": "d5f9067306c6f7e78603cb5e8b3a270ae2915ea1425d3b8249008e40a0d8f580",
+      "bytes": 3937
+    },
+    {
+      "path": "scripts/final_matched_event_launcher.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/final_matched_event_launcher.py",
+      "sha256": "a18cb3f23e5223c79583e3b57e416e98ba6fbd84ff5c5a55a2b4ccd45bb85f91",
+      "bytes": 5090
+    },
+    {
+      "path": "scripts/launch_corrected_sparse.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/launch_corrected_sparse.py",
+      "sha256": "817e9ad91301c888104c629ddc8591b86b1b2ce2099abaaf05a481958b81c920",
+      "bytes": 3727
+    },
+    {
+      "path": "scripts/prepare_persistent_campaign.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/prepare_persistent_campaign.py",
+      "sha256": "c6ca980ef3adbdabcf056bab8b610aa3290e552f9dc36050409b33f3b2065e69",
+      "bytes": 3019
+    },
+    {
+      "path": "scripts/run_group11_15_acceptance.sh",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/run_group11_15_acceptance.sh",
+      "sha256": "01aeebfb7d8c24619b244f114ec6a96f5ab3dc8ebfc0255cd28fbd235a991a9b",
+      "bytes": 654
+    },
+    {
+      "path": "scripts/run_group11_2_latency_case01.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/run_group11_2_latency_case01.py",
+      "sha256": "16d44fa4a46d18b408c4840410b4919bb23f755df06d277d70655f4760a6f629",
+      "bytes": 1783
+    },
+    {
+      "path": "scripts/run_group11_3_latency_case01.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/run_group11_3_latency_case01.py",
+      "sha256": "a8b4452806d08043335008d2fcf61f0edd5725b240b66f6b2e8327fdba56fd51",
+      "bytes": 1790
+    },
+    {
+      "path": "scripts/run_group12_15_acceptance_retry.sh",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/run_group12_15_acceptance_retry.sh",
+      "sha256": "dee8b948a8d0a886d638e59049b88ee25374d439e7b720dbf894c562219d9ac9",
+      "bytes": 611
+    },
+    {
+      "path": "scripts/run_group12_15_canonical10_rr.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/scripts/run_group12_15_canonical10_rr.py",
+      "sha256": "dadd9405349ef27dad0b72d7e904d86a5d84a31c5cec4a64fb910dd7a23f27aa",
+      "bytes": 11531
+    },
+    {
+      "path": "train_ae_delta.sh",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/train_ae_delta.sh",
+      "sha256": "5c6999157ee0294e017d73c14488f7cac62003a4d2f6cc93c2e74eeb1e18b99a",
+      "bytes": 309
+    },
+    {
+      "path": "unified_evaluation_schema.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/unified_evaluation_schema.py",
+      "sha256": "14615e956fdadf6fb5d389a0c4783ad926d99335605ddcd9a8ed5004c2938b7b",
+      "bytes": 3316
+    },
+    {
+      "path": "utils/compressed_history_archive.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/compressed_history_archive.py",
+      "sha256": "8f51bb6f9e2074d670d36d68f46e17341f62b7de9285ce02dc1e114e85ab8238",
+      "bytes": 6252
+    },
+    {
+      "path": "utils/dataset.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/dataset.py",
+      "sha256": "c9bf4a9fa9e200bed3a4c3b4c04980fe9adf6ae2b211fdd8ee7e38e476d22e9d",
+      "bytes": 998
+    },
+    {
+      "path": "utils/debug_option.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/debug_option.py",
+      "sha256": "bbf3e29cc11c9989e4f6842b0f36d7cbbd28bd5c3cd2f3376b24e1964a73ef72",
+      "bytes": 14
+    },
+    {
+      "path": "utils/draftmap_retrieval.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/draftmap_retrieval.py",
+      "sha256": "4b4a2dad0b33faa33d606e00a97194537200112d6cb8ae4df24678352b110ad4",
+      "bytes": 5244
+    },
+    {
+      "path": "utils/h200_group_runtime.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/h200_group_runtime.py",
+      "sha256": "71ad2c93f0a48a1290255fdfdf3b2a57ed0250906095601774e644040c2e0ed0",
+      "bytes": 7334
+    },
+    {
+      "path": "utils/lora_utils.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/lora_utils.py",
+      "sha256": "bf06b7df315d23097c96ba00e53faf54544709d04f07cfce94b0a75fbd16ac35",
+      "bytes": 3890
+    },
+    {
+      "path": "utils/memory.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/memory.py",
+      "sha256": "48b412f5cf6a1c0884986702a21829e95ca99f011dbae9c36c75d45c5b3fbf65",
+      "bytes": 4820
+    },
+    {
+      "path": "utils/misc.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/misc.py",
+      "sha256": "610bead16d50d99fabdccb2e9ce3c20fa1fa1cd3bdf735d7ff7ffda978bfe195",
+      "bytes": 1155
+    },
+    {
+      "path": "utils/persistent_anemoi_8bit_cache.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/persistent_anemoi_8bit_cache.py",
+      "sha256": "5e7c88c37053aee748269cf4539dae6b83d89cec7dc8909354ab1ac4db626909",
+      "bytes": 3443
+    },
+    {
+      "path": "utils/persistent_draftmap.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/persistent_draftmap.py",
+      "sha256": "9c34ee1d872a5b5f00045ef748e179a3ff7b83f516c4e3a9610d30cda167a1c1",
+      "bytes": 3188
+    },
+    {
+      "path": "utils/persistent_kv_storage.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/persistent_kv_storage.py",
+      "sha256": "a073ab8429206d8d77f7b71c143567fb2f794c67b740023ee338a5acd62167ee",
+      "bytes": 4713
+    },
+    {
+      "path": "utils/persistent_nvfp4_cache.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/persistent_nvfp4_cache.py",
+      "sha256": "d54c7f80fa20a84c7f114d7d92b817c4c94ac2149c9765b1b7884b3dfacb7874",
+      "bytes": 2965
+    },
+    {
+      "path": "utils/quant.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/quant.py",
+      "sha256": "341e2e6ce5e7f2c5da3872cd3eba91a158b72834003412230550f88bf04259da",
+      "bytes": 2103
+    },
+    {
+      "path": "utils/runtime_memory_measurement.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/runtime_memory_measurement.py",
+      "sha256": "98f87a7c2a6f955a066f9c9df061d09c31e85b82a430dff927a0efa486696089",
+      "bytes": 11840
+    },
+    {
+      "path": "utils/scheduler.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/scheduler.py",
+      "sha256": "4194ef1324bb06527621749c7f9a82f431ccf011823aa65099cb7bdf116b642e",
+      "bytes": 7979
+    },
+    {
+      "path": "utils/unified_latency_profiler.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/unified_latency_profiler.py",
+      "sha256": "f1749779546b7a10159bed08214ecd0c165487be95674ec492cf385b697eb3d6",
+      "bytes": 1907
+    },
+    {
+      "path": "utils/wan_wrapper.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/utils/wan_wrapper.py",
+      "sha256": "4de4e71f290cc061187478b70b97dce5e7c2395c31bfdfdd9d768f97ef6f15e7",
+      "bytes": 16225
+    },
+    {
+      "path": "wan/README.md",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/README.md",
+      "sha256": "3effc67d0f90b47a3846a061cc2296737bcfa39ed84bd1860340629ee7329216",
+      "bytes": 92
+    },
+    {
+      "path": "wan/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/__init__.py",
+      "sha256": "d9390f993a448bd679ac8d5254620ca6b5d2bc450f65bbf5f4a64c82cb4f4a99",
+      "bytes": 107
+    },
+    {
+      "path": "wan/configs/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/configs/__init__.py",
+      "sha256": "7b782183abca0e09c3efbc8ff02ab12c50c023d59642f6077cc16d1a23fa8bac",
+      "bytes": 1011
+    },
+    {
+      "path": "wan/configs/shared_config.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/configs/shared_config.py",
+      "sha256": "e3785cd01cff5763f83159ccc242f2d17435ba8dcef99f4a70db958c88e7f5ab",
+      "bytes": 916
+    },
+    {
+      "path": "wan/configs/wan_i2v_14B.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/configs/wan_i2v_14B.py",
+      "sha256": "2d5a3ff4326a5b1c1c8d564f8a8829fe30879cb99fe0ad1b18c236ecb43aac54",
+      "bytes": 972
+    },
+    {
+      "path": "wan/configs/wan_t2v_14B.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/configs/wan_t2v_14B.py",
+      "sha256": "a1d8f5f876fa20c4f58c5ee5433ca0d5e2cdf37accef7c97bc0c5aee7ba8db8c",
+      "bytes": 743
+    },
+    {
+      "path": "wan/configs/wan_t2v_1_3B.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/configs/wan_t2v_1_3B.py",
+      "sha256": "28dea1d8ef2095d7ddd1e2506e7b498ba698b32e962bdbc79d6d7da3ca5a6d0c",
+      "bytes": 760
+    },
+    {
+      "path": "wan/distributed/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/distributed/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "wan/distributed/fsdp.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/distributed/fsdp.py",
+      "sha256": "a20cbd8ea747db64226eb21e5e848c44cc2ccf95a76efbf13956efe8e9f900a3",
+      "bytes": 1077
+    },
+    {
+      "path": "wan/distributed/xdit_context_parallel.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/distributed/xdit_context_parallel.py",
+      "sha256": "b3b16b38dd08b0e857d90e4c97c7a41a06368be477abafa460ce3a44ea596474",
+      "bytes": 5899
+    },
+    {
+      "path": "wan/image2video.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/image2video.py",
+      "sha256": "46348294457e81210c70d40c6a1be6e24e5b749a48bf4aaac3febb6bd8e155ee",
+      "bytes": 13203
+    },
+    {
+      "path": "wan/modules/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/__init__.py",
+      "sha256": "6cba8c084de01455a914a3b5620e0a286d4dee2c39143b6508bb8fac87e71b4b",
+      "bytes": 365
+    },
+    {
+      "path": "wan/modules/attention.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/attention.py",
+      "sha256": "152bd2f23fe41f2f8a203470149d108d2dd1a068169ffdaa522efba218e631da",
+      "bytes": 5630
+    },
+    {
+      "path": "wan/modules/causal_model.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/causal_model.py",
+      "sha256": "9d535f0e47f33bd056d4dd4c729dbc0fd48e5dee4ee42150760eba33c4e1e58d",
+      "bytes": 51137
+    },
+    {
+      "path": "wan/modules/causal_model_latentmem.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/causal_model_latentmem.py",
+      "sha256": "babac411c7209ac490d99ea1e92c14985222fddbf320067d8d5bd242dc388ec9",
+      "bytes": 110073
+    },
+    {
+      "path": "wan/modules/clip.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/clip.py",
+      "sha256": "2ab8672603a998422defb897e16531608750737ab8d631520b055bda93aba35c",
+      "bytes": 16835
+    },
+    {
+      "path": "wan/modules/model.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/model.py",
+      "sha256": "f7409d6c3cf85e1e34b1b7ead0b8b2cc737523f683da044af87e7a9524d97928",
+      "bytes": 30798
+    },
+    {
+      "path": "wan/modules/t5.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/t5.py",
+      "sha256": "8b0cebf3192c542f92a344255a06c203df3ba24160715899a055cc8de0cd930f",
+      "bytes": 16910
+    },
+    {
+      "path": "wan/modules/tokenizers.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/tokenizers.py",
+      "sha256": "cf5b189c1ae017326efadab2fc6380ba223fa7a59d0be6464bd264db53c76934",
+      "bytes": 2431
+    },
+    {
+      "path": "wan/modules/vae.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/vae.py",
+      "sha256": "3e06f2aa4036cb040378300cdf3f0cdd52d1b7a853edc44ed7528beb921bd4b5",
+      "bytes": 23773
+    },
+    {
+      "path": "wan/modules/xlm_roberta.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/modules/xlm_roberta.py",
+      "sha256": "7e27d93573b5fb0fef1c9db9205264453bd30dcb1404c38031f24ed9c84b8d4a",
+      "bytes": 4865
+    },
+    {
+      "path": "wan/text2video.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/text2video.py",
+      "sha256": "ca344c0f24d3d305dd93a0433dc88a212e5d815bb8a784f8f54fc9fa98ff06c1",
+      "bytes": 10241
+    },
+    {
+      "path": "wan/utils/__init__.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/utils/__init__.py",
+      "sha256": "4a8d71cd9feefa65d51770ee8351a07cd6ebe82f9b75fef1ddaf0f30b4db502c",
+      "bytes": 339
+    },
+    {
+      "path": "wan/utils/fm_solvers.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/utils/fm_solvers.py",
+      "sha256": "f7254e3ac5c6c6715317cdf991d927cde61c1400ad73851be41fc51ce5ecba5d",
+      "bytes": 40232
+    },
+    {
+      "path": "wan/utils/fm_solvers_unipc.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/utils/fm_solvers_unipc.py",
+      "sha256": "de622aced9aa5022622509295e5a0e40589b53f59ce13cf64061af9e99af5f66",
+      "bytes": 32646
+    },
+    {
+      "path": "wan/utils/prompt_extend.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/utils/prompt_extend.py",
+      "sha256": "f00f7f03ed5dc6d7648290c3d9b0f80b33d71692958542c447d722acc42dcbd6",
+      "bytes": 34788
+    },
+    {
+      "path": "wan/utils/qwen_vl_utils.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/utils/qwen_vl_utils.py",
+      "sha256": "9ae8190bdb0c6ad5b283fd9fecae65f3adfe45bc90326d3851fb5c8d777995c9",
+      "bytes": 13044
+    },
+    {
+      "path": "wan/utils/utils.py",
+      "origin": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb_ao/wan/utils/utils.py",
+      "sha256": "ebf33b0c4dc69a62faca6243d58bfa890ea4fb9c056e7c1ef0fa501cbbe22566",
+      "bytes": 3239
+    }
+  ],
+  "excluded": "Checkpoints, model weights, environments, credentials, generated videos, profiler databases and caches are excluded from the archival changes. Unchanged baseline assets already present at HEAD are not part of this scoped commit."
+}

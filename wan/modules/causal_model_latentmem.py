@@ -175,7 +175,12 @@ class CausalWanSelfAttention(nn.Module):
         compressed_entries = kv_cache.get("compressed_history_entries", [])
         cpu_k = compressed_entries if compressed_entries else kv_cache.get("cpu_k_frames", [])
         gpu_draft_k = kv_cache.get("gpu_draft_k_frames", [])
-        eligible = max(len(cpu_k) - self.recent_exclude, 0)
+        # Keep AO's logical W20 eligibility boundary even when the physical
+        # persistent cache is smaller. The CPU archive is a storage detail;
+        # recent_exclude is applied once to the committed logical prefix.
+        committed_frames = int(current_start) // frame_seqlen
+        logical_history = max(committed_frames - self.local_attn_size, 0) if self.local_attn_size != -1 else len(cpu_k)
+        eligible = min(len(cpu_k), max(logical_history - self.recent_exclude, 0))
         if eligible <= 0 or len(gpu_draft_k) < eligible:
             return None
         if self.retrieval_query_mode == "previous_q":
@@ -427,6 +432,104 @@ class CausalWanSelfAttention(nn.Module):
         return output, {"mode": "flashfetch_serial", "history_ids": ids,
                         "h2d_ms": total_h2d, "tile_tokens": frame_seq}
 
+    def _w1_progressive_final_buffer(self, *, memory_indices, cpu_k_list, cpu_v_list,
+                                      sink_k, sink_v, local_k, local_v,
+                                      q, v_dtype, frame_tokens, freqs, grid_sizes):
+        """Exploratory W1: warmup first reverse-consumed source, then publish rest.
+
+        This intentionally launches stock attention after only the first source
+        dependency. It is UNSYNCHRONIZED_EXPLORATORY: later writes may race the
+        stock FA consumer and therefore require explicit correctness validation.
+        """
+        device = q.device
+        b = int(memory_indices.shape[0])
+        k_sel = int(memory_indices.shape[1])
+        sink_tokens = int(sink_k.shape[1]) if sink_k is not None else 0
+        local_tokens = int(local_k.shape[1])
+        total_tokens = sink_tokens + k_sel * int(frame_tokens) + local_tokens
+        final_k = torch.empty((b, total_tokens, q.shape[2], q.shape[3]), device=device, dtype=v_dtype)
+        final_v = torch.empty_like(final_k)
+        if sink_k is not None:
+            final_k[:, :sink_tokens].copy_(sink_k)
+            final_v[:, :sink_tokens].copy_(sink_v)
+        local_base = sink_tokens + k_sel * int(frame_tokens)
+        final_k[:, local_base:local_base + local_tokens].copy_(local_k)
+        final_v[:, local_base:local_base + local_tokens].copy_(local_v)
+
+        fetch_stream = torch.cuda.Stream(device=device)
+        keepalive = []
+        reverse_ranks = list(range(k_sel - 1, -1, -1))
+        warmup_ranks = reverse_ranks[:1]
+        remaining_ranks = reverse_ranks[1:]
+        frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
+
+        def submit_rank(rank):
+            logical_ids = []
+            with torch.cuda.stream(fetch_stream):
+                for bi in range(b):
+                    logical_id = int(memory_indices[bi, rank].item())
+                    sk = cpu_k_list[logical_id][bi, 0]
+                    sv = cpu_v_list[logical_id][bi, 0]
+                    if sk.device.type == 'cpu' and not sk.is_pinned():
+                        sk = sk.contiguous().pin_memory()
+                    if sv.device.type == 'cpu' and not sv.is_pinned():
+                        sv = sv.contiguous().pin_memory()
+                    raw_k = sk.to(device, non_blocking=True)
+                    raw_v = sv.to(device, non_blocking=True)
+                    copied_bytes = int(sk.numel() * sk.element_size() + sv.numel() * sv.element_size())
+                    if self.group11_profile is not None:
+                        self.group11_profile["NUM_CPU_KV_FETCH_CALLS"] = int(self.group11_profile.get("NUM_CPU_KV_FETCH_CALLS", 0)) + 1
+                        self.group11_profile["NUM_H2D_COPY_CALLS"] = int(self.group11_profile.get("NUM_H2D_COPY_CALLS", 0)) + 2
+                        self.group11_profile["TOTAL_FULL_KV_H2D_BYTES"] = int(self.group11_profile.get("TOTAL_FULL_KV_H2D_BYTES", 0)) + copied_bytes
+                        self.group11_profile.setdefault("h2d_rows", []).append({
+                            "source_chunk_id": logical_id, "layer": int(getattr(self, "_current_layer_index", -1)),
+                            "bytes_K": int(sk.numel() * sk.element_size()),
+                            "bytes_V": int(sv.numel() * sv.element_size()),
+                            "total_bytes": copied_bytes, "copy_stream": "w1_fetch",
+                            "non_blocking": True, "source_pinned_memory": bool(sk.is_pinned() and sv.is_pinned()),
+                        })
+                    roped_k = causal_online_rope(
+                        raw_k.unsqueeze(0), frame_grid, freqs,
+                        relative_frame_indices=torch.zeros(1, dtype=torch.long, device=device),
+                    ).type_as(q)
+                    offset = sink_tokens + rank * int(frame_tokens)
+                    final_k[bi, offset:offset + int(frame_tokens)].copy_(roped_k[0])
+                    final_v[bi, offset:offset + int(frame_tokens)].copy_(raw_v)
+                    keepalive.extend([raw_k, raw_v, roped_k])
+                    logical_ids.append(logical_id)
+            return logical_ids
+
+        warmup_ids = []
+        for rank in warmup_ranks:
+            warmup_ids.extend(submit_rank(rank))
+        warmup_event = torch.cuda.Event()
+        with torch.cuda.stream(fetch_stream):
+            warmup_event.record(fetch_stream)
+        torch.cuda.current_stream(device).wait_event(warmup_event)
+        remaining_ids = []
+        for rank in remaining_ranks:
+            remaining_ids.extend(submit_rank(rank))
+        all_event = torch.cuda.Event()
+        with torch.cuda.stream(fetch_stream):
+            all_event.record(fetch_stream)
+        self._w1_pending_fetch_event = all_event
+        self._w1_pending_fetch_stream = fetch_stream
+        self._w1_fetch_keepalive = keepalive
+        return final_k, final_v, {
+            'mode': 'W1_STREAMING_UNSYNCHRONIZED_EXPLORATORY',
+            'warmup_source_ids': warmup_ids,
+            'remaining_source_ids': remaining_ids,
+            'submitted_source_count': len(warmup_ids) + len(remaining_ids),
+            'warmup_source_count': len(warmup_ids),
+            'remaining_source_count': len(remaining_ids),
+            'reverse_rank_order': reverse_ranks,
+            'warmup_event_recorded': True,
+            'full_producer_wait_before_attention': False,
+            'final_buffer_tokens': total_tokens,
+            'fetch_stream': int(fetch_stream.cuda_stream),
+            'compute_stream': int(torch.cuda.current_stream(device).cuda_stream),
+        }
+
     def forward(
         self,
         x,
@@ -633,10 +736,12 @@ class CausalWanSelfAttention(nn.Module):
                 # === causal online RoPE Application ===
                 # For query: use relative indices based on position in window
                 # Query frames are at the end of the window: [local_attn_size - num_new_frames, ..., local_attn_size - 1]
+                logical_end_frames = current_end // frame_seqlen
+                logical_window_end = min(logical_end_frames, self.local_attn_size)
                 query_relative_indices = torch.arange(
-                    self.local_attn_size - num_new_frames, 
-                    self.local_attn_size, 
-                    device=q.device
+                    logical_window_end - num_new_frames,
+                    logical_window_end,
+                    device=q.device, dtype=torch.long
                 )
                 rope_start = time.perf_counter()
                 roped_query = causal_online_rope(
@@ -649,7 +754,18 @@ class CausalWanSelfAttention(nn.Module):
                 # Sink frames: [0, 1, ..., sink_size - 1]
                 # Rolling window frames: [sink_size, sink_size + 1, ..., local_end_index/frame_seqlen - 1]
                 num_cache_frames = local_end_index // frame_seqlen
-                cache_relative_indices = torch.arange(0, num_cache_frames, device=k.device)
+                physical_cache_frames = kv_cache_size // frame_seqlen
+                if physical_cache_frames < self.local_attn_size:
+                    retained_local = max(num_cache_frames - self.sink_size, 0)
+                    logical_local_start = max(logical_window_end - retained_local, self.sink_size)
+                    sink_indices = torch.arange(self.sink_size, device=k.device, dtype=torch.long)
+                    local_indices = torch.arange(
+                        logical_local_start, logical_local_start + retained_local,
+                        device=k.device, dtype=torch.long
+                    )
+                    cache_relative_indices = torch.cat([sink_indices, local_indices])
+                else:
+                    cache_relative_indices = torch.arange(0, num_cache_frames, device=k.device, dtype=torch.long)
                 
                 # Create a grid_sizes for the cached K
                 cache_grid_sizes = grid_sizes.clone()
@@ -679,6 +795,7 @@ class CausalWanSelfAttention(nn.Module):
                     "evicted_v_frames": evicted_v_frames,
                     "evicted_draft_k_frames": evicted_draft_k_frames,
                     "new_draft_k_frames": draft_k_frames,
+                    "frame_seqlen": frame_seqlen,
                 }
             else:
                 # === DIRECT INSERT MODE ===
@@ -703,7 +820,9 @@ class CausalWanSelfAttention(nn.Module):
 
                 # === RoPE Application with Relative Indices ===
                 # Current frame position in the window
-                current_frame_in_window = local_start_index // frame_seqlen
+                logical_end_frames = current_end // frame_seqlen
+                logical_window_end = min(logical_end_frames, self.local_attn_size)
+                current_frame_in_window = logical_window_end - num_new_frames
                 
                 # Query: apply RoPE with relative frame indices
                 query_relative_indices = torch.arange(
@@ -717,7 +836,18 @@ class CausalWanSelfAttention(nn.Module):
                 
                 # Cached K: apply RoPE dynamically
                 num_cache_frames = local_end_index // frame_seqlen
-                cache_relative_indices = torch.arange(0, num_cache_frames, device=k.device)
+                physical_cache_frames = kv_cache_size // frame_seqlen
+                if physical_cache_frames < self.local_attn_size:
+                    retained_local = max(num_cache_frames - self.sink_size, 0)
+                    logical_local_start = max(logical_window_end - retained_local, self.sink_size)
+                    sink_indices = torch.arange(self.sink_size, device=k.device, dtype=torch.long)
+                    local_indices = torch.arange(
+                        logical_local_start, logical_local_start + retained_local,
+                        device=k.device, dtype=torch.long
+                    )
+                    cache_relative_indices = torch.cat([sink_indices, local_indices])
+                else:
+                    cache_relative_indices = torch.arange(0, num_cache_frames, device=k.device, dtype=torch.long)
                 
                 cache_grid_sizes = grid_sizes.clone()
                 cache_grid_sizes[0, 0] = num_cache_frames
@@ -739,6 +869,7 @@ class CausalWanSelfAttention(nn.Module):
                     "current_end": current_end,
                     "is_recompute": is_recompute,
                     "new_draft_k_frames": draft_k_frames,
+                    "frame_seqlen": frame_seqlen,
                 }
 
             # Use roped K for attention computation
@@ -774,6 +905,9 @@ class CausalWanSelfAttention(nn.Module):
                 
                 # --- MEMORY TOKEN RETRIEVAL (using pre-computed indices) ---
                 k_mem = None
+                w1_final_k = None
+                w1_final_v = None
+                w1_meta = None
                 v_mem = None
                 
                 if self.memory_size > 0 and memory_indices is not None:
@@ -788,144 +922,187 @@ class CausalWanSelfAttention(nn.Module):
                     if len(cpu_k_list) > 0:
                         k_sel = memory_indices.shape[1]  # [B, k_sel]
                         device = q.device
-                        gather_start = time.perf_counter()
-                        
-                        k_mem_unroped_list = []
-                        v_mem_list = []
-                        k_host_ms = 0.0
-                        v_host_ms = 0.0
-                        for bi in range(b):
-                            indices = memory_indices[bi]
-                            for k_idx in indices:
-                                prefetched = None
-                                cache_hit = False
-                                if archive is not None:
-                                    rec = compressed_entries[int(k_idx)]
-                                    src_k, src_v = archive.fetch(rec, device)
-                                    if self.group11_profile is not None:
-                                        self.group11_profile["EXPOSED_H2D_MS"] = float(self.group11_profile.get("EXPOSED_H2D_MS", 0.0)) + float(getattr(archive, "last_h2d_ms", 0.0))
-                                        self.group11_profile["EXPOSED_H2D_CALLS"] = int(self.group11_profile.get("EXPOSED_H2D_CALLS", 0)) + int(getattr(archive, "last_h2d_calls", 0))
-                                    src_k = src_k[bi]
-                                    src_v = src_v[bi]
-                                    kv_cache["retrieved_archived_entries"] = int(kv_cache.get("retrieved_archived_entries", 0)) + 1
-                                    deq_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
-                                    kv_cache["transient_dequant_gpu_bytes"] = int(kv_cache.get("transient_dequant_gpu_bytes", 0)) + deq_bytes
-                                    kv_cache["transient_dequant_gpu_peak_bytes"] = max(int(kv_cache.get("transient_dequant_gpu_peak_bytes", 0)), deq_bytes)
-                                    cache_key = None
-                                else:
-                                    prefetched = None
-                                    if self.group11_fetch_mode == "next_layer_prefetch":
-                                        prefetched = self._consume_prefetch_or_fetch(kv_cache, layer_index, int(k_idx), bi, device)
-                                    if prefetched is not None:
-                                        dst_k, dst_v = prefetched
-                                        src_k, src_v = dst_k, dst_v
-                                        cache_key = None
-                                        cache_hit = True
-                                        k_ms = v_ms = 0.0
-                                    else:
-                                        src_k = cpu_k_list[k_idx][bi, 0]
-                                        src_v = cpu_v_list[k_idx][bi, 0]
-                                        cache_key = (int(getattr(self, "_current_layer_index", -1)), int(k_idx), int(bi))
-                                reuse = os.environ.get("GROUP11_REUSE_CACHE", "0") == "1"
-                                cache_hit = bool(locals().get("cache_hit", False) or (reuse and cache_key in getattr(self, "_group11_reuse_cache", {})))
-                                if archive is not None:
-                                    dst_k, dst_v = src_k, src_v
-                                    k_ms = 0.0
-                                    v_ms = 0.0
-                                elif cache_hit and prefetched is None:
-                                    dst_k, dst_v = self._group11_reuse_cache[cache_key]
-                                    k_ms = 0.0
-                                    v_ms = 0.0
-                                    if self.group11_profile is not None:
-                                        self.group11_profile["CACHE_HITS"] += 1
-                                        self.group11_profile["AVOIDED_H2D_CALLS"] += 2
-                                        self.group11_profile["AVOIDED_H2D_BYTES"] += int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
-                                else:
-                                    if self.group11_fetch_mode == "next_layer_prefetch":
-                                        owner, _ = self._prefetch_state(kv_cache)
-                                        owner["prefetch_correction_chunks"] = int(owner.get("prefetch_correction_chunks", 0)) + 1
-                                        owner["prefetch_correction_bytes"] = int(owner.get("prefetch_correction_bytes", 0)) + int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
-                                    k_start = time.perf_counter()
-                                    dst_k = src_k.to(device, non_blocking=True)
-                                    k_ms = (time.perf_counter() - k_start) * 1000.0
-                                    v_start = time.perf_counter()
-                                    dst_v = src_v.to(device, non_blocking=True)
-                                    v_ms = (time.perf_counter() - v_start) * 1000.0
-                                    if reuse:
-                                        self._group11_reuse_cache[cache_key] = (dst_k, dst_v)
-                                    if self.group11_profile is not None:
-                                        self.group11_profile["CACHE_MISSES"] += 1
-                                        if reuse:
-                                            cache_bytes = sum(int(k.numel() * k.element_size() + vv.numel() * vv.element_size()) for k, vv in self._group11_reuse_cache.values())
-                                            self.group11_profile["GPU_CACHE_PEAK_BYTES"] = max(int(self.group11_profile.get("GPU_CACHE_PEAK_BYTES", 0)), cache_bytes)
-                                copy_ms = k_ms + v_ms
-                                k_host_ms += k_ms
-                                v_host_ms += v_ms
-                                copied_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
-                                if prefetched is None:
-                                    self.runtime_counters["full_kv_h2d_bytes"] += copied_bytes
-                                    self.runtime_counters["full_kv_h2d_calls"] += 2
-                                self.history_fetch_trace.append({
-                                    "history_id": int(k_idx), "batch": int(bi),
-                                    "source_k_device": str(src_k.device),
-                                    "source_v_device": str(src_v.device),
-                                    "source_k_ptr": int(src_k.untyped_storage().data_ptr()),
-                                    "source_v_ptr": int(src_v.untyped_storage().data_ptr()),
-                                    "destination_k_ptr": int(dst_k.untyped_storage().data_ptr()),
-                                    "destination_v_ptr": int(dst_v.untyped_storage().data_ptr()),
-                                    "copied_bytes": copied_bytes,
-                                    "layer": int(getattr(self, "_current_layer_index", -1)),
-                                    "copy_time_ms": copy_ms,
-                                    "source_pinned_memory": bool(src_k.is_pinned() and src_v.is_pinned()),
-                                    "non_blocking": True,
-                                    "cache_hit": cache_hit,
+                        w1_zero_acquire = self.group11_fetch_mode == "w1_zero_acquire"
+                        w1_final_k = None
+                        w1_final_v = None
+                        w1_meta = None
+                        if w1_zero_acquire:
+                            w1_final_k, w1_final_v, w1_meta = self._w1_progressive_final_buffer(
+                                memory_indices=memory_indices,
+                                cpu_k_list=cpu_k_list,
+                                cpu_v_list=cpu_v_list,
+                                sink_k=k_sink,
+                                sink_v=v_sink,
+                                local_k=(roped_temp_k[:, local_start_for_window:local_end_index]
+                                         if local_budget > 0 and local_start_for_window < local_end_index
+                                         else roped_temp_k[:, :0]),
+                                local_v=(temp_v[:, local_start_for_window:local_end_index]
+                                         if local_budget > 0 and local_start_for_window < local_end_index
+                                         else temp_v[:, :0]),
+                                q=q,
+                                v_dtype=v.dtype,
+                                frame_tokens=frame_seqlen,
+                                freqs=freqs,
+                                grid_sizes=grid_sizes,
+                            )
+                            k_mem = w1_final_k[:, sink_tokens:sink_tokens + k_sel * frame_seqlen]
+                            v_mem = w1_final_v[:, sink_tokens:sink_tokens + k_sel * frame_seqlen]
+                            fetch_end_to_end_ms = (time.perf_counter() - fetch_start) * 1000.0
+                            if self.group11_profile is not None:
+                                self.group11_profile.setdefault('w1_zero_acquire', {}).update(w1_meta)
+                                self.group11_profile['fetch_phase_rows'].append({
+                                    'layer': int(layer_index), 'lookup_ms': lookup_ms,
+                                    'k_to_device_ms': 0.0, 'v_to_device_ms': 0.0,
+                                    'gather_ms': 0.0, 'cat_ms': 0.0,
+                                    'end_to_end_ms': fetch_end_to_end_ms,
+                                    'selected_chunks': int(k_sel),
+                                    'selected_ids': [int(x) for x in memory_indices[0].detach().cpu().tolist()],
+                                    'fetch_mode': 'W1_STREAMING',
                                 })
-                                if self.group11_profile is not None:
-                                    self.group11_profile["NUM_CPU_KV_FETCH_CALLS"] += 1
-                                    self.group11_profile["NUM_H2D_COPY_CALLS"] += 2
-                                    self.group11_profile["TOTAL_FULL_KV_H2D_BYTES"] += copied_bytes
-                                    self.group11_profile["EXPOSED_H2D_MS"] = float(self.group11_profile.get("EXPOSED_H2D_MS", 0.0)) + float(copy_ms)
-                                    self.group11_profile["EXPOSED_H2D_CALLS"] = int(self.group11_profile.get("EXPOSED_H2D_CALLS", 0)) + 2
-                                    self.group11_profile["h2d_rows"].append({"source_chunk_id": int(k_idx), "layer": int(getattr(self, "_current_layer_index", -1)), "bytes_K": int(src_k.numel()*src_k.element_size()), "bytes_V": int(src_v.numel()*src_v.element_size()), "total_bytes": copied_bytes, "copy_time_ms": copy_ms, "k_host_ms": k_ms, "v_host_ms": v_ms, "source_pinned_memory": bool(src_k.is_pinned() and src_v.is_pinned()), "non_blocking": True, "copy_stream": "default", "cache_hit": cache_hit})
-                                k_mem_unroped_list.append(dst_k)
-                                v_mem_list.append(dst_v)
-                            
-                        gather_start = time.perf_counter()
-                        k_mem_unroped = torch.stack(k_mem_unroped_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
-                        v_mem = torch.stack(v_mem_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
-                        gather_ms = (time.perf_counter() - gather_start) * 1000.0
-                        
-                        mem_grid_sizes = grid_sizes.clone()
-                        mem_grid_sizes[:, 0] = k_sel
-                        
-                        k_mem = causal_online_rope(
-                            k_mem_unroped,
-                            mem_grid_sizes, freqs, relative_frame_indices=torch.zeros(k_sel, dtype=torch.long, device=device)
-                        ).type_as(v)
-                        fetch_end_to_end_ms = (time.perf_counter() - fetch_start) * 1000.0
-                        if self.group11_profile is not None:
-                            self.group11_profile["fetch_phase_rows"].append({"layer": int(layer_index), "lookup_ms": lookup_ms, "k_to_device_ms": k_host_ms, "v_to_device_ms": v_host_ms, "gather_ms": gather_ms, "cat_ms": 0.0, "end_to_end_ms": fetch_end_to_end_ms, "selected_chunks": int(k_sel), "selected_ids": [int(x) for x in memory_indices[0].detach().cpu().tolist()]})
-                        if self.retrieval_backend == "draftmap_online" and self.draftmap_trace:
-                            self.draftmap_trace[-1]["cpu_gather_ms"] = (time.perf_counter() - gather_start) * 1000.0
-                            self.draftmap_trace[-1]["h2d_ms"] = 0.0
+                        else:
+                            k_sel = memory_indices.shape[1]  # [B, k_sel]
+                            device = q.device
+                            gather_start = time.perf_counter()
 
-                k_parts = [k_sink]
-                v_parts = [v_sink]
-                
-                if k_mem is not None:
-                    k_parts.append(k_mem)
-                    v_parts.append(v_mem)
-                    
-                if local_budget > 0 and local_start_for_window < local_end_index:
-                    k_local = roped_temp_k[:, local_start_for_window:local_end_index]
-                    v_local = temp_v[:, local_start_for_window:local_end_index]
-                    k_parts.append(k_local)
-                    v_parts.append(v_local)
-                    
-                cat_start = time.perf_counter()
-                k_cat = torch.cat(k_parts, dim=1)
-                v_cat = torch.cat(v_parts, dim=1)
-                cat_ms = (time.perf_counter() - cat_start) * 1000.0
+                            k_mem_unroped_list = []
+                            v_mem_list = []
+                            k_host_ms = 0.0
+                            v_host_ms = 0.0
+                            for bi in range(b):
+                                indices = memory_indices[bi]
+                                for k_idx in indices:
+                                    prefetched = None
+                                    cache_hit = False
+                                    if archive is not None:
+                                        rec = compressed_entries[int(k_idx)]
+                                        src_k, src_v = archive.fetch(rec, device)
+                                        if self.group11_profile is not None:
+                                            self.group11_profile["EXPOSED_H2D_MS"] = float(self.group11_profile.get("EXPOSED_H2D_MS", 0.0)) + float(getattr(archive, "last_h2d_ms", 0.0))
+                                            self.group11_profile["EXPOSED_H2D_CALLS"] = int(self.group11_profile.get("EXPOSED_H2D_CALLS", 0)) + int(getattr(archive, "last_h2d_calls", 0))
+                                        src_k = src_k[bi]
+                                        src_v = src_v[bi]
+                                        kv_cache["retrieved_archived_entries"] = int(kv_cache.get("retrieved_archived_entries", 0)) + 1
+                                        deq_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                        kv_cache["transient_dequant_gpu_bytes"] = int(kv_cache.get("transient_dequant_gpu_bytes", 0)) + deq_bytes
+                                        kv_cache["transient_dequant_gpu_peak_bytes"] = max(int(kv_cache.get("transient_dequant_gpu_peak_bytes", 0)), deq_bytes)
+                                        cache_key = None
+                                    else:
+                                        prefetched = None
+                                        if self.group11_fetch_mode == "next_layer_prefetch":
+                                            prefetched = self._consume_prefetch_or_fetch(kv_cache, layer_index, int(k_idx), bi, device)
+                                        if prefetched is not None:
+                                            dst_k, dst_v = prefetched
+                                            src_k, src_v = dst_k, dst_v
+                                            cache_key = None
+                                            cache_hit = True
+                                            k_ms = v_ms = 0.0
+                                        else:
+                                            src_k = cpu_k_list[k_idx][bi, 0]
+                                            src_v = cpu_v_list[k_idx][bi, 0]
+                                            cache_key = (int(getattr(self, "_current_layer_index", -1)), int(k_idx), int(bi))
+                                    reuse = os.environ.get("GROUP11_REUSE_CACHE", "0") == "1"
+                                    cache_hit = bool(locals().get("cache_hit", False) or (reuse and cache_key in getattr(self, "_group11_reuse_cache", {})))
+                                    if archive is not None:
+                                        dst_k, dst_v = src_k, src_v
+                                        k_ms = 0.0
+                                        v_ms = 0.0
+                                    elif cache_hit and prefetched is None:
+                                        dst_k, dst_v = self._group11_reuse_cache[cache_key]
+                                        k_ms = 0.0
+                                        v_ms = 0.0
+                                        if self.group11_profile is not None:
+                                            self.group11_profile["CACHE_HITS"] += 1
+                                            self.group11_profile["AVOIDED_H2D_CALLS"] += 2
+                                            self.group11_profile["AVOIDED_H2D_BYTES"] += int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                    else:
+                                        if self.group11_fetch_mode == "next_layer_prefetch":
+                                            owner, _ = self._prefetch_state(kv_cache)
+                                            owner["prefetch_correction_chunks"] = int(owner.get("prefetch_correction_chunks", 0)) + 1
+                                            owner["prefetch_correction_bytes"] = int(owner.get("prefetch_correction_bytes", 0)) + int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                        k_start = time.perf_counter()
+                                        dst_k = src_k.to(device, non_blocking=True)
+                                        k_ms = (time.perf_counter() - k_start) * 1000.0
+                                        v_start = time.perf_counter()
+                                        dst_v = src_v.to(device, non_blocking=True)
+                                        v_ms = (time.perf_counter() - v_start) * 1000.0
+                                        if reuse:
+                                            self._group11_reuse_cache[cache_key] = (dst_k, dst_v)
+                                        if self.group11_profile is not None:
+                                            self.group11_profile["CACHE_MISSES"] += 1
+                                            if reuse:
+                                                cache_bytes = sum(int(k.numel() * k.element_size() + vv.numel() * vv.element_size()) for k, vv in self._group11_reuse_cache.values())
+                                                self.group11_profile["GPU_CACHE_PEAK_BYTES"] = max(int(self.group11_profile.get("GPU_CACHE_PEAK_BYTES", 0)), cache_bytes)
+                                    copy_ms = k_ms + v_ms
+                                    k_host_ms += k_ms
+                                    v_host_ms += v_ms
+                                    copied_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                    if prefetched is None:
+                                        self.runtime_counters["full_kv_h2d_bytes"] += copied_bytes
+                                        self.runtime_counters["full_kv_h2d_calls"] += 2
+                                    self.history_fetch_trace.append({
+                                        "history_id": int(k_idx), "batch": int(bi),
+                                        "source_k_device": str(src_k.device),
+                                        "source_v_device": str(src_v.device),
+                                        "source_k_ptr": int(src_k.untyped_storage().data_ptr()),
+                                        "source_v_ptr": int(src_v.untyped_storage().data_ptr()),
+                                        "destination_k_ptr": int(dst_k.untyped_storage().data_ptr()),
+                                        "destination_v_ptr": int(dst_v.untyped_storage().data_ptr()),
+                                        "copied_bytes": copied_bytes,
+                                        "layer": int(getattr(self, "_current_layer_index", -1)),
+                                        "copy_time_ms": copy_ms,
+                                        "source_pinned_memory": bool(src_k.is_pinned() and src_v.is_pinned()),
+                                        "non_blocking": True,
+                                        "cache_hit": cache_hit,
+                                    })
+                                    if self.group11_profile is not None:
+                                        self.group11_profile["NUM_CPU_KV_FETCH_CALLS"] += 1
+                                        self.group11_profile["NUM_H2D_COPY_CALLS"] += 2
+                                        self.group11_profile["TOTAL_FULL_KV_H2D_BYTES"] += copied_bytes
+                                        self.group11_profile["EXPOSED_H2D_MS"] = float(self.group11_profile.get("EXPOSED_H2D_MS", 0.0)) + float(copy_ms)
+                                        self.group11_profile["EXPOSED_H2D_CALLS"] = int(self.group11_profile.get("EXPOSED_H2D_CALLS", 0)) + 2
+                                        self.group11_profile["h2d_rows"].append({"source_chunk_id": int(k_idx), "layer": int(getattr(self, "_current_layer_index", -1)), "bytes_K": int(src_k.numel()*src_k.element_size()), "bytes_V": int(src_v.numel()*src_v.element_size()), "total_bytes": copied_bytes, "copy_time_ms": copy_ms, "k_host_ms": k_ms, "v_host_ms": v_ms, "source_pinned_memory": bool(src_k.is_pinned() and src_v.is_pinned()), "non_blocking": True, "copy_stream": "default", "cache_hit": cache_hit})
+                                    k_mem_unroped_list.append(dst_k)
+                                    v_mem_list.append(dst_v)
+
+                            gather_start = time.perf_counter()
+                            k_mem_unroped = torch.stack(k_mem_unroped_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
+                            v_mem = torch.stack(v_mem_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
+                            gather_ms = (time.perf_counter() - gather_start) * 1000.0
+
+                            mem_grid_sizes = grid_sizes.clone()
+                            mem_grid_sizes[:, 0] = k_sel
+
+                            k_mem = causal_online_rope(
+                                k_mem_unroped,
+                                mem_grid_sizes, freqs, relative_frame_indices=torch.zeros(k_sel, dtype=torch.long, device=device)
+                            ).type_as(v)
+                            fetch_end_to_end_ms = (time.perf_counter() - fetch_start) * 1000.0
+                            if self.group11_profile is not None:
+                                self.group11_profile["fetch_phase_rows"].append({"layer": int(layer_index), "lookup_ms": lookup_ms, "k_to_device_ms": k_host_ms, "v_to_device_ms": v_host_ms, "gather_ms": gather_ms, "cat_ms": 0.0, "end_to_end_ms": fetch_end_to_end_ms, "selected_chunks": int(k_sel), "selected_ids": [int(x) for x in memory_indices[0].detach().cpu().tolist()]})
+                            if self.retrieval_backend == "draftmap_online" and self.draftmap_trace:
+                                self.draftmap_trace[-1]["cpu_gather_ms"] = (time.perf_counter() - gather_start) * 1000.0
+                                self.draftmap_trace[-1]["h2d_ms"] = 0.0
+
+
+                if w1_final_k is not None:
+                    k_cat = w1_final_k
+                    v_cat = w1_final_v
+                    cat_ms = 0.0
+                else:
+                    k_parts = [k_sink]
+                    v_parts = [v_sink]
+                    if k_mem is not None:
+                        k_parts.append(k_mem)
+                        v_parts.append(v_mem)
+                    if local_budget > 0 and local_start_for_window < local_end_index:
+                        k_local = roped_temp_k[:, local_start_for_window:local_end_index]
+                        v_local = temp_v[:, local_start_for_window:local_end_index]
+                        k_parts.append(k_local)
+                        v_parts.append(v_local)
+                    cat_start = time.perf_counter()
+                    k_cat = torch.cat(k_parts, dim=1)
+                    v_cat = torch.cat(v_parts, dim=1)
+                    cat_ms = (time.perf_counter() - cat_start) * 1000.0
                 if self.group11_profile is not None and self.group11_profile["fetch_phase_rows"]:
                     self.group11_profile["fetch_phase_rows"][-1]["cat_ms"] += cat_ms
                 persistent_owner = (
@@ -951,6 +1128,11 @@ class CausalWanSelfAttention(nn.Module):
                     cuda_attn_token = self.unified_latency_profiler.begin_cuda("ATTENTION_KERNEL")
                 with attn_ctx:
                     x = attention(roped_query, k_cat, v_cat)
+                if self.group11_fetch_mode == "w1_zero_acquire" and getattr(self, "_w1_pending_fetch_event", None) is not None:
+                    torch.cuda.current_stream(q.device).wait_event(self._w1_pending_fetch_event)
+                    self._w1_pending_fetch_event = None
+                    self._w1_pending_fetch_stream = None
+                    self._w1_fetch_keepalive = []
                 if self.unified_latency_profiler is not None:
                     self.unified_latency_profiler.end_cuda(cuda_attn_token, {
                         "call_id": len(self.unified_latency_profiler._events),
@@ -1550,14 +1732,15 @@ class CausalWanModel(ModelMixin, ConfigMixin):
 
                 new_k_frames = update_info.get("new_draft_k_frames", [])
                 if update_info["action"] == "roll_and_insert":
-                    sink_frames = update_info["sink_tokens"] // 1560
-                    evicted_frames = update_info["num_evicted_tokens"] // 1560
-                    rolled_frames = update_info["num_rolled_tokens"] // 1560
+                    frame_seqlen = int(update_info["frame_seqlen"])
+                    sink_frames = update_info["sink_tokens"] // frame_seqlen
+                    evicted_frames = update_info["num_evicted_tokens"] // frame_seqlen
+                    rolled_frames = update_info["num_rolled_tokens"] // frame_seqlen
                     old_k = cache.get("local_draft_k_frames", [])
                     start = sink_frames + evicted_frames
                     cache["local_draft_k_frames"] = old_k[:sink_frames] + old_k[start:start + rolled_frames] + list(new_k_frames)
                 else:
-                    start = update_info.get("write_start_index", 0) // 1560
+                    start = update_info.get("write_start_index", 0) // int(update_info["frame_seqlen"])
                     old_k = list(cache.get("local_draft_k_frames", []))
                     while len(old_k) < start:
                         old_k.append(None)
