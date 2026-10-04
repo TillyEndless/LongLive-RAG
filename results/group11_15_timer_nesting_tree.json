@@ -1,0 +1,67 @@
+{
+  "exclusive_boundary_note": "Parent timers contain children; do not sum parent and child times.",
+  "tree": {
+    "name": "PROCESS_WALL",
+    "children": [
+      {
+        "name": "MODEL_SETUP",
+        "children": []
+      },
+      {
+        "name": "E2E_INFERENCE",
+        "children": [
+          {
+            "name": "TEXT_ENCODER_AND_INIT",
+            "children": []
+          },
+          {
+            "name": "TRANSFORMER_TOTAL",
+            "children": [
+              {
+                "name": "GENERATION_UNIT",
+                "repeat": "40",
+                "children": [
+                  {
+                    "name": "DENOISING_STEP",
+                    "repeat": "4 + 1 context update",
+                    "children": [
+                      {
+                        "name": "TRANSFORMER_BLOCK",
+                        "repeat": "all model blocks",
+                        "children": [
+                          {
+                            "name": "SELF_ATTN_WRAPPER",
+                            "children": [
+                              "QKV_PROJECTION",
+                              "CACHE_BOOKKEEPING",
+                              "ROPE",
+                              "ROUTING_SCORE",
+                              "BLOCK_SELECTION",
+                              "H2D",
+                              "DEQUANT_DECODE",
+                              "GATHER_REPACK",
+                              "MASK_LAYOUT",
+                              "ATTENTION_KERNEL",
+                              "OUTPUT_PROJECTION"
+                            ]
+                          },
+                          "CROSS_ATTENTION",
+                          "FFN",
+                          "NORM_RESIDUAL"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "VAE_DECODE",
+        "children": []
+      }
+    ]
+  }
+}

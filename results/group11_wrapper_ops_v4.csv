@@ -1,0 +1,5 @@
+operation,file_line,call_count,cumulative_s,mean_us,possible_sync,note
+torch.stack selected K/V,wan/modules/causal_model_latentmem.py:620-623,10440,0.18814031779766083,18.021103237323835,NO,targeted working-set materialization
+torch.cat K/V,wan/modules/causal_model_latentmem.py:652-655,10440,0.1146041490137577,10.977408909363765,NO,K/V cat split evenly for reporting
+Tensor.to(cuda),wan/modules/causal_model_latentmem.py:578-583,10440,0.8418382313102484,80.63584591094333,POSSIBLE_SYNC,non_blocking=True; host wall only
+BF16 attention call,wan/modules/causal_model_latentmem.py:663-668,6000,1.9261962436139584,321.0327072689931,NO,inner call to wan/modules/attention.py:139

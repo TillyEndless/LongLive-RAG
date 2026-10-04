@@ -1,0 +1,188 @@
+{
+  "source": {
+    "root": "results/group12_vs_group14_1_critical_path_runs_v2",
+    "case": "case_01",
+    "attention_calls": {
+      "group12": 6000,
+      "group14_1": 6000
+    },
+    "instrumentation": "v2"
+  },
+  "authoritative_reference": {
+    "group12_wrapper_s": 75.486982,
+    "group14_1_wrapper_s": 80.519119,
+    "group12_attention_kernel_s": 10.716861,
+    "group14_1_attention_kernel_s": 8.65521,
+    "attention_kernel_saved_s": 2.061651,
+    "additional_non_kernel_overhead_s": 7.094
+  },
+  "components": {
+    "full_decode": {
+      "group12": {
+        "host_ms": 6.330105278,
+        "cuda_ms": 5.5612275188602505
+      },
+      "group14_1": {
+        "host_ms": 6.195233933000001,
+        "cuda_ms": 5.451047326371074
+      },
+      "delta_group14_minus_group12": {
+        "host_ms": -0.13487134499999875,
+        "cuda_ms": -0.11018019248917632
+      }
+    },
+    "materialization": {
+      "group12": {
+        "host_ms": 1.9966437989999999,
+        "cuda_ms": 1.2412991998568177
+      },
+      "group14_1": {
+        "host_ms": 1.9345586989999999,
+        "cuda_ms": 1.2039931196626277
+      },
+      "delta_group14_minus_group12": {
+        "host_ms": -0.062085100000000004,
+        "cuda_ms": -0.03730608019419002
+      }
+    },
+    "routing": {
+      "group12": {
+        "host_ms": 0.0,
+        "cuda_ms": 0.0
+      },
+      "group14_1": {
+        "host_ms": 4.134836834,
+        "cuda_ms": 3.0547774391574785
+      },
+      "delta_group14_minus_group12": {
+        "host_ms": 4.134836834,
+        "cuda_ms": 3.0547774391574785
+      }
+    },
+    "cpu_detach_cpu": {
+      "group12": {
+        "host_ms": 0.0,
+        "cuda_ms": 0.0
+      },
+      "group14_1": {
+        "host_ms": 1.104756689,
+        "cuda_ms": 0.3118950399188325
+      },
+      "delta_group14_minus_group12": {
+        "host_ms": 1.104756689,
+        "cuda_ms": 0.3118950399188325
+      }
+    },
+    "tolist": {
+      "group12": {
+        "host_ms": 0.0,
+        "cuda_ms": 0.0
+      },
+      "group14_1": {
+        "host_ms": 0.275624257,
+        "cuda_ms": 0.16192217599996367
+      },
+      "delta_group14_minus_group12": {
+        "host_ms": 0.275624257,
+        "cuda_ms": 0.16192217599996367
+      }
+    },
+    "gather": {
+      "group12": {
+        "host_ms": 0.0,
+        "cuda_ms": 0.0
+      },
+      "group14_1": {
+        "host_ms": 0.858008427,
+        "cuda_ms": 1.0692195549663157
+      },
+      "delta_group14_minus_group12": {
+        "host_ms": 0.858008427,
+        "cuda_ms": 1.0692195549663157
+      }
+    },
+    "repack": {
+      "group12": {
+        "host_ms": 0.414914441,
+        "cuda_ms": 0.9999616961926222
+      },
+      "group14_1": {
+        "host_ms": 0.401437395,
+        "cuda_ms": 0.9958402245268225
+      },
+      "delta_group14_minus_group12": {
+        "host_ms": -0.013477046000000048,
+        "cuda_ms": -0.004121471665799681
+      }
+    },
+    "rope": {
+      "group12": {
+        "host_ms": 1.152276243,
+        "cuda_ms": 2.24344979172945
+      },
+      "group14_1": {
+        "host_ms": 1.140231384,
+        "cuda_ms": 2.2430554883778093
+      },
+      "delta_group14_minus_group12": {
+        "host_ms": -0.012044858999999963,
+        "cuda_ms": -0.0003943033516407013
+      }
+    },
+    "h2d": {
+      "group12": {
+        "host_ms": 0.236044166,
+        "cuda_ms": 0.21353689576685428
+      },
+      "group14_1": {
+        "host_ms": 0.224972149,
+        "cuda_ms": 0.20453206399083138
+      },
+      "delta_group14_minus_group12": {
+        "host_ms": -0.01107201699999999,
+        "cuda_ms": -0.009004831776022904
+      }
+    },
+    "decode_exclusive_delta_s": {
+      "host_ms": -0.07278624499999875,
+      "cuda_ms": -0.0728741122949863
+    }
+  },
+  "additive_closure": {
+    "measured_positive_overhead_s": 6.373226207,
+    "explained_overhead_s": 6.373226207,
+    "explained_percent": 89.83967024245841,
+    "residual_s": 0.7207737930000002,
+    "residual_percent": 10.160329757541586,
+    "parts_used_host_wall_s": {
+      "decode_exclusive": -0.07278624499999875,
+      "materialization": -0.062085100000000004,
+      "draftmap_routing": 4.134836834,
+      "cpu_sync_wait": 1.104756689,
+      "tolist_cpu_conversion": 0.275624257,
+      "gather_k_v": 0.858008427,
+      "repack": -0.013477046000000048,
+      "rope": -0.012044858999999963,
+      "h2d": -0.01107201699999999
+    },
+    "note": "full_decode is split as decode-exclusive plus nested BF16 materialization; nested timers are not summed twice"
+  },
+  "unavailable": {
+    "mask_layout_preparation": "NOT_AVAILABLE: no independent timer boundary in existing path",
+    "explicit_implicit_sync": "NOT_ISOLATED: only CPU detach/copy exposed wait is observable; final trace synchronization is outside wrapper"
+  },
+  "top_overhead": [
+    [
+      "draftmap_routing",
+      4.134836834
+    ],
+    [
+      "cpu_sync_wait",
+      1.104756689
+    ],
+    [
+      "gather_k_v",
+      0.858008427
+    ]
+  ]
+}

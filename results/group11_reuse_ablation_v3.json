@@ -1,0 +1,15 @@
+{
+  "metric": "Group11 reuse diagnostic",
+  "cache_hits": 29351,
+  "cache_misses": 919,
+  "cache_hit_rate": 0.9696399074991741,
+  "avoided_h2d_calls": 58702,
+  "avoided_h2d_bytes": 281318768640,
+  "gpu_cache_peak_bytes": 507985920,
+  "total_wall_with_reuse_s": 188.22008752822876,
+  "untouched_group11_wall_s": 203.7611243724823,
+  "wall_delta_s": -15.54103684425354,
+  "selected_id_digest_primary": "6b40fe7165487fc31d7aa3d5782b865735869ad047f5ad257e2c7f5a6b13cb00",
+  "selected_id_digest_reuse": "6b40fe7165487fc31d7aa3d5782b865735869ad047f5ad257e2c7f5a6b13cb00",
+  "selection_ids_unchanged": true
+}

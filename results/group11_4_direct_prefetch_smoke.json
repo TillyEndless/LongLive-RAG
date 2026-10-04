@@ -1,0 +1,15 @@
+{
+  "MODE_NAME": "next_layer_prefetch_direct",
+  "ATTENTION_CALLS": 1500,
+  "PREFETCH_REQUESTS": 3161,
+  "PREFETCHED_IDS": 3161,
+  "DIRECT_PREFETCH_CONSUMED": 696,
+  "PREFETCH_STATE_MISS": 109,
+  "NEXT_LAYER_HISTORY_RETRIEVAL_CALLS": 0,
+  "CORRECTION_FETCH_COUNT": 0,
+  "RECONCILIATION_COUNT": 0,
+  "BOOTSTRAP_COUNT": 804,
+  "FINAL_WORKING_SET_UNCHANGED": "YES",
+  "NAN_INF": "NO",
+  "RUNTIME_JSON": "/data/zxl/LongLive-RAG-group11_15_h200/results/group11_4_direct_prefetch_smoke_v2/rank0-0-0_lora_runtime.json"
+}

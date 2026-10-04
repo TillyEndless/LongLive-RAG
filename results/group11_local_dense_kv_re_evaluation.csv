@@ -1,0 +1,3 @@
+group,case,GPU_LOCAL_DENSE_KV_BYTES,GPU_LOCAL_DENSE_KV_GiB,source_key,source_path,CPU_HISTORICAL_PACKED_KV_INCLUDED,definition
+11.1,case_01,3450470400,3.2135009765625,GPU_KV_MEASURED_BYTES (legacy local dense),/data/zxl/LongLive-RAG-group11_15_h200/results/group11_profile_case01/rank0-0-0_lora_memory_measurement.json,NO,current local dense BF16 K/V only
+11.2,case_01,3450470400,3.2135009765625,GPU_LOCAL_BF16_KV_BYTES,/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_case01/rank0-0-0_lora_memory_measurement.json,NO,current local dense BF16 K/V only

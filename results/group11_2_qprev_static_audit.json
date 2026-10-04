@@ -1,0 +1,35 @@
+{
+  "strategy": "Group11.2 PREVIOUS_Q",
+  "source": {
+    "worktree": "/data/zxl/LongLive-RAG-group11_15_h200",
+    "head": "410948eb7e328513e7751ac2d44193115363cee4",
+    "file": "wan/modules/causal_model_latentmem.py"
+  },
+  "static_only": true,
+  "QPREV_STATE_LAYER_SPECIFIC": "YES: per-layer kv_cache and explicit layer check",
+  "QPREV_STATE_TIME_ALIGNED": "NO / NOT_PROVABLY_EXACT: layer is checked, but predecessor chunk/denoising-step sequence is not validated",
+  "QPREV_RETRIEVAL_DIRECT": "YES after bootstrap",
+  "CURRENT_Q_CORRECTION_PRESENT": "NO",
+  "EXTRA_FETCH_BEYOND_SELECTED_IDS": "NO in the qprev path; group11_fetch_mode remains serial_full",
+  "FINAL_WORKING_SET_EQUALS_QPREV_SELECTION": "YES after bootstrap",
+  "QPREV_EXTRA_CONTROL_OVERHEAD": [
+    "wan/modules/causal_model_latentmem.py:442-448 query.detach().clone() into draft_q_pending on every invocation",
+    "wan/modules/causal_model_latentmem.py:450-457 pending->history commit and metadata dictionary update",
+    "wan/modules/causal_model_latentmem.py:270-275 only checks layer and optionally records denoising-step age; it does not enforce exact t-1",
+    "wan/modules/causal_model_latentmem.py:300-306 selected ID detach/cpu/tolist for provenance, also present in CURRENT_Q"
+  ],
+  "call_graph": [
+    "current Q computed -> _queue_draft_q_history (600)",
+    "previous history read or bootstrap current Q in _online_memory_indices (262-277)",
+    "DraftMap selection and direct selected tensor return (278-343)",
+    "selected qprev IDs fetched and assembled into attention working set (930-1114)",
+    "current Q is committed only after attention (1216-1217)"
+  ],
+  "evidence": {
+    "config": "configs/g11_2.yaml:15-18 retrieval_query_mode: previous_q",
+    "state_storage": "wan/modules/causal_model_latentmem.py:442-457",
+    "selection_source": "wan/modules/causal_model_latentmem.py:263-277",
+    "final_working_set": "wan/modules/causal_model_latentmem.py:1093-1114"
+  },
+  "conclusion": "It is not a predictive-prefetch path and does not add a second current-Q correction retrieval. It differs from CURRENT_Q by retrieval-query state plus clone/metadata overhead, with a first-use bootstrap to current Q. Exact temporal t-1 alignment is not statically guaranteed."
+}

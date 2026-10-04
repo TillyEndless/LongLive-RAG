@@ -1,0 +1,86 @@
+{
+  "audit_type": "static_ownership_accounting_audit",
+  "inference_run": false,
+  "benchmark_run": false,
+  "source_files": [
+    "utils/compressed_history_archive.py",
+    "utils/runtime_memory_measurement.py",
+    "wan/modules/causal_model_latentmem.py",
+    "pipeline/causal_inference.py"
+  ],
+  "group14_storage_model": "LAZY_RESIDENT_CACHE",
+  "group15_storage_model": "LAZY_RESIDENT_CACHE",
+  "ownership": {
+    "cpu_archive": "CPU BF16 K/V owned by CompressedHistoryArchive records",
+    "gpu_lowbit": "Per-record gpu_k_payload/gpu_v_payload plus metadata; created lazily on first non-promoted selected fetch and retained in the record",
+    "local": "cache[k]/cache[v], persistent dense BF16 local window",
+    "transient": "BF16 promotion and dequantized low-bit materializations returned by materialize_selected"
+  },
+  "sparse_order": "Q-sparse selection occurs before CompressedHistoryArchive.materialize_selected; materialize_selected then splits retained IDs into promoted CPU BF16 and low-bit GPU dequant paths.",
+  "sparsity_effect": {
+    "reduces_persistent_storage": "PARTIAL",
+    "reduces_active_working_set": "YES",
+    "reason": "Only selected IDs are materialized per call, but once a selected low-bit record is created, its GPU payload remains attached to the archive record. The code has no per-ratio eviction of gpu_k_payload/gpu_v_payload; archive eviction is tied to rolling history records, not Q-sparse ratio."
+  },
+  "memory_accounting": {
+    "GPU_KV_MEASURED_BYTES": "cache[k]/cache[v] storage only, deduplicated by storage identity; current local dense BF16 KV",
+    "GPU_LOCAL_BF16_KV_BYTES": "sum of cache[k]/cache[v] storage bytes",
+    "GPU_PACKED_K_BYTES": "sum of persistent rec.gpu_k_payload values for records whose low-bit owner has been created",
+    "GPU_PACKED_V_BYTES": "sum of persistent rec.gpu_v_payload values for records whose low-bit owner has been created",
+    "GPU_PACKED_SCALE_BYTES": "payload scale/amax and record metadata tensor storage where discoverable",
+    "GPU_KV_ACTUAL_PERSISTENT_BYTES": "GPU_KV_MEASURED_BYTES + GPU_PACKED_K_BYTES + GPU_PACKED_V_BYTES + GPU_PACKED_SCALE_BYTES + GPU_PACKED_METADATA_BYTES",
+    "GPU_KV_BF16_EQUIVALENT_BYTES": "logical BF16 size for every archive record shape plus local BF16 cache; this is an estimate/equivalent, not an allocation measurement",
+    "TRANSIENT_DEQUANT_GPU_PEAK_BYTES": "cache counters updated from returned BF16 dequant tensors",
+    "TRANSIENT_PROMOTION_GPU_PEAK_BYTES": "cache counters updated from promoted CPU BF16 H2D materializations",
+    "PEAK_GPU_ALLOCATED_BYTES": "not produced by runtime_inference_memory; must come from separate torch.cuda.max_memory_allocated instrumentation if needed"
+  },
+  "source_locations": {
+    "archive_append": "utils/compressed_history_archive.py:100-113",
+    "lazy_lowbit_creation_fetch": "utils/compressed_history_archive.py:116-168",
+    "lazy_lowbit_creation_helper": "utils/compressed_history_archive.py:170-196",
+    "promotion_and_materialization": "utils/compressed_history_archive.py:208-285",
+    "archive_eviction_append": "wan/modules/causal_model_latentmem.py:2495-2505",
+    "q_sparse_then_materialize": "wan/modules/causal_model_latentmem.py:1264-1298 and the archive materialization path in the attention retrieval block",
+    "memory_measurement": "utils/runtime_memory_measurement.py:170-246"
+  },
+  "reported_numeric_rows": {
+    "status": "NOT_TRACEABLE_AS_MEMORY_FROM_CURRENT_REPO",
+    "values_group14_gib": [
+      3.7889,
+      3.227,
+      2.6303,
+      1.997
+    ],
+    "values_group15_gib": [
+      2.1532,
+      1.7853,
+      1.5181,
+      1.0684
+    ],
+    "finding": "The current source defines no retained-ratio memory formula that produces these rows. Several matching decimals (for example 3.2270, 2.6303, 1.5181, 1.0684) occur in profiling CSVs as timing fields such as time_score_ms or EXPOSED_CRITICAL_PATH_TIME, not as GPU memory fields. They must not be reported as GiB without the originating table/artifact."
+  },
+  "semantic_verdict": {
+    "GPU_ACTUAL_PERSISTENT_KV_SEMANTIC_CORRECT": "NO",
+    "current_problem": "The field name is too broad: GPU_KV_MEASURED_BYTES is local dense BF16 KV, while GPU_KV_ACTUAL_PERSISTENT_BYTES includes local dense KV plus persistent low-bit owners but does not expose the historical persistent component separately. It also does not expose active working-set bytes as a separate field.",
+    "recommended_fields": [
+      "GPU_LOCAL_PERSISTENT_KV_BYTES",
+      "GPU_HISTORICAL_PERSISTENT_RESIDENT_KV_BYTES",
+      "GPU_HISTORICAL_ACTIVE_WORKING_SET_BYTES",
+      "GPU_HISTORICAL_TRANSIENT_PEAK_BYTES",
+      "GPU_KV_ACTUAL_PERSISTENT_BYTES",
+      "KV_RELATED_GPU_PEAK_BYTES",
+      "PEAK_GPU_ALLOCATED_BYTES"
+    ]
+  },
+  "final_answers": {
+    "1": "Current Group14/15 GPU_KV_MEASURED is local dense BF16 KV, not historical packed KV. Historical packed ownership is represented separately by GPU_PACKED_K/V fields when populated.",
+    "2": "Q-sparsity definitely reduces active materialized working set. It does not necessarily physically reduce persistent GPU packed storage after selected records have been lazily cached.",
+    "3": "Previously selected/pruned-by-Q chunks can still have persistent GPU packed K/V if they were selected in an earlier call; Q-pruned chunks are not packed merely because they were pruned in the current call.",
+    "4": "For the corrected path, Q-sparse selection precedes materialize_selected. Low-bit packing is lazy on first selected non-promoted fetch, not a full pre-pack of every historical chunk.",
+    "5": "Yes. The per-record gpu_k_payload/gpu_v_payload fields form a lazy persistent resident cache. No ratio-based eviction is present; history eviction removes archive records.",
+    "6": "The four Group14 numbers cannot be validated as GiB from current memory artifacts; their matching decimals appear in timing traces. Treat their memory label as unverified/mislabelled.",
+    "7": "The four Group15 numbers have the same problem; current source does not define a formula yielding them as GiB.",
+    "8": "No. GPU_KV_ACTUAL_PERSISTENT_BYTES is closer to local dense plus currently materialized persistent low-bit payloads, but it is not decomposed enough to be an authoritative historical/persistent semantic field.",
+    "9": "Final tables should use the recommended fields separately; never use GPU_KV_MEASURED_BYTES as historical GPU KV and never fold transient BF16 buffers into persistent KV."
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "case": "case_01",
+  "counts": {
+    "BOOTSTRAP_CALLS": 30,
+    "NUM_ATTENTION_CALLS": 6000,
+    "QPREFETCH_H2D_COUNT": 30270,
+    "QPREFETCH_HITS": 30090,
+    "QPREFETCH_MISSES": 0,
+    "QPREFETCH_PREDICTIONS": 5220,
+    "QPREFETCH_REQUESTED_IDS": 30270,
+    "QPREFETCH_STALE_REJECTS": 0,
+    "QPREFETCH_TEMPORAL_ALIGNMENT_FAIL": 0,
+    "QPREFETCH_TEMPORAL_ALIGNMENT_PASS": 5220
+  },
+  "e2e_latency_s": 114.45478158816695,
+  "events": 5220,
+  "invariants": {
+    "CURRENT_INVOCATION_QPREV_RERETRIEVAL": 0,
+    "DEMAND_H2D_ON_VALID_PREFETCH": 0,
+    "EXACT_Q_T_MINUS_1_ALIGNMENT": "PASS",
+    "FINAL_WORKING_SET_EQUALS_QPREV_PREDICTION": "YES",
+    "NON_BOOTSTRAP_FALLBACK_COUNT": 0,
+    "NON_BOOTSTRAP_PREFETCH_MISS": 0
+  },
+  "process_wall_s": 229.88,
+  "result_dir": "/data/zxl/LongLive-RAG-group11_15_h200/results/group11_2_temporal_prefetch_case01_profile",
+  "runtime_json": "/data/zxl/LongLive-RAG-group11_15_h200/results/group11_2_temporal_prefetch_case01_profile/rank0-0-0_lora_runtime.json",
+  "self_attention_wrapper_s": 88.49939351901412,
+  "timing_summary_ms": {
+    "archive_lookup_ms": {
+      "count": 5220,
+      "max_ms": 0.008864328265190125,
+      "mean_ms": 0.00020339371372456752,
+      "median_ms": 0.0001695007085800171,
+      "min_ms": 0.00010989606380462646,
+      "p90_ms": 0.0002505257725715637,
+      "p95_ms": 0.00027939677238464355
+    },
+    "available_overlap_window_ms": {
+      "count": 5190,
+      "max_ms": 1676.637463271618,
+      "mean_ms": 546.864836690104,
+      "median_ms": 396.59014344215393,
+      "min_ms": 223.564094863832,
+      "p90_ms": 1067.3192796297374,
+      "p95_ms": 1192.611957062036
+    },
+    "h2d_exposed_wait_ms": {
+      "count": 5190,
+      "max_ms": 0.010747462511062622,
+      "mean_ms": 0.001259899818426382,
+      "median_ms": 0.0011725351214408875,
+      "min_ms": 0.0008810311555862427,
+      "p90_ms": 0.0015012919902801514,
+      "p95_ms": 0.0016530975699424744
+    },
+    "h2d_work_ms": {
+      "count": 5220,
+      "max_ms": 2.811840057373047,
+      "mean_ms": 1.0618260420373573,
+      "median_ms": 1.0863679647445679,
+      "min_ms": 0.20748800039291382,
+      "p90_ms": 1.1068799495697021,
+      "p95_ms": 1.1149455845355987
+    },
+    "host_id_control_ms": {
+      "count": 5220,
+      "max_ms": 0.09239464998245239,
+      "mean_ms": 0.02054588448156342,
+      "median_ms": 0.020301900804042816,
+      "min_ms": 0.016955658793449402,
+      "p90_ms": 0.021804124116897583,
+      "p95_ms": 0.02254452556371689
+    },
+    "kv_assembly_ms": {
+      "count": 5190,
+      "max_ms": 0.16238540410995483,
+      "mean_ms": 0.041325509849655835,
+      "median_ms": 0.04016328603029251,
+      "min_ms": 0.03607664257287979,
+      "p90_ms": 0.04561338573694229,
+      "p95_ms": 0.0466187484562397
+    },
+    "overlap_margin_ms": {
+      "count": 5190,
+      "max_ms": 1675.5511912703514,
+      "mean_ms": 545.8031644582562,
+      "median_ms": 395.49623864144087,
+      "min_ms": 223.08771084994078,
+      "p90_ms": 1066.228716403991,
+      "p95_ms": 1191.5248562641445
+    },
+    "prefetch_prepare_ms": {
+      "count": 5220,
+      "max_ms": 2.679448574781418,
+      "mean_ms": 0.19143212790033598,
+      "median_ms": 0.15927013009786606,
+      "min_ms": 0.05708914250135422,
+      "p90_ms": 0.25009652599692345,
+      "p95_ms": 0.47229831106960773
+    },
+    "qpredict_work_ms": {
+      "count": 5220,
+      "max_ms": 313.32547403872013,
+      "mean_ms": 2.786036343331595,
+      "median_ms": 2.6929103769361973,
+      "min_ms": 0.39148423820734024,
+      "p90_ms": 3.1629162840545177,
+      "p95_ms": 3.249174077063799
+    },
+    "target_wait_event_ms": {
+      "count": 5190,
+      "max_ms": 0.01727999933063984,
+      "mean_ms": 0.003950470938707966,
+      "median_ms": 0.0037280000979080796,
+      "min_ms": 0.0025599999353289604,
+      "p90_ms": 0.0046720001846551895,
+      "p95_ms": 0.004896000027656555
+    }
+  },
+  "transformer_latency_s": 101.73888247925788,
+  "unavailable_phase_breakdown": [
+    "output_projection_after_launch",
+    "ffn_after_launch",
+    "norm_residual_after_launch"
+  ],
+  "window": 12,
+  "wrapper_latency_s": 12.71589910890907
+}

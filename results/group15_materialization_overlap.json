@@ -1,0 +1,111 @@
+{
+  "device": "cuda",
+  "results": [
+    {
+      "mode": "int8_fp8",
+      "serial": {
+        "wall_s": 0.08674636948853731,
+        "ids": [
+          2,
+          0,
+          3,
+          1
+        ],
+        "promoted": [
+          3,
+          1
+        ],
+        "lowbit": [
+          2,
+          0
+        ],
+        "mode": "serial_reference",
+        "promotion_event": false,
+        "dequant_event": false,
+        "transient_bf16_bytes": 262144,
+        "persistent_gpu_bytes": 67600
+      },
+      "async": {
+        "wall_s": 0.004246148280799389,
+        "ids": [
+          2,
+          0,
+          3,
+          1
+        ],
+        "promoted": [
+          3,
+          1
+        ],
+        "lowbit": [
+          2,
+          0
+        ],
+        "mode": "async_overlap",
+        "promotion_event": true,
+        "dequant_event": true,
+        "transient_bf16_bytes": 262144,
+        "persistent_gpu_bytes": 67600
+      },
+      "ids_exact": true,
+      "promotion_ids_exact": true,
+      "lowbit_ids_exact": true,
+      "max_abs_k": 0.0,
+      "max_abs_v": 0.0,
+      "overlap_saving": 0.08250022120773792
+    },
+    {
+      "mode": "nvfp4",
+      "serial": {
+        "wall_s": 0.14257112983614206,
+        "ids": [
+          2,
+          0,
+          3,
+          1
+        ],
+        "promoted": [
+          3,
+          1
+        ],
+        "lowbit": [
+          2,
+          0
+        ],
+        "mode": "serial_reference",
+        "promotion_event": false,
+        "dequant_event": false,
+        "transient_bf16_bytes": 262144,
+        "persistent_gpu_bytes": 36880
+      },
+      "async": {
+        "wall_s": 0.0023271841928362846,
+        "ids": [
+          2,
+          0,
+          3,
+          1
+        ],
+        "promoted": [
+          3,
+          1
+        ],
+        "lowbit": [
+          2,
+          0
+        ],
+        "mode": "async_overlap",
+        "promotion_event": true,
+        "dequant_event": true,
+        "transient_bf16_bytes": 262144,
+        "persistent_gpu_bytes": 36880
+      },
+      "ids_exact": true,
+      "promotion_ids_exact": true,
+      "lowbit_ids_exact": true,
+      "max_abs_k": 0.0,
+      "max_abs_v": 0.0,
+      "overlap_saving": 0.14024394564330578
+    }
+  ]
+}

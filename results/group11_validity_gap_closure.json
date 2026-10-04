@@ -1,0 +1,35 @@
+{
+  "static_and_smoke_only": true,
+  "canonical10_run": false,
+  "evaluation_run": false,
+  "qprev_exact_temporal_alignment": "PASS",
+  "qprev_alignment_status_counts": {
+    "BOOTSTRAP_CURRENT_Q": 30,
+    "PASS": 300
+  },
+  "qprev_attention_calls": 600,
+  "prefetch_attention_calls": 600,
+  "host_id_sync_removed": "NO",
+  "host_id_sync_reason": "The prefetch source remains a Python-indexed CPU archive; GPU IDs cannot index it without changing archive/indexing semantics.",
+  "per_prefetch_gpu_allocation_removed": "YES for reused logical staging slots; first-seen slot allocation remains necessary",
+  "prefetch_source_pre_pinned": "YES",
+  "hit_tensor_reuse_unchanged": "YES",
+  "final_working_set_unchanged": "YES",
+  "prefetch_counters": {
+    "requested": 638,
+    "hits": 351,
+    "corrections": 660,
+    "waste": 287
+  },
+  "PREFETCH_REQUESTED": 638,
+  "PREFETCH_HITS": 351,
+  "PREFETCH_CORRECTIONS": 660,
+  "PREFETCH_WASTE": 287,
+  "ATTENTION_CALLS": 600,
+  "CONFIG_PATH": "/data/zxl/LongLive-RAG-group11_15_h200/results/group11_validity_smoke_10block/group11_4_prefetch/config.yaml",
+  "RESULT_DIR": "/data/zxl/LongLive-RAG-group11_15_h200/results/group11_validity_smoke_10block/group11_4_prefetch",
+  "GIT_COMMIT": "410948eb7e328513e7751ac2d44193115363cee4",
+  "authoritative_smoke": "group11_validity_smoke_10block/group11_4_prefetch",
+  "final_working_set_unchanged": "YES",
+  "smoke_outputs": "/data/zxl/LongLive-RAG-group11_15_h200/results/group11_validity_smoke_10block"
+}

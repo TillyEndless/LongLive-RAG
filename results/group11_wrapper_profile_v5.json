@@ -1,0 +1,59 @@
+{
+  "profile_version": "v5",
+  "scope": "case01 bounded profiler interval, blocks 6-7",
+  "interval_wall_s": 154.88356907714845,
+  "custom_event_count": 2400,
+  "custom_host_record_function_ms": {
+    "G11_QKV_PROJECTION": [
+      600,
+      1156.1288379999999
+    ],
+    "G11_BF16_ATTN": [
+      600,
+      825.9852309999994
+    ],
+    "G11_ATTN_OUTPUT_PROJECTION": [
+      600,
+      242.5416100000002
+    ],
+    "G11_WRAPPER": [
+      600,
+      13547.006412000006
+    ]
+  },
+  "profiler_category_s": {
+    "python_function": {
+      "calls": 593368,
+      "duration_s": 99268.20172422496
+    },
+    "cpu_op": {
+      "calls": 450519,
+      "duration_s": 19.31267351800005
+    },
+    "cuda_runtime": {
+      "calls": 173437,
+      "duration_s": 5.435506917000007
+    },
+    "kernel": {
+      "calls": 80274,
+      "duration_s": 1.7811477720000013
+    },
+    "gpu_memcpy": {
+      "calls": 21840,
+      "duration_s": 0.5444055950000023
+    },
+    "gpu_memset": {
+      "calls": 4953,
+      "duration_s": 0.004379108999999973
+    },
+    "cuda_driver": {
+      "calls": 20,
+      "duration_s": 0.00015253
+    }
+  },
+  "cuda_event_pairs": "NOT_CAPTURED_IN_THIS_RUN",
+  "cuda_event_note": "torch.profiler CUDA events were captured; explicit torch.cuda.Event phase pairs were not installed before this run.",
+  "previous_v4_wrapper_s": 77.94811591692269,
+  "previous_v4_unattributed_s": 62.373,
+  "coverage": "Bounded interval captured; explicit CUDA-event critical-path decomposition requires a follow-up run."
+}

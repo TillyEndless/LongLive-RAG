@@ -1,0 +1,15 @@
+{
+  "root": "/data/zxl/LongLive-RAG-group11_15_h200",
+  "global_invariant": "CPU historical K/V is authoritative BF16 for Groups12-19",
+  "canonical_runs_launched": false,
+  "groups": [
+    {"group": 12, "old_artifacts": ["results/group12_corrected_canonical10", "results/group12_corrected_case01", "results/group12_quality_eval.json"], "old_status": "INVALID_FOR_CORRECTED_GROUP12_19", "reason": "runtime metadata recorded compressed CPU historical K/V"},
+    {"group": 13, "old_artifacts": ["results/group13_corrected_canonical10", "results/group13_corrected_case01", "results/group13_quality_eval.json"], "old_status": "INVALID_FOR_CORRECTED_GROUP12_19", "reason": "runtime metadata recorded compressed CPU historical K/V"},
+    {"group": 14, "old_artifacts": ["results/group14_case01_retained05", "results/group14_case01_retained10", "results/group14_case01_retained20", "results/group14_case01_retained30", "results/group14_case02_retained30", "results/group14_case03_retained30", "results/group14_case04_retained30", "results/group14_case05_retained30", "results/group14_case06_retained30", "results/group14_case07_retained30", "results/group14_case08_retained30", "results/group14_case09_retained30", "results/group14_case10_retained30"], "old_status": "INVALID_FOR_CORRECTED_GROUP12_19", "reason": "derived from old compressed-CPU archive lifecycle"},
+    {"group": 15, "old_artifacts": ["results/group15_case01_retained05", "results/group15_case01_retained10", "results/group15_case01_retained20", "results/group15_case01_retained30", "results/group15_case02_retained30"], "old_status": "INVALID_FOR_CORRECTED_GROUP12_19", "reason": "derived from old compressed-CPU archive lifecycle"},
+    {"group": 16, "old_artifacts": [], "old_status": "BLOCKED_H200_NOT_IMPLEMENTED", "reason": "native RTX5090 path absent from H200 checkout"},
+    {"group": 17, "old_artifacts": [], "old_status": "BLOCKED_H200_NOT_IMPLEMENTED", "reason": "native RTX5090 path absent from H200 checkout"},
+    {"group": 18, "old_artifacts": [], "old_status": "BLOCKED_H200_NOT_IMPLEMENTED", "reason": "native RTX5090 path absent from H200 checkout"},
+    {"group": 19, "old_artifacts": [], "old_status": "BLOCKED_H200_NOT_IMPLEMENTED", "reason": "native RTX5090 path absent from H200 checkout"}
+  ]
+}

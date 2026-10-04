@@ -1,0 +1,11 @@
+metric,group11,longlive_rag_w12,delta,note
+total_wall,189.0,61.2,127.8,LongLive value is published wall-only reference; no aligned phase trace
+draftmap,6.938321080058813,NOT_AVAILABLE,NOT_AVAILABLE,LongLive value is published wall-only reference; no aligned phase trace
+fetch_host,0.7716380665078759,NOT_AVAILABLE,NOT_AVAILABLE,LongLive value is published wall-only reference; no aligned phase trace
+attention_host,1.8321020044386387,NOT_AVAILABLE,NOT_AVAILABLE,LongLive value is published wall-only reference; no aligned phase trace
+fetch_requests,30270,NOT_AVAILABLE,NOT_AVAILABLE,LongLive value is published wall-only reference; no aligned phase trace
+h2d_calls,60540,NOT_AVAILABLE,NOT_AVAILABLE,LongLive value is published wall-only reference; no aligned phase trace
+h2d_bytes,290127052800,NOT_AVAILABLE,NOT_AVAILABLE,LongLive value is published wall-only reference; no aligned phase trace
+unique_entries,919,NOT_AVAILABLE,NOT_AVAILABLE,LongLive value is published wall-only reference; no aligned phase trace
+repeated_entries,29351,NOT_AVAILABLE,NOT_AVAILABLE,LongLive value is published wall-only reference; no aligned phase trace
+mean_kv_tokens,17113.2,NOT_AVAILABLE,NOT_AVAILABLE,LongLive value is published wall-only reference; no aligned phase trace

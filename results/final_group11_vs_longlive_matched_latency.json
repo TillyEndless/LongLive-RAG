@@ -1,0 +1,71 @@
+{
+  "status": "COMPLETED_GPU1",
+  "gpu": "H200 NVL",
+  "case": "case_01",
+  "window": 12,
+  "group11": {
+    "mode": "group11_draftmap_w12",
+    "gpu": "H200 GPU1",
+    "case": "case_01",
+    "window": 12,
+    "seed": 0,
+    "matched_blocks": [
+      6,
+      7
+    ],
+    "wrapper_cuda_s": 3.7367016730308533,
+    "bf16_attention_cuda_s": 0.5224269117116928,
+    "qkv_q_s": 0.01615945601090789,
+    "qkv_k_s": 0.01856918400898576,
+    "qkv_v_s": 0.025636959992349148,
+    "output_projection_s": 0.01354585599154234,
+    "e2e_wall_proxy_s": 103.0,
+    "e2e_wall_proxy_note": "inference progress elapsed 0it [01:43]; runtime JSON has no canonical e2e field",
+    "draftmap_calls": 5220,
+    "attention_calls": 6000,
+    "fetch_requests": 30270,
+    "unique_fetches": 919,
+    "duplicate_fetches": 29351,
+    "h2d_calls": 60540,
+    "h2d_bytes": 290127052800,
+    "cache_hits": 0,
+    "cache_misses": 30270,
+    "memory_artifact": "results/final_group11_gpu1_20260927_1828/rank0-0-0_lora_memory_measurement.json"
+  },
+  "longlive_w12": {
+    "mode": "longlive_native_w12",
+    "gpu": "H200 GPU1",
+    "case": "case_01",
+    "window": 12,
+    "seed": 0,
+    "matched_blocks": [
+      6,
+      7
+    ],
+    "wrapper_cuda_s": 1.0476999032497405,
+    "bf16_attention_cuda_s": 0.5570283516645432,
+    "qkv_q_s": 0.014478655952960252,
+    "qkv_k_s": 0.014350687988102436,
+    "qkv_v_s": 0.0142929599955678,
+    "output_projection_s": 0.0133888319991529,
+    "e2e_wall_s": 42.71775874402374,
+    "draftmap_calls": 0,
+    "attention_calls": 6000,
+    "fetch_requests": 0,
+    "unique_fetches": 0,
+    "duplicate_fetches": 0,
+    "h2d_calls": 0,
+    "h2d_bytes": 0,
+    "runtime_artifact": "results/final_longlive_gpu1_20260927_1828/rank0-0-0_lora_runtime.json"
+  },
+  "comparison": {
+    "wrapper_cuda_delta_s": 2.689001769781113,
+    "wrapper_cuda_ratio": 3.566576327286474,
+    "bf16_attention_delta_s": -0.03460143995285048,
+    "group11_wall_proxy_delta_vs_longlive_e2e_s": 60.28224125597626,
+    "accounted_wrapper_delta_s": 2.689001769781113,
+    "unaccounted_delta_s": "NOT_COMPUTABLE for full E2E because Group11 has no canonical e2e field",
+    "root_cause": "Group11 wrapper/orchestration is slower; BF16 attention is not the cause; DraftMap/fetch/H2D subphase times were not separately instrumented in this pass",
+    "nsys_recommended": "YES only if subphase attribution is required; do not launch automatically"
+  }
+}

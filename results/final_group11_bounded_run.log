@@ -1,0 +1,76 @@
+Traceback (most recent call last):
+  File "/data/zxl/LongLive-RAG-group11_15_h200/scripts/final_matched_event_launcher.py", line 32, in <module>
+    import wan.modules.causal_model_latentmem as cm
+  File "/data/zxl/LongLive-RAG-group11_15_h200/wan/__init__.py", line 1, in <module>
+    from . import configs, distributed, modules
+  File "/data/zxl/LongLive-RAG-group11_15_h200/wan/modules/__init__.py", line 2, in <module>
+    from .model import WanModel
+  File "/data/zxl/LongLive-RAG-group11_15_h200/wan/modules/model.py", line 6, in <module>
+    from diffusers.configuration_utils import ConfigMixin, register_to_config
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/diffusers/__init__.py", line 5, in <module>
+    from .utils import (
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/diffusers/utils/__init__.py", line 135, in <module>
+    from .peft_utils import (
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/diffusers/utils/peft_utils.py", line 26, in <module>
+    from .torch_utils import empty_device_cache
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/diffusers/utils/torch_utils.py", line 89, in <module>
+    from torch._dynamo import allow_in_graph as maybe_allow_in_graph
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/_dynamo/__init__.py", line 3, in <module>
+    from . import convert_frame, eval_frame, resume_execution
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/_dynamo/convert_frame.py", line 53, in <module>
+    from . import config, exc, trace_rules
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/_dynamo/trace_rules.py", line 46, in <module>
+    from .variables import (
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/_dynamo/variables/__init__.py", line 2, in <module>
+    from .builtin import BuiltinVariable
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/_dynamo/variables/builtin.py", line 47, in <module>
+    from .ctx_manager import EventVariable, StreamVariable
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/_dynamo/variables/ctx_manager.py", line 22, in <module>
+    from .functions import (
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/_dynamo/variables/functions.py", line 31, in <module>
+    from torch.distributed._composable.fsdp import _fsdp_param_group
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/_composable/__init__.py", line 3, in <module>
+    from .fully_shard import fully_shard
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/_composable/fully_shard.py", line 10, in <module>
+    from torch.distributed.fsdp._common_utils import _FSDPState
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/fsdp/__init__.py", line 1, in <module>
+    from ._flat_param import FlatParameter as FlatParameter
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/fsdp/_flat_param.py", line 47, in <module>
+    from ._fsdp_extensions import (
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/fsdp/_fsdp_extensions.py", line 6, in <module>
+    from torch.distributed._shard.sharded_tensor.api import ShardedTensor
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/_shard/__init__.py", line 1, in <module>
+    from .api import _shard_tensor, load_with_process_group, shard_module, shard_parameter
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/_shard/api.py", line 9, in <module>
+    from torch.distributed._shard.sharded_tensor import ShardedTensor
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/_shard/sharded_tensor/__init__.py", line 8, in <module>
+    from .api import (
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/_shard/sharded_tensor/api.py", line 31, in <module>
+    from .reshard import reshard_local_shard, reshuffle_local_shard
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/_shard/sharded_tensor/reshard.py", line 14, in <module>
+    from torch.distributed.nn.functional import all_to_all, all_to_all_single
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/nn/__init__.py", line 7, in <module>
+    from .api.remote_module import RemoteModule
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/nn/api/remote_module.py", line 26, in <module>
+    from torch.distributed.nn.jit import instantiator
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/torch/distributed/nn/jit/instantiator.py", line 20, in <module>
+    _TEMP_DIR = tempfile.TemporaryDirectory()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/tempfile.py", line 886, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/tempfile.py", line 373, in mkdtemp
+    prefix, suffix, dir, output_type = _sanitize_params(prefix, suffix, dir)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/tempfile.py", line 126, in _sanitize_params
+    dir = gettempdir()
+          ^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/tempfile.py", line 315, in gettempdir
+    return _os.fsdecode(_gettempdir())
+                        ^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/tempfile.py", line 308, in _gettempdir
+    tempdir = _get_default_tempdir()
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/tempfile.py", line 223, in _get_default_tempdir
+    raise FileNotFoundError(_errno.ENOENT,
+FileNotFoundError: [Errno 2] No usable temporary directory found in ['/tmp', '/var/tmp', '/usr/tmp', '/home/zhouxiaoling']

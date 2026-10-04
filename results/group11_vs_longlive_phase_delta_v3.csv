@@ -1,0 +1,12 @@
+metric,group11_s,longlive_rag_s,delta_s,note
+total wall,203.7611243724823,471.8529607299715,-268.0918363574892,control has forced synchronize after every to
+DraftMap,6.5009048925712705,NOT_AVAILABLE,NOT_AVAILABLE,control does not use DraftMap
+fetch end-to-end host,13.46050849556923,0.06102663744240999,13.39948185812682,control retrieval bucket
+CUDA H2D,0.8418382313102484,32.53741439897567,-31.695576167665422,transfer bucket
+working-set build,0.30274446681141853,9.743745852261782,-9.441001385450363,gather+cat vs KV concat
+BF16 attention,1.9261962436139584,61.2959816660881,-59.369785422474145,host attention rows vs event attention
+QKV projection,7.2537913313135505,NOT_AVAILABLE,NOT_AVAILABLE,not exposed by control wrapper
+FFN/MLP,11.68169581424445,NOT_AVAILABLE,NOT_AVAILABLE,not exposed by control wrapper
+norm/RoPE,0.3246567165479064,NOT_AVAILABLE,NOT_AVAILABLE,not exposed by control wrapper
+cache update,0.0,NOT_AVAILABLE,NOT_AVAILABLE,not exposed by control wrapper
+scheduler/bookkeeping,0.0,NOT_AVAILABLE,NOT_AVAILABLE,not exposed by control wrapper

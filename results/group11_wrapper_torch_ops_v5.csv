@@ -1,0 +1,1912 @@
+category,name,calls,duration_us,max_duration_us,trace_events
+python_function,<built-in method apply of FunctionMeta object at 0x5ae2c66810d0>,660,99079534264.9149,154818092.934,0
+python_function,torch/nn/modules/module.py(1740): _call_impl,16995,45709932.31499994,1602526.769,0
+python_function,threading.py(637): wait,1,10000212.419,10000212.419,0
+python_function,threading.py(323): wait,1,10000186.899,10000186.899,0
+python_function,<built-in method acquire of _thread.lock object at 0x737b2b85a500>,4,10000108.195,10000104.4,0
+python_function,wan/modules/causal_model_latentmem.py(758): forward,329,9440790.562000006,88599.033,0
+python_function,wan/modules/causal_model_latentmem.py(225): forward,329,8219403.5490000015,83936.078,0
+python_function,nn.Module: WanDiffusionWrapper_0,10,8081436.300000001,1602530.986,0
+python_function,utils/wan_wrapper.py(281): forward,10,8081276.402000001,1602521.882,0
+python_function,nn.Module: PeftModel_0,10,8076957.666,1602096.517,0
+python_function,peft/peft_model.py(1024): forward,10,8076866.622,1602089.735,0
+python_function,nn.Module: CausalWanModel_0,10,8076166.146,1602029.972,0
+python_function,wan/modules/causal_model_latentmem.py(1578): forward,10,8076070.367000001,1602022.831,0
+python_function,wan/modules/causal_model_latentmem.py(1261): _forward_inference,10,8074869.759,1601816.228,0
+cpu_op,aten::to,26217,3329178.5370000135,17059.987,29064583151
+cpu_op,aten::_to_copy,13598,3306764.9649999845,17033.044,15126851091
+python_function,<built-in method to of Tensor object at 0x737abde38fa0>,12912,3078574.091999997,17098.446,0
+cpu_op,aten::empty_strided,15886,3027422.0939999963,16924.454,17643931329
+cuda_runtime,cudaHostAlloc,540,2542602.7990000006,11452.575,596884860
+cuda_runtime,cudaStreamSynchronize,12282,2112647.6570000052,5711.614,13842568130
+cpu_op,aten::item,13718,1740106.021000009,5722.792,15480693330
+cpu_op,aten::_local_scalar_dense,13718,1726893.0380000484,5721.42,15480707048
+python_function,peft/tuners/lora/layer.py(1030): forward,2638,1390777.8970000003,4808.171,0
+python_function,torch/nn/modules/linear.py(124): forward,7974,1108900.981000003,4105.182,0
+python_function,<built-in function linear>,7974,1093639.1530000067,4102.868,0
+python_function,wan/modules/causal_model_latentmem.py(811): cross_attn_ffn,330,1082809.6750000003,8331.913,0
+cpu_op,aten::linear,7974,1063846.741000002,4096.498,8805446100
+cpu_op,aten::copy_,19780,775439.5009999978,8861.782,21933310772
+python_function,wan/modules/causal_model_latentmem.py(165): _online_memory_indices,330,680109.1710000001,27974.379,0
+cpu_op,aten::matmul,5606,666051.7510000012,3201.708,6190458103
+python_function,wan/modules/causal_model_latentmem.py(263): qkv_fn,330,644913.7639999999,6137.4,0
+python_function,wan/modules/model.py(161): forward,330,614328.632,6373.19,0
+python_function,wan/modules/causal_model_latentmem.py(93): _draft_frame_pools,330,590640.401,5846.085,0
+cpu_op,aten::mm,5276,561583.4759999997,3188.728,5826190186
+kernel,"void flash::flash_fwd_kernel<Flash_fwd_kernel_traits<128, 128, 64, 4, false, false, cutlass::bfloat16_t, Flash_kernel_traits<128, 128, 64, 4, cutlass::bfloat16_t> >, false, false, false, false, false, true, false, false>(flash::Flash_fwd_params)",659,544652.7709999997,1821.996,727819221
+cpu_op,aten::fill_,35051,511150.9699999978,8283.598,38798579380
+python_function,utils/draftmap_retrieval.py(107): score_history,330,424724.2209999998,4278.783,0
+python_function,wan/modules/attention.py(32): flash_attention,660,408473.00799999986,3826.716,0
+python_function,nn.Module: CausalWanAttentionBlock_3,11,371804.80299999996,85972.054,0
+python_function,wan/modules/causal_model_latentmem.py(41): causal_online_rope,990,370342.0070000001,3604.809,0
+python_function,nn.Module: CausalWanAttentionBlock_1,11,363199.681,88620.286,0
+cuda_runtime,cudaLaunchKernel,72000,359154.79700000025,4261.005,79703891180
+cpu_op,aten::addmm,2698,356015.39100000064,4059.871,2979308974
+python_function,torch/nn/modules/container.py(248): forward,359,355959.973,4153.437,0
+python_function,utils/draftmap_retrieval.py(68): score_blocks,330,352161.8449999998,3809.579,0
+python_function,nn.Module: CausalWanAttentionBlock_2,11,348494.40799999994,87590.975,0
+python_function,nn.Module: CausalWanSelfAttention_3,11,332656.414,81626.596,0
+python_function,nn.Module: CausalWanAttentionBlock_7,11,328941.533,56745.626,0
+python_function,nn.Module: CausalWanSelfAttention_1,11,323438.963,84006.238,0
+python_function,nn.Module: CausalWanAttentionBlock_4,11,322196.891,53642.972,0
+python_function,nn.Module: CausalWanAttentionBlock_5,11,321117.433,54638.319,0
+python_function,nn.Module: CausalWanAttentionBlock_11,11,320771.011,53843.636,0
+python_function,nn.Module: CausalWanAttentionBlock_26,11,318798.277,62519.738,0
+python_function,nn.Module: CausalWanAttentionBlock_16,11,315621.58800000005,54444.115,0
+python_function,nn.Module: CausalWanAttentionBlock_25,11,314880.794,54422.21,0
+python_function,nn.Module: CausalWanAttentionBlock_9,11,313789.562,48175.87,0
+python_function,nn.Module: CausalWanAttentionBlock_0,10,313369.775,59814.786,0
+python_function,nn.Module: CausalWanAttentionBlock_22,11,312791.24100000004,53421.997,0
+python_function,nn.Module: CausalWanAttentionBlock_12,11,312592.79699999996,53179.667,0
+python_function,nn.Module: CausalWanAttentionBlock_29,11,311798.666,47767.842,0
+python_function,nn.Module: CausalWanAttentionBlock_15,11,311025.063,62531.045,0
+python_function,nn.Module: CausalWanAttentionBlock_17,11,309989.55600000004,51781.36,0
+python_function,nn.Module: CausalWanAttentionBlock_20,11,309239.09200000006,47662.978,0
+python_function,nn.Module: CausalWanAttentionBlock_14,11,308760.174,56809.906,0
+python_function,nn.Module: CausalWanAttentionBlock_6,11,307864.27999999997,53439.624,0
+python_function,nn.Module: CausalWanAttentionBlock_19,11,306578.02,56220.254,0
+python_function,nn.Module: CausalWanAttentionBlock_8,11,306240.69099999993,51116.73,0
+python_function,nn.Module: CausalWanSelfAttention_2,11,304885.173,78954.586,0
+python_function,nn.Module: CausalWanAttentionBlock_28,11,303291.467,50160.835,0
+python_function,nn.Module: CausalWanAttentionBlock_10,11,303071.062,51542.486,0
+python_function,nn.Module: CausalWanAttentionBlock_18,11,302672.993,53962.222,0
+python_function,nn.Module: CausalWanAttentionBlock_27,11,299803.082,56879.495,0
+python_function,nn.Module: CausalWanAttentionBlock_23,11,299721.71499999997,51340.861,0
+python_function,nn.Module: CausalWanAttentionBlock_13,11,299634.717,54466.741,0
+python_function,nn.Module: CausalWanAttentionBlock_24,11,295425.533,47035.737,0
+python_function,nn.Module: CausalWanAttentionBlock_21,11,292716.667,51388.976,0
+python_function,nn.Module: CausalWanSelfAttention_7,11,286827.875,53140.335,0
+python_function,nn.Module: CausalWanSelfAttention_4,11,283686.552,50188.628,0
+python_function,nn.Module: CausalWanSelfAttention_26,11,279808.787,58674.763,0
+python_function,nn.Module: CausalWanSelfAttention_5,11,278540.04099999997,50669.04,0
+python_function,nn.Module: CausalWanSelfAttention_11,11,277043.61,50504.602,0
+python_function,nn.Module: CausalWanSelfAttention_25,11,276517.304,51057.437,0
+python_function,nn.Module: CausalWanSelfAttention_0,10,274818.228,56258.333,0
+python_function,nn.Module: CausalWanSelfAttention_9,11,274004.459,44632.978,0
+python_function,nn.Module: CausalWanSelfAttention_22,11,273166.657,49852.132,0
+python_function,nn.Module: CausalWanSelfAttention_16,11,273148.488,50892.159,0
+python_function,nn.Module: CausalWanSelfAttention_12,11,272950.398,49679.512,0
+python_function,nn.Module: CausalWanSelfAttention_15,11,271570.00700000004,58887.806,0
+python_function,nn.Module: CausalWanSelfAttention_17,11,271183.892,48250.987,0
+gpu_memcpy,Memcpy HtoD (Pinned -> Device),3060,270134.1120000019,270.657,3490258590
+python_function,nn.Module: CausalWanSelfAttention_29,11,270049.53,44293.347,0
+python_function,nn.Module: CausalWanSelfAttention_14,11,269617.585,53265.051,0
+python_function,nn.Module: CausalWanSelfAttention_20,11,269595.809,44096.128,0
+python_function,nn.Module: CausalWanSelfAttention_6,11,268817.28199999995,49975.895,0
+python_function,nn.Module: CausalWanSelfAttention_8,11,267896.39,47722.831,0
+python_function,nn.Module: CausalWanSelfAttention_19,11,267347.343,52891.677,0
+kernel,sm90_xmma_gemm_bf16bf16_bf16f32_f32_tn_n_tilesize128x128x64_warpgroupsize1x1x1_execute_segment_k_off_kernel__5x_cublas,7579,264367.53000000055,2744.178,8367935909
+python_function,nn.Module: CausalWanSelfAttention_28,11,264147.978,46691.798,0
+python_function,nn.Module: CausalWanSelfAttention_18,11,261739.93299999996,50485.633,0
+python_function,nn.Module: CausalWanSelfAttention_27,11,261177.54499999998,53185.737,0
+python_function,nn.Module: CausalWanSelfAttention_10,11,259523.948,48039.627,0
+python_function,nn.Module: CausalWanSelfAttention_13,11,256506.05099999998,50937.89,0
+python_function,nn.Module: CausalWanSelfAttention_23,11,256003.467,47216.198,0
+python_function,nn.Module: CausalWanSelfAttention_21,11,253967.36399999997,47924.296,0
+python_function,nn.Module: CausalWanSelfAttention_24,11,252002.451,43117.047,0
+python_function,<built-in method item of Tensor object at 0x737abde65220>,4528,249447.46600000004,2289.07,0
+cuda_runtime,cudaMemcpyAsync,21842,248308.31400000135,3675.169,24469905110
+python_function,utils/draftmap_retrieval.py(48): pooled_blocks,330,231401.21099999998,2973.08,0
+python_function,wan/modules/attention.py(139): attention,330,220576.12,3831.022,0
+python_function,flash_attn/flash_attn_interface.py(1370): flash_attn_varlen_func,660,182603.93499999988,1293.503,0
+python_function,torch/autograd/function.py(559): apply,660,180581.03700000007,1290.709,0
+python_function,wan/modules/model.py(78): forward,990,173468.84499999962,3259.949,0
+gpu_memcpy,Memcpy DtoD (Device -> Device),4640,170375.6050000002,551.235,5079921762
+cpu_op,aten::empty,13693,162705.3889999997,3597.848,15122326086
+cpu_op,FlashAttnVarlenFunc,660,157950.9560000002,1246.6,729153840
+python_function,torch/_ops.py(1105): __call__,1859,153891.73700000002,1200.949,0
+python_function,<built-in method _flash_attn_varlen_forward of PyCapsule object at 0x737e47a8e820>,660,150313.7839999998,1235.743,0
+python_function,flash_attn/flash_attn_interface.py(894): forward,660,147554.29799999998,1231.286,0
+cpu_op,aten::cat,7650,143674.75199999992,470.906,8448521459
+python_function,<built-in method cpu of Tensor object at 0x737abdef7840>,990,143337.50099999993,2111.943,0
+python_function,<built-in method cat of type object at 0x737fbe25e280>,5640,134007.1230000004,197.549,0
+cpu_op,flash_attn::_flash_attn_varlen_forward,660,126107.10299999992,1188.389,729154500
+cpu_op,aten::mul,7643,121164.78500000022,4275.187,8439135474
+python_function,torch/_library/autograd.py(107): autograd_impl,660,119586.17500000012,1180.226,0
+python_function,torch/_library/autograd.py(33): forward_no_grad,660,116995.54699999995,1175.649,0
+kernel,"void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",3325,114777.63500000042,2561.009,3670887308
+python_function,<built-in method redispatch_boxed of PyCapsule object at 0x737f3c35d4d0>,660,111646.19499999992,1169.179,0
+python_function,torch/_ops.py(720): redispatch,660,108289.23199999993,1163.37,0
+python_function,torch/_library/custom_ops.py(316): backend_impl,660,99935.00599999994,1151.311,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<c10::BFloat16>, at::detail::Array<char*, 1> >(int, at::native::FillFunctor<c10::BFloat16>, at::detail::Array<char*, 1>)",12658,99514.64700000023,402.083,14077110319
+gpu_memcpy,Memcpy DtoH (Device -> Pinned),10500,99320.08100000024,197.025,11877687573
+python_function,<built-in method float of Tensor object at 0x737abde39630>,2970,92339.7080000001,3049.169,0
+python_function,wan/modules/model.py(94): forward,999,91522.35299999996,3696.562,0
+python_function,wan/modules/model.py(85): _norm,990,88622.397,604.075,0
+python_function,torch/nn/modules/normalization.py(216): forward,999,85640.14300000003,3687.939,0
+python_function,torch/nn/functional.py(2879): layer_norm,999,82913.04600000002,3684.774,0
+python_function,<built-in method new_zeros of Tensor object at 0x737abde398b0>,2650,82299.27700000026,3285.119,0
+cpu_op,aten::add,6298,80022.74599999987,3140.513,6954744354
+python_function,<built-in method layer_norm of type object at 0x737fbe25e280>,999,79230.28600000005,3680.738,0
+kernel,"void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#6}::operator()() const::{lambda(double)#1}, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#6}::operator()() const::{lambda(double)#1}, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",1040,76619.64200000008,140.801,1148519614
+python_function,<built-in method type_as of Tensor object at 0x737abde39590>,3985,76618.57499999981,3244.085,0
+cuda_runtime,cudaLaunchKernelExC,8294,76245.5049999999,3463.888,9158742942
+cpu_op,aten::layer_norm,999,74003.08499999995,3674.808,1103553746
+cpu_op,aten::new_zeros,2650,73176.40400000016,3280.091,2926600823
+kernel,"void at::native::(anonymous namespace)::CatArrayBatchedCopy_contig<at::native::(anonymous namespace)::OpaqueType<2u>, unsigned int, 4, 128, 1>(at::native::(anonymous namespace)::OpaqueType<2u>*, at::native::(anonymous namespace)::CatArrInputTensorMetadata<at::native::(anonymous namespace)::OpaqueType<2u>, unsigned int, 128, 1>, at::native::(anonymous namespace)::TensorSizeStride<unsigned int, 4u>, int, unsigned int)",2580,72986.27200000014,81.857,2860802160
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<double>, at::detail::Array<char*, 1> >(int, at::native::FillFunctor<double>, at::detail::Array<char*, 1>)",1070,72823.65599999997,134.529,1181638905
+cpu_op,aten::native_layer_norm,999,69876.10700000012,3669.74,1103554745
+python_function,utils/draftmap_retrieval.py(92): aggregate_chunks,330,69157.14800000002,754.25,0
+cpu_op,aten::type_as,3985,67907.55200000001,3240.879,4400798755
+cpu_op,aten::select,19246,67775.72299999974,619.259,21590114609
+cpu_op,aten::slice,21308,66349.11500000047,240.566,23547906790
+kernel,"void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::complex<double>, c10::complex<double>, c10::complex<double>, at::native::binary_internal::MulFunctor<c10::complex<double> > > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::complex<double>, c10::complex<double>, c10::complex<double>, at::native::binary_internal::MulFunctor<c10::complex<double> > > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::complex<double>, c10::complex<double>, c10::complex<double>, at::native::binary_internal::MulFunctor<c10::complex<double> > > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::complex<double>, c10::complex<double>, c10::complex<double>, at::native::binary_internal::MulFunctor<c10::complex<double> > > const&)::{lambda(int)#1})",990,66113.63700000002,122.113,1093346325
+python_function,torch/_compile.py(22): inner,660,66013.65699999998,1108.404,0
+kernel,sm90_xmma_gemm_bf16bf16_bf16f32_f32_tn_n_tilesize128x256x64_warpgroupsize2x1x1_execute_segment_k_off_kernel__5x_cublas,329,64896.744000000086,201.441,363302245
+cpu_op,aten::arange,1340,64694.86400000004,3417.516,1479673796
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<c10::BFloat16>, at::detail::Array<char*, 3> >(int, at::native::CUDAFunctor_add<c10::BFloat16>, at::detail::Array<char*, 3>)",3623,64575.63200000022,2513.682,4000271467
+python_function,torch/_dynamo/eval_frame.py(628): _fn,660,64392.66499999994,1106.451,0
+cpu_op,aten::clone,2630,62166.20199999991,257.112,2894354817
+python_function,<built-in method stack of type object at 0x737fbe25e280>,2010,61372.01099999991,482.575,0
+python_function,<built-in method sum of Tensor object at 0x737abde39040>,3000,59617.17700000001,202.257,0
+python_function,torch/_library/custom_ops.py(362): wrapped_fn,660,59583.67399999997,1098.559,0
+python_function,flash_attn/flash_attn_interface.py(142): _flash_attn_varlen_forward,660,58387.23500000002,1097.106,0
+python_function,<built-in method varlen_fwd of PyCapsule object at 0x737e47a8d710>,660,53915.14000000009,661.846,0
+python_function,<built-in method matmul of type object at 0x737fbe25e280>,330,51884.69100000003,324.447,0
+cpu_op,aten::stack,2010,51769.063999999955,476.595,2219774055
+cpu_op,aten::view,32784,51292.375000000604,804.468,36204393798
+cpu_op,aten::sum,3000,50318.84499999985,141.161,3385728855
+kernel,"void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1})",2316,48854.683999999914,405.794,2556830010
+cuda_runtime,cudaFuncGetAttributes,8588,48129.18099999962,26023.277,9489034160
+cpu_op,aten::new_empty,2650,44546.07400000005,3194.457,2926603473
+kernel,"void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",2969,44257.64399999998,2522.065,3277591183
+python_function,utils/draftmap_retrieval.py(111): select_topk,330,43671.67100000003,26149.175,0
+cpu_op,aten::t,7974,43386.9880000002,628.062,8805459410
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::AUnaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float> >, at::detail::Array<char*, 2> >(int, at::native::AUnaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float> >, at::detail::Array<char*, 2>)",2636,43311.56100000032,357.667,2912357401
+cpu_op,aten::as_strided,63257,43286.38700000151,44.499,70353650616
+python_function,torch/autograd/profiler.py(738): __exit__,1200,42923.871000000036,174.763,0
+python_function,<built-in method topk of type object at 0x737fbe25e280>,330,42555.324000000044,26144.637,0
+python_function,<built-in method clone of Tensor object at 0x737abde433e0>,1620,41096.40599999997,259.856,0
+cpu_op,aten::topk,330,40554.92700000005,26128.712,364301475
+cpu_op,aten::bmm,330,40040.614,275.841,364286715
+python_function,<built-in method arange of type object at 0x737fbe25e280>,670,39679.52300000001,3422.714,0
+python_function,<built-in method cumsum of Tensor object at 0x737abde42b70>,1320,38267.99300000003,3118.027,0
+python_function,<built-in method view of Tensor object at 0x737abde39810>,8110,37871.176000000036,196.367,0
+python_function,torch/_ops.py(939): __call__,1200,36364.036000000015,151.377,0
+cpu_op,aten::cumsum,1320,34985.978999999985,3114.933,1458297120
+python_function,<built-in method full of type object at 0x737fbe25e280>,1320,32846.76200000001,523.509,0
+cpu_op,aten::reshape,11636,32563.13299999993,192.621,12848875343
+python_function,<built-in method flatten of Tensor object at 0x737abde65b30>,5339,32300.61999999997,175.624,0
+python_function,<built-in method is_pinned of Tensor object at 0x737abc51c910>,6120,31719.668000000143,3280.161,0
+cpu_op,aten::empty_like,1678,30967.13700000005,192.902,1852939459
+python_function,<built-in method contiguous of Tensor object at 0x737abde39630>,1320,29055.50100000004,191.87,0
+cuda_runtime,cudaMemsetAsync,4967,28940.376999999957,47.013,5484947185
+python_function,torch/_tensor.py(1356): unflatten,2034,28236.460999999956,1429.456,0
+python_function,torch/_tensor.py(968): split,1170,28169.70799999994,229.199,0
+cpu_op,aten::transpose,8314,27585.383999999965,167.172,9180791652
+python_function,torch/utils/_pytree.py(890): tree_iter,4800,27428.240000000034,98.724,0
+python_function,torch/_ops.py(993): _must_dispatch_in_python,1200,27387.523000000005,121.751,0
+python_function,<built-in function any>,1530,26696.755999999987,107.388,0
+python_function,<built-in method mean of Tensor object at 0x737abde39590>,1326,26472.215,260.287,0
+cpu_op,aten::full,1320,26202.037999999964,517.87,1457280360
+python_function,torch/utils/_pytree.py(1197): tree_any,1200,26053.916999999994,108.479,0
+cpu_op,aten::contiguous,1000,26041.077999999987,189.125,1104074638
+cpu_op,aten::index,1006,25905.941000000003,182.515,1110745609
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<float>, at::detail::Array<char*, 1> >(int, at::native::FillFunctor<float>, at::detail::Array<char*, 1>)",8280,25575.43299999976,2410.928,9140861660
+python_function,wan/modules/causal_model_latentmem.py(1174): _apply_cache_updates,10,25288.919,5978.001,0
+kernel,"void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1})",989,24490.370000000017,26.945,1091737056
+python_function,nn.Module: WanT2VCrossAttention_23,11,24385.035000000003,6381.662,0
+python_function,nn.Module: WanT2VCrossAttention_11,11,23757.022000000004,5430.244,0
+python_function,torch/nn/modules/module.py(1918): __getattr__,42268,23390.946999999844,83.681,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::GeluCUDAKernelImpl(at::TensorIteratorBase&, at::native::GeluType)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(c10::BFloat16)#1}, at::detail::Array<char*, 2> >(int, at::native::GeluCUDAKernelImpl(at::TensorIteratorBase&, at::native::GeluType)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(c10::BFloat16)#1}, at::detail::Array<char*, 2>)",339,23145.13600000001,71.776,374342305
+cpu_op,aten::resize_,686,23134.612000000012,3400.83,757257545
+cpu_op,aten::zero_,3640,22399.751000000044,168.133,4019722698
+python_function,<built-in method tensor of type object at 0x737fbe25e280>,1340,21746.766999999985,732.687,0
+python_function,nn.Module: WanT2VCrossAttention_10,11,21391.812,3108.833,0
+cpu_op,aten::narrow,5654,21279.577000000052,163.626,6220371173
+python_function,torch/autograd/profiler.py(732): __enter__,1199,21243.668999999973,79.935,0
+python_function,nn.Module: WanT2VCrossAttention_2,11,21189.357,2800.331,0
+cpu_op,aten::mean,1326,21123.34999999999,256.712,1464238029
+cpu_op,aten::is_pinned,6120,21071.01900000009,3277.927,6980566140
+python_function,torch/_tensor.py(1099): __iter__,1022,20951.96700000002,198.2,0
+python_function,nn.Module: WanT2VCrossAttention_6,11,20947.568,2888.548,0
+python_function,nn.Module: WanT2VCrossAttention_12,11,20920.044,2802.454,0
+python_function,nn.Module: WanT2VCrossAttention_24,11,20706.667999999998,2419.995,0
+python_function,nn.Module: WanT2VCrossAttention_3,11,20622.119000000002,2453.217,0
+python_function,nn.Module: WanT2VCrossAttention_9,11,20581.307,2379.423,0
+python_function,nn.Module: WanT2VCrossAttention_13,11,20577.048,2327.15,0
+python_function,nn.Module: WanT2VCrossAttention_18,11,20543.375,2454.569,0
+python_function,nn.Module: WanT2VCrossAttention_16,11,20460.246,2520.012,0
+python_function,nn.Module: WanT2VCrossAttention_5,11,20371.84,2214.204,0
+python_function,nn.Module: WanT2VCrossAttention_14,11,20348.411,2313.198,0
+python_function,nn.Module: WanT2VCrossAttention_1,11,20295.577999999998,2338.288,0
+python_function,nn.Module: WanT2VCrossAttention_20,11,20293.434,2274.177,0
+python_function,nn.Module: WanT2VCrossAttention_15,11,20291.040999999997,2404.802,0
+python_function,nn.Module: WanT2VCrossAttention_22,11,20258.089999999997,2361.494,0
+python_function,nn.Module: WanT2VCrossAttention_29,11,20241.144,2337.928,0
+python_function,nn.Module: WanT2VCrossAttention_26,11,20235.065000000002,2190.457,0
+python_function,nn.Module: WanT2VCrossAttention_0,11,20155.288,2531.56,0
+python_function,nn.Module: WanT2VCrossAttention_19,11,20074.724000000002,2304.375,0
+python_function,nn.Module: WanT2VCrossAttention_21,11,19955.568,2350.366,0
+python_function,nn.Module: WanT2VCrossAttention_25,11,19875.518999999997,2406.033,0
+python_function,nn.Module: WanT2VCrossAttention_8,11,19859.695,2603.423,0
+python_function,nn.Module: WanT2VCrossAttention_7,11,19819.514000000003,2383.018,0
+python_function,nn.Module: WanT2VCrossAttention_17,11,19813.915,2402.859,0
+python_function,nn.Module: WanT2VCrossAttention_4,11,19784.879999999997,2226.793,0
+python_function,nn.Module: WanT2VCrossAttention_27,11,19619.2,2033.411,0
+python_function,<built-in method div_ of Tensor object at 0x737abde41bd0>,1320,19587.617000000035,2045.079,0
+python_function,nn.Module: WanT2VCrossAttention_28,11,19516.018,1876.826,0
+cpu_op,aten::flatten,5339,19434.44599999997,164.026,5896769308
+python_function,<built-in method unflatten of Tensor object at 0x737abde65db0>,2034,19313.700999999965,424.223,0
+python_function,<built-in method pow of Tensor object at 0x737abde398b0>,990,19251.572999999986,532.653,0
+python_function,<built-in method zeros of type object at 0x737fbe25e280>,990,18644.145000000004,185.029,0
+python_function,<built-in method _record_function_enter_new of PyCapsule object at 0x737e5c7ff9c0>,1199,17390.359000000008,76.209,0
+kernel,"void at::native::(anonymous namespace)::CatArrayBatchedCopy_contig<at::native::(anonymous namespace)::OpaqueType<2u>, unsigned int, 3, 128, 1>(at::native::(anonymous namespace)::OpaqueType<2u>*, at::native::(anonymous namespace)::CatArrInputTensorMetadata<at::native::(anonymous namespace)::OpaqueType<2u>, unsigned int, 128, 1>, at::native::(anonymous namespace)::TensorSizeStride<unsigned int, 4u>, int, unsigned int)",600,17380.312999999995,36.16,674840130
+kernel,"void at::native::(anonymous namespace)::vectorized_layer_norm_kernel<c10::BFloat16, float>(int, float, c10::BFloat16 const*, c10::BFloat16 const*, c10::BFloat16 const*, float*, float*, c10::BFloat16*)",998,17128.864999999983,20.32,1101767840
+python_function,<built-in method expand of Tensor object at 0x737abde41900>,2970,17047.62200000002,162.384,0
+cpu_op,aten::pow,1010,16825.268999999993,529.458,1115149811
+kernel,"void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<c10::BFloat16> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<c10::BFloat16> const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<c10::BFloat16> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<c10::BFloat16> const&)::{lambda(int)#1})",1018,16466.156000000006,24.704,1125829244
+python_function,<built-in method unbind of Tensor object at 0x737abde395e0>,1022,16447.08699999998,190.919,0
+cpu_op,aten::div_,1320,16328.314000000004,2040.161,1457302470
+python_function,nn.Module: Sequential_16,11,14960.883999999998,4159.356,0
+python_function,nn.Module: Sequential_10,11,14621.612,4050.356,0
+python_function,<built-in method _get_tracing_state of PyCapsule object at 0x737f3c320c30>,18025,14469.404999999888,374.796,0
+python_function,<built-in method split_with_sizes of type object at 0x737fbe25e280>,990,14322.154999999995,219.834,0
+cpu_op,aten::zeros,990,14095.490999999993,178.98,1093108305
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::pow_tensor_scalar_kernel_impl<float, float>(at::TensorIteratorBase&, float)::{lambda(float)#1}, at::detail::Array<char*, 2> >(int, at::native::(anonymous namespace)::pow_tensor_scalar_kernel_impl<float, float>(at::TensorIteratorBase&, float)::{lambda(float)#1}, at::detail::Array<char*, 2>)",989,14045.325000000028,16.608,1091731122
+cpu_op,aten::split,519,14002.997000000008,501.304,573316535
+python_function,<built-in method rsqrt of type object at 0x737fbe25e280>,990,13938.688999999988,198.23,0
+python_function,<built-in method chunk of Tensor object at 0x737abde65f90>,339,13645.213000000005,507.574,0
+python_function,nn.Module: Sequential_32,10,13271.869,4010.563,0
+cpu_op,aten::unbind,1022,13140.928,187.454,1128610587
+python_function,<built-in function prod>,340,12983.12799999999,1581.474,0
+python_function,<built-in method reshape of Tensor object at 0x737abde39d60>,2006,12325.624999999996,100.818,0
+cpu_op,aten::chunk,339,12219.238,504.038,374359976
+python_function,nn.Module: Sequential_14,11,12158.720000000001,1937.38,0
+cpu_op,aten::expand,3640,12059.82600000001,155.553,4019620398
+python_function,nn.Module: Sequential_21,11,11878.191,1430.377,0
+python_function,nn.Module: Sequential_26,11,11807.362000000001,1556.755,0
+python_function,nn.Module: Sequential_27,11,11685.648,1339.806,0
+python_function,nn.Module: Sequential_25,11,11656.123,1430.027,0
+python_function,nn.Module: Sequential_8,11,11593.935,1259.68,0
+python_function,nn.Module: Sequential_7,11,11585.764,1560.431,0
+python_function,nn.Module: Linear_3,21,11567.065999999999,3780.473,0
+python_function,nn.Module: Sequential_4,11,11537.748,1423.637,0
+python_function,nn.Module: Sequential_23,11,11505.798000000003,1261.894,0
+python_function,nn.Module: Sequential_12,11,11477.164,1380.239,0
+python_function,nn.Module: Sequential_18,11,11466.017,1378.477,0
+python_function,nn.Module: Linear_250,22,11392.200000000004,4812.919,0
+python_function,nn.Module: Sequential_24,11,11333.118000000002,1356.252,0
+python_function,nn.Module: Sequential_19,11,11319.757,1434.975,0
+python_function,nn.Module: Sequential_3,11,11318.846,1095.935,0
+python_function,nn.Module: Sequential_17,11,11272.796000000002,1376.723,0
+python_function,nn.Module: Linear_237,22,11265.149,4609.51,0
+python_function,nn.Module: Sequential_15,11,11263.137999999999,1367.649,0
+python_function,nn.Module: Sequential_6,11,11245.401000000002,1187.037,0
+python_function,nn.Module: Sequential_30,11,11220.261999999999,1184.793,0
+python_function,nn.Module: Sequential_29,11,11201.151,1216.323,0
+python_function,nn.Module: Sequential_13,11,11180.718,1297.59,0
+python_function,nn.Module: Sequential_5,11,11172.917,1297.72,0
+python_function,nn.Module: Sequential_22,11,11158.205999999998,1355.641,0
+python_function,nn.Module: Sequential_20,11,11125.845,1323.741,0
+python_function,nn.Module: Sequential_28,11,11083.779,1226.238,0
+python_function,nn.Module: Sequential_11,11,10990.521,1286.482,0
+cpu_op,aten::rsqrt,990,10932.336000000005,66.264,1093071285
+cpu_op,aten::unflatten,2034,10907.447999999991,128.552,2246573167
+python_function,nn.Module: Sequential_31,11,10856.063999999998,1048.63,0
+python_function,nn.Module: Sequential_9,11,10822.509999999998,1018.093,0
+python_function,nn.Module: Linear_152,22,10644.269,4061.643,0
+python_function,nn.Module: Linear_79,22,10622.777999999998,3544.014,0
+kernel,"void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, float>, unsigned int, float, 4> >(at::native::ReduceOp<float, at::native::MeanOps<float, float, float, float>, unsigned int, float, 4>)",989,10568.795000000011,15.04,1091734089
+python_function,<frozen _collections_abc>(804): get,2846,10418.419999999987,95.149,0
+python_function,nn.Module: Linear_244,22,10338.241000000004,3190.231,0
+python_function,nn.Module: Linear_139,22,10315.294,3622.346,0
+python_function,<built-in function isinstance>,44719,10287.371000000376,19.421,0
+python_function,<built-in method size of Tensor object at 0x737abde392c0>,18540,10189.554999999522,44.4,0
+cpu_op,aten::split_with_sizes,990,10039.566,215.367,1093309695
+python_function,nn.Module: Linear_32,22,9983.957999999999,3602.846,0
+python_function,<built-in method permute of Tensor object at 0x737abde398b0>,1340,9851.429999999993,115.851,0
+python_function,torch/_functorch/utils.py(32): unwrap_dead_wrappers,660,9745.400000000007,62.208,0
+python_function,nn.Module: Linear_299,21,9415.257999999998,3431.498,0
+python_function,torch/nn/modules/module.py(1935): __setattr__,958,9409.977999999992,35.155,0
+python_function,torch/_library/custom_ops.py(820): iter_tensors,5940,9290.450999999957,437.184,0
+cuda_runtime,cudaFuncSetAttribute,24552,9243.255999999768,8.934,27112523181
+kernel,"void at::native::reduce_kernel<128, 4, at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::sum_functor<float, float, float>::operator()(at::TensorIterator&)::{lambda(float, float)#1}>, unsigned int, float, 4> >(at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::sum_functor<float, float, float>::operator()(at::TensorIterator&)::{lambda(float, float)#1}>, unsigned int, float, 4>)",1320,9081.908999999998,9.888,1457298510
+python_function,nn.Module: Linear_114,11,9009.323,3980.727,0
+python_function,nn.Module: Linear_261,11,8813.979,3809.609,0
+python_function,nn.Module: Linear_163,22,8751.796999999999,1489.881,0
+python_function,<built-in method view_as_complex of type object at 0x737fbe25e280>,990,8613.822000000004,80.456,0
+python_function,torch/utils/_pytree.py(904): tree_iter,2400,8587.545999999998,52.673,0
+python_function,nn.Module: Linear_291,11,8422.015000000001,3580.04,0
+python_function,nn.Module: Linear_93,22,8290.433,927.831,0
+python_function,wan/modules/model.py(15): sinusoidal_embedding_1d,10,8270.225999999999,2694.444,0
+python_function,<frozen os>(709): __getitem__,2846,8242.511000000015,94.919,0
+python_function,nn.Module: Linear_33,22,8224.619,1101.793,0
+python_function,nn.Module: Linear_14,22,8202.43,654.003,0
+cpu_op,aten::_unsafe_view,5616,8198.242000000022,17.127,6201521376
+python_function,nn.Module: Linear_183,22,8183.902000000001,815.746,0
+python_function,nn.Module: Linear_164,22,8174.5560000000005,790.317,0
+python_function,nn.Module: Linear_193,22,8156.798000000001,779.079,0
+python_function,nn.Module: Linear_253,22,8097.155000000002,752.707,0
+python_function,nn.Module: Linear_123,22,8078.173,801.023,0
+python_function,nn.Module: Linear_104,22,8038.062999999999,705.644,0
+python_function,nn.Module: Linear_44,22,7969.657000000001,591.175,0
+python_function,nn.Module: Linear_133,22,7958.026,737.884,0
+python_function,nn.Module: Linear_74,22,7950.179999999999,719.175,0
+python_function,nn.Module: Linear_194,22,7946.862999999999,669.758,0
+python_function,nn.Module: Linear_243,22,7920.709999999999,748.351,0
+python_function,torch/utils/_pytree.py(672): _is_leaf,4800,7920.313000000031,90.351,0
+python_function,nn.Module: Linear_118,22,7897.559999999999,1377.925,0
+python_function,nn.Module: Linear_13,22,7891.764999999999,959.2,0
+python_function,nn.Module: Linear_43,22,7890.053,754.57,0
+python_function,nn.Module: Linear_73,22,7887.365000000001,739.066,0
+python_function,nn.Module: Linear_63,22,7873.473999999999,723.582,0
+python_function,<built-in method mul_ of Tensor object at 0x737abdef7fc0>,330,7869.733999999998,119.207,0
+python_function,nn.Module: Linear_284,22,7863.571999999998,526.664,0
+python_function,nn.Module: Linear_134,22,7837.245999999999,622.403,0
+python_function,nn.Module: Linear_223,22,7827.4760000000015,787.692,0
+python_function,nn.Module: Linear_254,22,7811.282,740.799,0
+python_function,nn.Module: Linear_103,22,7791.879,724.413,0
+python_function,nn.Module: Linear_153,22,7787.428999999999,697.701,0
+python_function,torch/utils/_pytree.py(665): _get_node_type,8400,7785.033999999972,89.41,0
+python_function,nn.Module: Linear_224,22,7776.3730000000005,656.907,0
+python_function,nn.Module: Linear_283,22,7764.424999999998,664.158,0
+python_function,nn.Module: Linear_213,22,7695.959999999999,786.32,0
+python_function,nn.Module: Linear_273,22,7683.468999999998,675.857,0
+python_function,nn.Module: Linear_137,22,7645.7080000000005,725.676,0
+python_function,nn.Module: Linear_107,22,7628.254999999999,672.041,0
+python_function,nn.Module: Linear_227,22,7601.215000000001,689.779,0
+python_function,nn.Module: Linear_248,22,7585.094999999999,694.437,0
+python_function,<built-in method  of PyCapsule object at 0x737abdf9adf0>,1200,7567.934999999989,21.474,0
+python_function,nn.Module: Linear_17,22,7529.019,756.483,0
+python_function,nn.Module: Linear_57,22,7519.152,755.512,0
+python_function,nn.Module: Linear_188,22,7504.924,758.416,0
+python_function,nn.Module: Linear_257,22,7441.592999999999,690.39,0
+python_function,nn.Module: Linear_77,22,7435.341,685.422,0
+python_function,<built-in method softmax of type object at 0x737fbe25e280>,330,7392.124000000002,116.022,0
+python_function,nn.Module: Linear_127,22,7386.7170000000015,743.203,0
+python_function,nn.Module: Linear_150,22,7381.6849999999995,691.602,0
+python_function,nn.Module: Linear_34,22,7377.598,798.619,0
+python_function,nn.Module: Linear_47,22,7373.937,618.778,0
+python_function,nn.Module: Linear_117,22,7368.6150000000025,727.137,0
+python_function,nn.Module: Linear_167,22,7362.237000000002,679.964,0
+python_function,nn.Module: Linear_78,22,7361.384999999999,682.177,0
+python_function,nn.Module: Linear_287,22,7351.875999999999,544.612,0
+python_function,nn.Module: Linear_154,22,7327.723,696.89,0
+python_function,nn.Module: Linear_38,22,7311.968999999999,596.403,0
+python_function,nn.Module: Linear_240,22,7304.736000000001,635.414,0
+python_function,nn.Module: Linear_297,22,7286.328000000001,621.242,0
+python_function,nn.Module: Linear_191,22,7284.183999999998,707.647,0
+python_function,nn.Module: Linear_122,22,7281.673999999999,775.934,0
+python_function,nn.Module: Linear_187,22,7278.607999999999,676.939,0
+python_function,nn.Module: Linear_157,22,7274.8279999999995,760.109,0
+python_function,nn.Module: Linear_177,22,7269.091000000001,690.09,0
+python_function,nn.Module: Linear_11,22,7265.4540000000015,606.228,0
+python_function,nn.Module: Linear_158,22,7265.285000000002,643.397,0
+python_function,nn.Module: Linear_147,22,7261.3060000000005,692.233,0
+python_function,nn.Module: Linear_247,22,7257.039999999999,676.448,0
+python_function,nn.Module: Linear_124,22,7254.55,809.917,0
+python_function,nn.Module: Linear_239,22,7254.246000000003,639.27,0
+python_function,nn.Module: Linear_180,22,7246.063,707.376,0
+python_function,nn.Module: Linear_70,22,7243.531000000001,641.123,0
+python_function,nn.Module: Linear_270,22,7240.304999999999,663.648,0
+python_function,nn.Module: Linear_100,22,7240.099999999999,724.683,0
+python_function,nn.Module: Linear_48,22,7237.111000000001,935.483,0
+python_function,nn.Module: Linear_67,22,7233.289000000001,672.382,0
+python_function,nn.Module: Linear_97,22,7217.941999999999,682.628,0
+python_function,nn.Module: Linear_197,22,7190.679,622.944,0
+python_function,nn.Module: Linear_27,22,7183.947,661.295,0
+python_function,nn.Module: Linear_221,22,7178.426999999999,703.541,0
+python_function,nn.Module: Linear_58,22,7166.257000000001,640.351,0
+python_function,nn.Module: Linear_238,22,7160.331,870.612,0
+python_function,nn.Module: Linear_0,21,7159.77,632.89,0
+python_function,nn.Module: Linear_207,22,7154.019000000001,636.706,0
+python_function,nn.Module: Linear_60,22,7144.657999999999,657.018,0
+python_function,nn.Module: Linear_190,22,7140.22,684.19,0
+python_function,nn.Module: Linear_101,22,7133.6100000000015,733.328,0
+python_function,nn.Module: Linear_228,22,7133.5,688.317,0
+python_function,nn.Module: Linear_242,22,7126.727999999999,634.002,0
+python_function,nn.Module: Linear_210,22,7125.083000000001,589.412,0
+python_function,nn.Module: Linear_37,22,7124.986000000001,641.263,0
+python_function,nn.Module: Linear_59,22,7121.429,590.774,0
+python_function,nn.Module: Linear_268,22,7110.747,699.044,0
+python_function,nn.Module: Linear_98,22,7107.408,677.841,0
+python_function,nn.Module: Linear_120,22,7105.142000000002,702.218,0
+python_function,nn.Module: Linear_208,22,7101.499999999999,624.387,0
+python_function,nn.Module: Linear_212,22,7100.919,593.749,0
+python_function,nn.Module: Linear_278,22,7096.309,564.593,0
+python_function,<built-in method tolist of Tensor object at 0x737f72557160>,1660,7094.931000000007,191.971,0
+python_function,nn.Module: Linear_217,22,7094.155000000001,667.695,0
+python_function,nn.Module: Linear_87,22,7089.789000000002,780.922,0
+python_function,nn.Module: Linear_40,22,7086.723999999999,656.396,0
+python_function,nn.Module: Linear_251,22,7086.407000000001,740.618,0
+python_function,nn.Module: Linear_168,22,7083.693,646.321,0
+python_function,nn.Module: Linear_128,22,7081.567000000001,647.963,0
+python_function,nn.Module: Linear_184,22,7069.18,699.164,0
+python_function,nn.Module: Linear_138,22,7059.373999999999,668.636,0
+python_function,nn.Module: Linear_218,22,7052.592999999999,676.448,0
+python_function,nn.Module: Linear_209,22,7046.971,592.777,0
+python_function,nn.Module: Linear_8,22,7046.933,550.451,0
+python_function,nn.Module: Linear_41,22,7042.348999999999,584.204,0
+python_function,nn.Module: Linear_7,22,7040.232999999999,620.441,0
+python_function,nn.Module: Linear_220,22,7036.907,705.213,0
+python_function,nn.Module: Linear_160,22,7036.123,706.835,0
+python_function,nn.Module: Linear_69,22,7023.486,619.68,0
+python_function,nn.Module: Linear_229,22,7022.443999999999,695.658,0
+python_function,nn.Module: Linear_62,22,7015.954999999999,591.435,0
+python_function,nn.Module: Linear_131,22,7002.232999999999,681.346,0
+python_function,nn.Module: Linear_92,22,7001.524,651.83,0
+python_function,nn.Module: Linear_130,22,6995.113999999999,715.91,0
+python_function,nn.Module: Linear_281,22,6991.145999999999,618.718,0
+python_function,nn.Module: Linear_94,22,6989.876000000001,636.976,0
+python_function,nn.Module: Linear_181,22,6988.922,676.698,0
+python_function,nn.Module: Linear_277,22,6987.649,542.508,0
+python_function,nn.Module: Linear_18,22,6986.190999999999,638.679,0
+python_function,nn.Module: Linear_182,22,6985.727,635.884,0
+python_function,nn.Module: Linear_178,22,6984.084999999999,682.047,0
+python_function,nn.Module: Linear_274,22,6976.723,696.129,0
+python_function,nn.Module: Linear_161,22,6954.959999999999,687.075,0
+python_function,nn.Module: Linear_267,22,6954.108999999999,528.337,0
+python_function,nn.Module: Linear_148,22,6949.1230000000005,705.985,0
+python_function,nn.Module: Linear_1,21,6943.59,616.534,0
+python_function,nn.Module: Linear_162,22,6941.999,702.319,0
+python_function,nn.Module: Linear_214,22,6940.998000000001,745.927,0
+python_function,nn.Module: Linear_68,22,6937.642000000001,501.624,0
+python_function,nn.Module: Linear_151,22,6933.194999999999,708.588,0
+python_function,nn.Module: Linear_192,22,6932.414000000001,697.411,0
+python_function,nn.Module: Linear_198,22,6931.3949999999995,664.219,0
+python_function,nn.Module: Linear_179,22,6918.793999999999,595.662,0
+python_function,nn.Module: Linear_30,22,6917.380000000002,535.818,0
+python_function,nn.Module: Linear_211,22,6911.682000000002,589.523,0
+python_function,nn.Module: Linear_91,22,6911.54,721.038,0
+python_function,nn.Module: Linear_189,22,6910.125999999999,628.964,0
+python_function,nn.Module: Linear_249,22,6909.396000000001,620.902,0
+python_function,nn.Module: Linear_121,22,6908.9270000000015,630.977,0
+python_function,nn.Module: Linear_222,22,6906.915,639.33,0
+python_function,nn.Module: Linear_90,22,6905.66,662.566,0
+python_function,nn.Module: Linear_108,22,6900.458999999999,657.088,0
+python_function,nn.Module: Linear_280,22,6897.97,542.168,0
+python_function,nn.Module: Linear_89,22,6896.751,639.68,0
+python_function,nn.Module: Linear_132,22,6889.367000000001,662.106,0
+python_function,nn.Module: Linear_149,22,6886.923999999999,629.505,0
+python_function,nn.Module: Linear_10,22,6886.314,537.12,0
+python_function,nn.Module: Linear_203,11,6884.808,884.964,0
+python_function,nn.Module: Linear_9,22,6883.317000000001,585.866,0
+python_function,nn.Module: Linear_61,22,6880.634,610.115,0
+python_function,nn.Module: Linear_159,22,6879.803,690.57,0
+python_function,nn.Module: Linear_99,22,6875.045,646.001,0
+python_function,nn.Module: Linear_71,22,6872.2210000000005,511.26,0
+python_function,nn.Module: Linear_28,22,6868.206,612.779,0
+python_function,nn.Module: Linear_258,22,6858.67,679.613,0
+python_function,nn.Module: Linear_119,22,6844.8640000000005,617.205,0
+python_function,nn.Module: Linear_241,22,6836.101,673.894,0
+python_function,nn.Module: Linear_49,22,6813.446999999999,635.594,0
+python_function,nn.Module: Linear_279,22,6791.325,639.07,0
+python_function,nn.Module: Linear_129,22,6779.794000000001,639.1,0
+python_function,torch/nn/modules/activation.py(733): forward,339,6779.762999999997,139.227,0
+python_function,nn.Module: Linear_102,22,6779.365,629.765,0
+python_function,nn.Module: Linear_271,22,6773.195,537.741,0
+python_function,nn.Module: Linear_29,22,6766.876000000001,521.706,0
+python_function,nn.Module: Linear_31,22,6758.639,583.282,0
+python_function,nn.Module: Linear_88,22,6758.544000000003,607.03,0
+python_function,nn.Module: Linear_169,22,6756.819,747.379,0
+python_function,nn.Module: Linear_64,22,6754.288000000001,608.292,0
+python_function,nn.Module: Linear_12,22,6738.012,587.84,0
+python_function,nn.Module: Linear_219,22,6726.691,631.337,0
+python_function,nn.Module: Linear_252,22,6722.626000000001,624.407,0
+python_function,nn.Module: Linear_39,22,6717.017000000002,555.399,0
+python_function,nn.Module: Linear_19,22,6712.8189999999995,663.838,0
+python_function,nn.Module: Linear_72,22,6697.714,499.411,0
+python_function,nn.Module: Linear_272,22,6697.517,506.282,0
+python_function,nn.Module: Linear_2,21,6697.406,675.046,0
+python_function,nn.Module: Linear_269,22,6694.822000000001,482.925,0
+python_function,nn.Module: Linear_282,22,6683.844999999999,503.888,0
+python_function,nn.Module: Linear_288,22,6678.868000000001,536.89,0
+python_function,nn.Module: Linear_23,11,6664.487999999999,927.08,0
+python_function,nn.Module: Linear_109,22,6656.766999999999,591.255,0
+python_function,nn.Module: Linear_173,11,6648.030000000001,749.783,0
+python_function,nn.Module: Linear_4,21,6641.307000000002,513.814,0
+python_function,nn.Module: Linear_42,22,6630.585,575.28,0
+python_function,nn.Module: Linear_143,11,6621.398,784.918,0
+python_function,nn.Module: Linear_24,11,6621.188,1136.188,0
+python_function,nn.Module: Linear_199,22,6619.414000000001,643.056,0
+python_function,nn.Module: Linear_113,11,6611.511999999999,811.039,0
+python_function,nn.Module: Linear_298,21,6598.017000000001,645.199,0
+kernel,"void at::native::(anonymous namespace)::CatArrayBatchedCopy<at::native::(anonymous namespace)::OpaqueType<16u>, unsigned int, 4, 64, 64>(at::native::(anonymous namespace)::OpaqueType<16u>*, at::native::(anonymous namespace)::CatArrInputTensorMetadata<at::native::(anonymous namespace)::OpaqueType<16u>, unsigned int, 64, 64>, at::native::(anonymous namespace)::TensorSizeStride<unsigned int, 4u>, int, unsigned int)",990,6585.879999999997,10.497,1093343355
+python_function,nn.Module: Linear_289,22,6555.742000000001,535.788,0
+python_function,<built-in method view_as_real of type object at 0x737fbe25e280>,990,6529.3339999999935,193.894,0
+python_function,nn.Module: Linear_263,11,6507.579999999999,713.295,0
+python_function,nn.Module: Linear_259,22,6507.348,590.444,0
+python_function,nn.Module: Linear_53,11,6503.6939999999995,750.624,0
+python_function,<built-in function gelu>,339,6481.743000000003,138.016,0
+cpu_op,aten::view_as_complex,990,6469.785999999989,73.996,1093324545
+python_function,nn.Module: Linear_83,11,6435.856000000001,724.373,0
+python_function,nn.Module: Linear_233,11,6425.601,757.295,0
+python_function,nn.Module: Linear_293,11,6296.041,735.31,0
+cuda_runtime,cudaPointerGetAttributes,6120,6200.0939999999755,3274.623,6980566140
+python_function,<built-in method detach of Tensor object at 0x737abde3b5c0>,996,6161.592999999998,81.588,0
+python_function,nn.Module: Linear_80,11,6053.240000000001,925.217,0
+python_function,<built-in method untyped_storage of Tensor object at 0x737abde411d0>,14700,6027.131999999944,26.101,0
+python_function,nn.Module: Linear_21,11,5989.01,1091.447,0
+python_function,nn.Module: Linear_112,11,5963.267999999999,840.996,0
+python_function,torch/_library/custom_ops.py(813): check,9240,5956.1429999999045,965.34,0
+cpu_op,aten::softmax,330,5903.712000000001,83.16,364287705
+python_function,nn.Module: Linear_204,11,5898.825,751.024,0
+python_function,nn.Module: Linear_140,11,5885.826999999999,886.687,0
+python_function,nn.Module: Linear_20,11,5837.030000000001,718.133,0
+python_function,nn.Module: Linear_144,11,5715.791,666.883,0
+cpu_op,aten::permute,1350,5711.888000000007,58.101,1490424041
+python_function,nn.Module: Linear_294,11,5709.3189999999995,624.847,0
+python_function,nn.Module: Linear_110,11,5707.647000000001,746.658,0
+python_function,nn.Module: Linear_54,11,5703.452000000001,622.794,0
+python_function,nn.Module: Linear_716,11,5693.856999999999,4110.51,0
+python_function,nn.Module: Linear_234,11,5684.7919999999995,712.535,0
+python_function,nn.Module: Linear_50,11,5683.981000000001,606.078,0
+python_function,nn.Module: Linear_290,11,5681.616999999999,667.924,0
+python_function,nn.Module: Linear_111,11,5668.705000000002,707.637,0
+python_function,nn.Module: Linear_264,11,5664.429999999999,774.01,0
+python_function,nn.Module: Linear_200,11,5661.858,741.751,0
+python_function,nn.Module: Linear_262,11,5636.407,610.485,0
+python_function,nn.Module: Linear_81,11,5627.505,806.722,0
+python_function,nn.Module: Linear_171,11,5587.228,742.351,0
+python_function,nn.Module: Linear_22,11,5564.783,727.307,0
+python_function,nn.Module: Linear_174,11,5542.561000000001,695.658,0
+python_function,nn.Module: Linear_230,11,5541.916,651.379,0
+python_function,nn.Module: Linear_170,11,5535.658999999999,657.098,0
+cpu_op,aten::mul_,330,5532.448999999996,45.0,364287375
+python_function,nn.Module: Linear_201,11,5481.515,670.329,0
+python_function,nn.Module: Linear_51,11,5472.771,610.805,0
+python_function,nn.Module: Linear_142,11,5467.262999999999,761.861,0
+python_function,nn.Module: Linear_141,11,5459.929999999999,680.494,0
+python_function,nn.Module: Linear_231,11,5450.6759999999995,651.649,0
+python_function,nn.Module: Linear_260,11,5442.092000000001,607.731,0
+python_function,nn.Module: Linear_84,11,5432.999999999999,619.75,0
+python_function,nn.Module: Linear_82,11,5381.83,631.027,0
+python_function,nn.Module: Linear_202,11,5381.084999999999,646.361,0
+python_function,nn.Module: Linear_232,11,5351.880999999999,648.694,0
+python_function,nn.Module: Linear_172,11,5314.364,616.114,0
+python_function,nn.Module: Linear_52,11,5311.377,632.279,0
+python_function,nn.Module: Linear_347,11,5180.754,3618.03,0
+python_function,nn.Module: Linear_292,11,5174.946,519.964,0
+cpu_op,aten::gelu,339,5099.188999999999,90.361,374342305
+cpu_op,aten::_softmax,330,5084.666,80.586,364288035
+python_function,<built-in function id>,8584,5057.410999999935,240.676,0
+python_function,torch/utils/_pytree.py(654): _is_namedtuple_instance,8400,5053.577000000014,88.889,0
+cpu_op,aten::unsqueeze,2071,4962.773000000011,65.592,2359735574
+python_function,nn.Module: WanRMSNorm_65,11,4883.206,3265.398,0
+python_function,peft/tuners/tuners_utils.py(1557): active_adapters,2638,4781.629000000005,20.843,0
+python_function,nn.Module: WanLayerNorm_6,11,4616.501,3702.442,0
+python_function,nn.Module: Linear_16,11,4564.4310000000005,3137.087,0
+python_function,torch/_functorch/utils.py(35): <genexpr>,11220,4553.229000000035,50.149,0
+python_function,nn.Module: Linear_789,11,4541.995999999999,3226.928,0
+python_function,nn.Module: Linear_424,11,4513.691,3208.529,0
+python_function,torch/autograd/profiler.py(721): __init__,1199,4511.788999999995,155.083,0
+gpu_memset,Memset (Device),4953,4379.108999999973,6.24,5468564224
+cpu_op,aten::detach,996,4305.201999999994,50.258,1100011206
+python_function,torch/nn/modules/container.py(500): __getitem__,7914,4272.614000000055,17.086,0
+python_function,<built-in function getattr>,9443,4251.645999999971,418.886,0
+python_function,nn.Module: WanLayerNorm_31,11,4140.229,3290.918,0
+kernel,"void at::native::reduce_kernel<512, 1, at::native::ReduceOp<c10::Half, at::native::func_wrapper_t<c10::Half, at::native::sum_functor<c10::Half, float, c10::Half>::operator()(at::TensorIterator&)::{lambda(float, float)#1}>, unsigned int, c10::Half, 4> >(at::native::ReduceOp<c10::Half, at::native::func_wrapper_t<c10::Half, at::native::sum_functor<c10::Half, float, c10::Half>::operator()(at::TensorIterator&)::{lambda(float, float)#1}>, unsigned int, c10::Half, 4>)",1680,4138.626999999961,3.584,1928430345
+cpu_op,aten::view_as_real,990,4075.1180000000036,71.292,1093347315
+python_function,nn.Module: WanLayerNorm_73,11,4027.152,3137.287,0
+python_function,nn.Module: WanLayerNorm_15,11,3968.1880000000006,3191.382,0
+python_function,<built-in function perf_counter>,14877,3861.9920000000125,25.41,0
+python_function,nn.Module: CausalHead_0,10,3830.7110000000002,492.801,0
+python_function,wan/modules/causal_model_latentmem.py(852): forward,10,3715.812000000001,483.155,0
+python_function,nn.Module: Sequential_0,10,3578.6279999999997,468.333,0
+python_function,utils/wan_wrapper.py(232): _convert_flow_pred_to_x0,10,3511.9430000000007,407.657,0
+python_function,torch/_library/custom_ops.py(810): iter_tensors,1320,3428.9469999999988,966.022,0
+python_function,<built-in method unsqueeze of Tensor object at 0x737abde396d0>,391,3416.7970000000023,123.293,0
+python_function,<built-in method split of type object at 0x737fbe25e280>,180,3238.907999999999,177.077,0
+python_function,nn.Module: Sequential_2,10,3203.5420000000004,384.221,0
+kernel,"void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",1020,3156.855999999996,51.617,1126159840
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, at::detail::Array<char*, 1> >(int, at::native::FillFunctor<int>, at::detail::Array<char*, 1>)",3954,3121.7170000001083,1.696,4366840859
+kernel,"void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::DivFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::DivFunctor<float> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::DivFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::DivFunctor<float> > const&)::{lambda(int)#1})",1320,3095.2549999999915,3.072,1457302470
+python_function,nn.Module: Linear_494,11,3070.4829999999997,1009.499,0
+python_function,torch/_dynamo/eval_frame.py(101): _maybe_set_eval_frame,1320,3058.9679999999926,19.641,0
+python_function,<frozen os>(791): encode,2846,2811.4180000000047,17.047,0
+python_function,<built-in method append of list object at 0x737b2bbd0d80>,13095,2787.6339999999805,29.636,0
+kernel,"void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<16> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<16> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<16> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<16> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&)::{lambda(int)#1})",990,2775.523999999995,5.056,1093326525
+python_function,nn.Module: Conv3d_0,10,2731.955,367.976,0
+cpu_op,aten::alias,690,2724.501999999999,24.028,756222270
+python_function,utils/h200_group_runtime.py(95): prepare_attention_kv,330,2722.462999999998,33.212,0
+python_function,torch/nn/modules/container.py(536): keys,2638,2717.6320000000037,64.631,0
+python_function,<built-in method get of dict object at 0x737e099aad00>,10446,2684.814999999989,13.461,0
+python_function,torch/nn/modules/conv.py(724): forward,10,2663.1660000000006,362.137,0
+python_function,<built-in method transpose of Tensor object at 0x737abde65b80>,340,2648.7280000000032,55.106,0
+python_function,torch/nn/modules/conv.py(707): _conv_forward,10,2633.651,358.991,0
+python_function,<built-in method conv3d of type object at 0x737fbe25e280>,10,2596.6330000000003,355.907,0
+python_function,peft/tuners/tuners_utils.py(1777): _cast_input_dtype,2638,2592.4139999999966,40.663,0
+gpu_memcpy,Memcpy HtoD (Pageable -> Device),2648,2589.9880000000203,4.576,2923928198
+cpu_op,aten::detach_,1340,2551.6370000000006,161.683,1480341856
+python_function,nn.Module: WanRMSNorm_58,11,2541.4639999999995,608.521,0
+cpu_op,aten::conv3d,10,2502.387,346.161,11040943
+python_function,flash_attn/flash_attn_interface.py(19): maybe_contiguous,1980,2468.8500000000145,1006.474,0
+cpu_op,detach,996,2440.917000000003,14.052,1100012202
+cpu_op,aten::convolution,10,2438.887,339.061,11040953
+python_function,nn.Module: WanRMSNorm_42,11,2397.69,476.946,0
+python_function,nn.Module: Linear_361,11,2369.255,1012.043,0
+python_function,nn.Module: WanRMSNorm_52,11,2367.905,697.851,0
+python_function,nn.Module: Linear_584,11,2361.625,368.086,0
+python_function,nn.Module: Linear_614,11,2358.562,312.209,0
+python_function,nn.Module: Linear_554,11,2354.4740000000006,325.66,0
+cpu_op,aten::_convolution,10,2351.69,328.464,11040963
+python_function,<built-in method numel of Tensor object at 0x737abdef7cf0>,6450,2345.6810000000846,44.9,0
+python_function,nn.Module: Linear_404,11,2316.675,271.094,0
+python_function,nn.Module: Linear_524,11,2308.1210000000005,244.542,0
+python_function,nn.Module: Linear_374,11,2304.156,273.488,0
+python_function,nn.Module: Linear_344,11,2290.0930000000003,242.519,0
+python_function,nn.Module: Linear_674,11,2288.4179999999997,259.576,0
+python_function,nn.Module: Linear_764,11,2287.889,276.002,0
+python_function,nn.Module: Linear_854,11,2282.932,252.225,0
+python_function,nn.Module: Linear_734,11,2282.24,294.781,0
+python_function,nn.Module: Linear_794,11,2275.178,302.823,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<long>, at::detail::Array<char*, 1> >(int, at::native::FillFunctor<long>, at::detail::Array<char*, 1>)",2807,2274.8060000000028,2.24,3089400110
+python_function,nn.Module: Linear_644,11,2266.4339999999997,287.189,0
+python_function,nn.Module: WanRMSNorm_98,11,2255.2889999999998,355.286,0
+python_function,nn.Module: WanRMSNorm_64,11,2253.898,493.312,0
+python_function,nn.Module: WanRMSNorm_22,11,2244.7,411.383,0
+python_function,nn.Module: WanRMSNorm_14,11,2237.21,306.499,0
+python_function,nn.Module: Linear_434,11,2219.463,280.509,0
+python_function,nn.Module: Linear_464,11,2201.343,281.08,0
+python_function,nn.Module: Linear_314,11,2200.27,276.112,0
+python_function,nn.Module: WanRMSNorm_9,11,2196.9350000000004,338.37,0
+python_function,nn.Module: Linear_704,11,2195.524,277.984,0
+python_function,nn.Module: WanRMSNorm_66,11,2187.1400000000003,341.213,0
+python_function,nn.Module: WanRMSNorm_38,11,2183.457,260.127,0
+python_function,nn.Module: Linear_884,11,2178.556,256.24,0
+python_function,nn.Module: WanRMSNorm_90,11,2165.386,265.695,0
+python_function,nn.Module: Linear_824,11,2162.563,250.622,0
+kernel,sm80_xmma_gemm_f32f32_f32f32_f32_tn_n_tilesize32x32x8_stage3_warpsize1x2x1_ffma_aligna4_alignc4_execute_kernel__5x_cublas,330,2158.289000000003,7.84,364286715
+python_function,nn.Module: WanRMSNorm_34,11,2155.2940000000003,305.669,0
+python_function,nn.Module: WanRMSNorm_6,11,2149.002,277.384,0
+python_function,nn.Module: WanRMSNorm_74,11,2140.8489999999997,321.924,0
+python_function,nn.Module: WanRMSNorm_50,11,2132.004,230.481,0
+python_function,<built-in method type of Tensor object at 0x737abde65bd0>,670,2121.563000000001,44.8,0
+python_function,nn.Module: WanRMSNorm_26,11,2103.4919999999997,332.891,0
+kernel,"void at_cuda_detail::cub::DeviceScanKernel<at_cuda_detail::cub::DeviceScanPolicy<int, std::plus<int> >::Policy900, int const*, int*, at_cuda_detail::cub::ScanTileState<int, true>, std::plus<int>, at_cuda_detail::cub::NullType, int, int>(int const*, int*, at_cuda_detail::cub::ScanTileState<int, true>, int, std::plus<int>, at_cuda_detail::cub::NullType, int)",1318,2101.770999999999,2.401,1455626580
+python_function,nn.Module: WanRMSNorm_110,11,2095.937,302.322,0
+python_function,nn.Module: WanRMSNorm_18,11,2093.945,343.037,0
+python_function,nn.Module: WanRMSNorm_46,11,2089.7479999999996,238.403,0
+python_function,nn.Module: WanRMSNorm_54,11,2084.17,252.746,0
+python_function,nn.Module: WanRMSNorm_20,11,2082.429,277.113,0
+python_function,nn.Module: WanRMSNorm_114,11,2072.7519999999995,311.167,0
+python_function,nn.Module: WanRMSNorm_40,11,2071.36,288.841,0
+python_function,nn.Module: WanRMSNorm_61,11,2066.533,245.134,0
+python_function,nn.Module: WanRMSNorm_82,11,2065.512,230.62,0
+python_function,nn.Module: WanRMSNorm_94,11,2051.0099999999998,238.123,0
+python_function,nn.Module: WanRMSNorm_70,11,2049.5969999999998,263.302,0
+python_function,nn.Module: WanRMSNorm_10,11,2040.0019999999997,238.843,0
+python_function,nn.Module: WanRMSNorm_48,11,2033.612,417.373,0
+python_function,nn.Module: WanRMSNorm_62,11,2030.4050000000002,241.107,0
+cuda_runtime,cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags,3720,2029.2869999999907,12.019,4156216680
+python_function,nn.Module: WanRMSNorm_56,11,2015.535,288.201,0
+python_function,nn.Module: WanRMSNorm_86,11,2006.6080000000002,238.543,0
+python_function,nn.Module: WanRMSNorm_78,11,2004.585,283.463,0
+python_function,nn.Module: WanRMSNorm_4,11,2000.207,274.379,0
+python_function,nn.Module: WanRMSNorm_92,11,1999.245,282.302,0
+python_function,nn.Module: WanRMSNorm_106,11,1990.272,228.808,0
+gpu_memcpy,Memcpy DtoH (Device -> Pageable),992,1985.8089999999997,14.464,1095438492
+python_function,nn.Module: WanRMSNorm_2,11,1985.2660000000003,235.739,0
+python_function,nn.Module: WanRMSNorm_88,11,1981.6100000000001,257.643,0
+python_function,nn.Module: WanRMSNorm_118,11,1979.2359999999996,236.029,0
+python_function,nn.Module: WanRMSNorm_68,11,1978.004,276.173,0
+python_function,nn.Module: Linear_341,11,1972.927,511.19,0
+python_function,nn.Module: WanRMSNorm_0,11,1968.1,245.815,0
+python_function,nn.Module: WanRMSNorm_102,11,1967.647,235.238,0
+python_function,nn.Module: WanRMSNorm_30,11,1962.7779999999998,224.14,0
+python_function,nn.Module: WanRMSNorm_100,11,1940.083,220.434,0
+python_function,nn.Module: Linear_215,11,1936.5510000000002,314.713,0
+python_function,nn.Module: WanRMSNorm_117,11,1932.7740000000001,238.193,0
+python_function,nn.Module: WanRMSNorm_16,11,1931.04,237.571,0
+python_function,nn.Module: WanRMSNorm_25,11,1931.0100000000002,279.817,0
+python_function,nn.Module: WanRMSNorm_76,11,1930.9279999999999,231.562,0
+python_function,nn.Module: WanRMSNorm_44,11,1928.5549999999998,211.861,0
+python_function,nn.Module: WanRMSNorm_104,11,1918.482,193.032,0
+python_function,nn.Module: WanRMSNorm_89,11,1917.672,240.737,0
+python_function,nn.Module: Linear_65,11,1915.1760000000002,254.929,0
+python_function,nn.Module: WanRMSNorm_36,11,1907.0099999999998,229.128,0
+python_function,nn.Module: Linear_155,11,1901.696,245.835,0
+python_function,nn.Module: WanRMSNorm_73,11,1895.2240000000002,283.443,0
+python_function,nn.Module: WanRMSNorm_116,11,1892.5069999999998,210.459,0
+kernel,"void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctorOnSelf_add<c10::BFloat16> >(at::TensorIteratorBase&, at::native::CUDAFunctorOnSelf_add<c10::BFloat16> const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctorOnSelf_add<c10::BFloat16> >(at::TensorIteratorBase&, at::native::CUDAFunctorOnSelf_add<c10::BFloat16> const&)::{lambda(int)#1})",669,1892.1669999999992,4.352,738544040
+python_function,nn.Module: WanRMSNorm_28,11,1892.1509999999998,223.629,0
+python_function,nn.Module: WanRMSNorm_60,11,1887.543,233.195,0
+python_function,nn.Module: WanRMSNorm_24,11,1879.8929999999998,211.14,0
+python_function,<built-in method long of Tensor object at 0x737abde38f50>,990,1877.6430000000046,99.926,0
+python_function,nn.Module: Linear_476,11,1877.225,289.112,0
+python_function,nn.Module: WanRMSNorm_72,11,1875.4550000000002,218.892,0
+python_function,nn.Module: WanRMSNorm_84,11,1872.9789999999998,192.12,0
+python_function,torch/utils/_pytree.py(439): _dict_flatten,1200,1870.1459999999968,19.34,0
+python_function,nn.Module: WanRMSNorm_8,11,1864.9980000000003,209.358,0
+python_function,nn.Module: Linear_497,11,1863.7670000000003,237.151,0
+python_function,nn.Module: WanRMSNorm_80,11,1863.557,214.316,0
+python_function,nn.Module: WanRMSNorm_45,11,1859.639,235.849,0
+python_function,nn.Module: Linear_416,11,1857.898,261.95,0
+python_function,nn.Module: Linear_569,11,1854.6109999999999,230.971,0
+python_function,nn.Module: WanRMSNorm_101,11,1852.87,258.465,0
+python_function,nn.Module: Linear_617,11,1849.442,266.466,0
+python_function,nn.Module: WanRMSNorm_53,11,1847.1999999999998,275.38,0
+python_function,nn.Module: Linear_246,11,1846.6109999999999,536.068,0
+python_function,nn.Module: Linear_305,11,1845.2779999999998,262.351,0
+python_function,nn.Module: WanRMSNorm_112,11,1841.8639999999998,183.257,0
+python_function,nn.Module: WanRMSNorm_81,11,1836.4819999999997,280.548,0
+python_function,nn.Module: WanRMSNorm_32,11,1835.4620000000002,201.946,0
+python_function,nn.Module: WanRMSNorm_105,11,1832.6660000000002,203.538,0
+python_function,nn.Module: Linear_746,11,1830.022,224.111,0
+python_function,nn.Module: WanRMSNorm_93,11,1827.808,252.695,0
+python_function,nn.Module: WanRMSNorm_108,11,1824.213,182.846,0
+python_function,nn.Module: Linear_506,11,1817.514,220.255,0
+python_function,nn.Module: WanRMSNorm_49,11,1816.0420000000001,227.115,0
+python_function,nn.Module: WanRMSNorm_96,11,1815.961,204.45,0
+python_function,nn.Module: WanRMSNorm_57,11,1814.9200000000003,219.433,0
+python_function,nn.Module: Linear_245,11,1811.403,268.76,0
+python_function,nn.Module: Linear_56,11,1810.091,223.549,0
+python_function,nn.Module: Linear_176,11,1808.679,237.452,0
+python_function,nn.Module: Linear_356,11,1803.8329999999999,254.187,0
+python_function,nn.Module: Linear_437,11,1803.21,265.605,0
+python_function,nn.Module: Linear_827,11,1802.4799999999998,323.516,0
+python_function,nn.Module: Linear_377,11,1800.077,244.954,0
+python_function,nn.Module: WanRMSNorm_12,11,1796.7490000000003,184.228,0
+python_function,nn.Module: WanRMSNorm_33,11,1795.9799999999998,248.239,0
+python_function,nn.Module: Linear_875,11,1791.194,257.513,0
+python_function,nn.Module: WanRMSNorm_41,11,1789.3809999999999,237.842,0
+python_function,nn.Module: Linear_422,11,1784.712,260.137,0
+python_function,nn.Module: WanRMSNorm_97,11,1783.4,253.326,0
+python_function,nn.Module: Linear_737,11,1779.613,239.264,0
+python_function,nn.Module: Linear_605,11,1777.72,241.397,0
+python_function,nn.Module: Linear_797,11,1776.588,296.144,0
+python_function,nn.Module: WanRMSNorm_1,11,1775.084,218.712,0
+python_function,nn.Module: Linear_485,11,1774.586,261.058,0
+python_function,nn.Module: Linear_446,11,1773.906,235.368,0
+python_function,nn.Module: WanRMSNorm_17,11,1773.4230000000002,202.827,0
+python_function,nn.Module: Linear_896,11,1772.213,206.413,0
+python_function,nn.Module: Linear_335,11,1770.962,228.978,0
+python_function,nn.Module: Linear_707,11,1766.0330000000001,263.352,0
+python_function,nn.Module: WanRMSNorm_77,11,1764.341,228.448,0
+python_function,nn.Module: Linear_185,11,1762.2970000000003,182.536,0
+python_function,nn.Module: Linear_425,11,1761.493,216.048,0
+python_function,nn.Module: Linear_395,11,1761.023,250.482,0
+python_function,nn.Module: Linear_725,11,1760.965,204.309,0
+python_function,nn.Module: WanRMSNorm_5,11,1760.407,197.289,0
+python_function,nn.Module: Linear_791,11,1759.2209999999998,204.59,0
+python_function,nn.Module: Linear_479,11,1754.234,264.804,0
+python_function,nn.Module: WanRMSNorm_85,11,1753.902,197.018,0
+python_function,nn.Module: Linear_548,11,1753.164,254.639,0
+python_function,nn.Module: Linear_596,11,1750.047,201.916,0
+python_function,nn.Module: Linear_566,11,1748.2759999999996,200.404,0
+python_function,nn.Module: Linear_635,11,1747.284,194.524,0
+python_function,nn.Module: Linear_638,11,1746.8919999999998,262.611,0
+python_function,nn.Module: WanRMSNorm_109,11,1744.207,177.197,0
+python_function,nn.Module: Linear_615,11,1741.3929999999998,362.217,0
+python_function,nn.Module: Linear_755,11,1740.451,205.261,0
+python_function,nn.Module: Linear_146,11,1739.1830000000002,202.026,0
+python_function,nn.Module: Linear_116,11,1738.2030000000002,204.08,0
+python_function,nn.Module: Linear_467,11,1736.988,233.626,0
+python_function,nn.Module: Linear_296,11,1736.576,201.645,0
+python_function,nn.Module: Linear_656,11,1734.5529999999999,227.386,0
+python_function,nn.Module: Linear_575,11,1734.5430000000001,196.608,0
+python_function,nn.Module: Linear_386,11,1732.842,188.274,0
+python_function,nn.Module: WanRMSNorm_37,11,1732.629,202.587,0
+python_function,nn.Module: Linear_545,11,1731.9000000000003,213.775,0
+kernel,"void at::native::(anonymous namespace)::CatArrayBatchedCopy_aligned16_contig<at::native::(anonymous namespace)::OpaqueType<4u>, unsigned int, 1, 128, 1>(at::native::(anonymous namespace)::OpaqueType<4u>*, at::native::(anonymous namespace)::CatArrInputTensorMetadata<at::native::(anonymous namespace)::OpaqueType<4u>, unsigned int, 128, 1>, at::native::(anonymous namespace)::TensorSizeStride<unsigned int, 4u>, int, unsigned int)",1318,1728.697999999993,2.112,1455625262
+python_function,nn.Module: Linear_866,11,1726.9,167.512,0
+python_function,typing.py(392): inner,1199,1725.4220000000043,152.098,0
+python_function,nn.Module: Linear_665,11,1725.309,215.518,0
+python_function,nn.Module: WanRMSNorm_21,11,1724.56,201.345,0
+python_function,nn.Module: Linear_749,11,1724.4070000000002,247.277,0
+python_function,peft/tuners/lora/layer.py(785): _check_forward_args,2638,1722.6179999999877,15.174,0
+python_function,nn.Module: Linear_35,11,1719.1779999999999,171.959,0
+python_function,nn.Module: Linear_326,11,1719.13,198.951,0
+python_function,nn.Module: Linear_776,11,1717.5869999999998,192.612,0
+python_function,nn.Module: WanRMSNorm_69,11,1715.874,211.44,0
+python_function,nn.Module: Linear_581,11,1715.2620000000002,233.525,0
+python_function,nn.Module: Linear_285,11,1713.9690000000003,218.412,0
+python_function,nn.Module: Linear_266,11,1712.479,219.624,0
+python_function,nn.Module: WanRMSNorm_113,11,1712.451,170.547,0
+python_function,nn.Module: Linear_536,11,1711.596,198.701,0
+python_function,nn.Module: Linear_206,11,1710.7970000000003,211.651,0
+python_function,nn.Module: Linear_515,11,1710.2650000000003,187.384,0
+python_function,nn.Module: Linear_5,11,1709.855,196.377,0
+python_function,nn.Module: Linear_626,11,1709.7969999999998,196.528,0
+python_function,nn.Module: Linear_557,11,1708.593,195.045,0
+python_function,nn.Module: Linear_455,11,1707.7019999999998,192.351,0
+python_function,nn.Module: Linear_26,11,1706.78,184.98,0
+python_function,nn.Module: Linear_401,11,1705.5779999999997,197.679,0
+python_function,nn.Module: Linear_86,11,1703.6129999999998,192.951,0
+python_function,nn.Module: Linear_469,11,1702.212,264.524,0
+python_function,nn.Module: Linear_686,11,1697.235,185.521,0
+python_function,nn.Module: Linear_236,11,1695.891,192.511,0
+python_function,nn.Module: Linear_887,11,1695.6899999999998,202.306,0
+python_function,nn.Module: Linear_275,11,1694.5910000000001,216.068,0
+python_function,nn.Module: Linear_329,11,1689.9350000000002,217.66,0
+python_function,nn.Module: Linear_632,11,1689.6830000000002,235.088,0
+python_function,nn.Module: WanRMSNorm_13,11,1689.0020000000002,168.324,0
+python_function,nn.Module: Linear_587,11,1686.5149999999999,214.966,0
+python_function,nn.Module: Linear_365,11,1686.0789999999997,213.244,0
+python_function,nn.Module: Linear_758,11,1685.5170000000003,219.514,0
+python_function,nn.Module: Linear_308,11,1685.3739999999998,201.184,0
+python_function,nn.Module: Linear_125,11,1678.7160000000003,187.704,0
+python_function,nn.Module: Linear_578,11,1677.8469999999998,210.42,0
+python_function,nn.Module: Linear_659,11,1677.313,224.431,0
+python_function,nn.Module: Linear_668,11,1677.1639999999995,200.313,0
+python_function,nn.Module: Linear_848,11,1674.42,257.433,0
+python_function,nn.Module: Linear_845,11,1671.675,164.468,0
+python_function,nn.Module: Linear_728,11,1671.5840000000003,211.23,0
+python_function,nn.Module: Linear_719,11,1671.1119999999999,204.95,0
+python_function,nn.Module: Linear_695,11,1670.9229999999995,192.851,0
+python_function,nn.Module: Linear_407,11,1669.2899999999997,200.693,0
+python_function,nn.Module: Linear_677,11,1666.757,180.693,0
+python_function,nn.Module: Linear_815,11,1665.6860000000001,160.171,0
+python_function,nn.Module: Linear_788,11,1665.5629999999999,235.849,0
+python_function,nn.Module: Linear_836,11,1664.495,161.543,0
+python_function,nn.Module: Linear_105,11,1663.0810000000001,302.733,0
+python_function,nn.Module: Linear_435,11,1662.4620000000002,212.553,0
+python_function,nn.Module: Linear_317,11,1661.9499999999998,216.829,0
+python_function,nn.Module: Linear_671,11,1660.9669999999999,198.47,0
+python_function,nn.Module: Linear_431,11,1659.735,267.228,0
+python_function,nn.Module: Linear_641,11,1658.005,200.594,0
+python_function,nn.Module: Linear_95,11,1656.6219999999998,167.542,0
+python_function,nn.Module: Linear_806,11,1653.657,157.045,0
+python_function,nn.Module: Linear_785,11,1652.9050000000002,183.166,0
+python_function,nn.Module: Linear_482,11,1651.9549999999997,221.767,0
+python_function,nn.Module: Linear_818,11,1651.3929999999998,201.625,0
+python_function,nn.Module: Linear_731,11,1650.5520000000001,187.263,0
+python_function,nn.Module: Linear_629,11,1650.332,198.35,0
+python_function,nn.Module: WanRMSNorm_29,11,1648.7979999999998,157.206,0
+python_function,nn.Module: Linear_816,11,1647.789,263.833,0
+python_function,nn.Module: Linear_527,11,1646.145,181.414,0
+python_function,nn.Module: Linear_767,11,1645.715,186.091,0
+python_function,nn.Module: Linear_647,11,1640.7889999999998,207.605,0
+python_function,nn.Module: Linear_371,11,1638.332,203.879,0
+python_function,nn.Module: Linear_750,11,1637.3719999999998,289.774,0
+python_function,nn.Module: Linear_419,11,1636.882,182.685,0
+python_function,nn.Module: Linear_488,11,1636.1719999999998,231.802,0
+python_function,nn.Module: Linear_611,11,1631.7030000000002,201.875,0
+python_function,nn.Module: Linear_518,11,1631.654,190.428,0
+python_function,nn.Module: Linear_585,11,1631.531,200.133,0
+python_function,nn.Module: Linear_495,11,1629.038,205.421,0
+python_function,nn.Module: Linear_338,11,1628.2459999999999,177.998,0
+python_function,nn.Module: Linear_389,11,1625.4410000000003,188.755,0
+python_function,nn.Module: Linear_692,11,1625.0009999999997,238.523,0
+python_function,nn.Module: Linear_509,11,1619.522,192.481,0
+python_function,nn.Module: Linear_689,11,1615.9769999999999,236.81,0
+python_function,nn.Module: Linear_551,11,1615.149,188.855,0
+python_function,nn.Module: Linear_398,11,1613.633,176.506,0
+python_function,nn.Module: Linear_698,11,1612.9740000000002,197.789,0
+python_function,nn.Module: Linear_458,11,1612.9240000000004,185.941,0
+python_function,nn.Module: Linear_375,11,1611.5500000000002,210.098,0
+python_function,nn.Module: Linear_498,11,1610.978,255.79,0
+python_function,nn.Module: Linear_761,11,1609.389,189.687,0
+python_function,nn.Module: Linear_345,11,1608.926,250.111,0
+python_function,nn.Module: Linear_539,11,1608.106,200.003,0
+python_function,nn.Module: Linear_302,11,1606.0130000000001,209.298,0
+python_function,nn.Module: Linear_491,11,1605.0310000000002,187.744,0
+python_function,nn.Module: Linear_461,11,1604.378,205.471,0
+python_function,nn.Module: Linear_555,11,1603.728,211.18,0
+python_function,nn.Module: Linear_857,11,1598.4020000000003,169.044,0
+python_function,nn.Module: Linear_368,11,1593.3750000000002,187.313,0
+python_function,nn.Module: Linear_701,11,1593.213,189.226,0
+python_function,nn.Module: Linear_779,11,1593.0430000000001,186.642,0
+python_function,nn.Module: Linear_359,11,1593.001,195.866,0
+python_function,nn.Module: Linear_428,11,1592.092,206.854,0
+python_function,nn.Module: Linear_579,11,1589.6979999999999,279.547,0
+python_function,nn.Module: Linear_311,11,1588.8760000000002,184.168,0
+python_function,nn.Module: Linear_878,11,1585.228,158.227,0
+python_function,nn.Module: Linear_675,11,1585.078,219.674,0
+python_function,nn.Module: Linear_15,11,1584.3179999999998,221.456,0
+python_function,nn.Module: Linear_722,11,1584.2689999999998,194.735,0
+python_function,nn.Module: Linear_905,10,1584.2579999999996,173.601,0
+cpu_op,aten::cudnn_convolution,10,1584.078,231.862,11041033
+python_function,nn.Module: Linear_664,11,1584.0059999999999,282.271,0
+python_function,nn.Module: Linear_608,11,1582.4959999999996,198.03,0
+python_function,nn.Module: Linear_126,11,1581.722,301.932,0
+python_function,peft/tuners/tuners_utils.py(1533): merged,2638,1580.37300000001,11.658,0
+python_function,nn.Module: Linear_358,11,1580.15,290.744,0
+python_function,nn.Module: Linear_449,11,1580.143,176.246,0
+python_function,nn.Module: Linear_376,11,1580.0700000000002,196.747,0
+python_function,nn.Module: Linear_691,11,1577.2699999999998,235.398,0
+python_function,nn.Module: Linear_452,11,1577.217,206.903,0
+python_function,nn.Module: Linear_521,11,1576.1450000000004,189.196,0
+python_function,nn.Module: Linear_851,11,1575.995,181.825,0
+python_function,nn.Module: Linear_821,11,1573.814,151.507,0
+python_function,nn.Module: Linear_766,11,1573.223,229.169,0
+python_function,nn.Module: Linear_526,11,1572.0079999999998,287.89,0
+python_function,nn.Module: Linear_705,11,1571.8200000000002,184.94,0
+python_function,nn.Module: Linear_735,11,1571.707,192.751,0
+python_function,<built-in function sum>,332,1571.3149999999998,34.654,0
+python_function,nn.Module: Linear_839,11,1567.743,161.543,0
+python_function,nn.Module: Sequential_1,10,1564.1370000000002,215.717,0
+python_function,nn.Module: Linear_75,11,1562.525,195.015,0
+python_function,nn.Module: Linear_844,11,1562.0919999999999,290.454,0
+python_function,nn.Module: Linear_567,11,1561.581,190.838,0
+python_function,nn.Module: Linear_599,11,1561.0149999999996,181.204,0
+python_function,nn.Module: Linear_572,11,1559.1200000000003,174.724,0
+python_function,nn.Module: Linear_752,11,1556.6239999999998,173.902,0
+python_function,nn.Module: Linear_888,11,1556.383,262.24,0
+python_function,nn.Module: Linear_810,11,1555.6860000000001,326.952,0
+python_function,nn.Module: Linear_809,11,1554.951,151.457,0
+python_function,nn.Module: Linear_589,11,1553.5990000000002,194.714,0
+python_function,nn.Module: Linear_427,11,1552.809,310.426,0
+cuda_runtime,cudaDeviceGetAttribute,5180,1549.004000000006,12.65,5745958866
+python_function,nn.Module: Linear_869,11,1546.752,164.978,0
+python_function,nn.Module: Linear_388,11,1546.65,202.948,0
+python_function,nn.Module: Linear_732,11,1544.048,284.946,0
+python_function,nn.Module: Linear_195,11,1543.0549999999998,170.557,0
+python_function,nn.Module: Linear_782,11,1540.921,184.638,0
+python_function,nn.Module: Linear_362,11,1538.905,198.57,0
+python_function,nn.Module: Linear_687,11,1538.654,227.475,0
+python_function,nn.Module: Linear_378,11,1538.4060000000002,200.653,0
+python_function,nn.Module: Linear_405,11,1538.246,193.313,0
+python_function,nn.Module: Linear_618,11,1538.0059999999999,255.59,0
+python_function,nn.Module: Linear_796,11,1537.3529999999998,233.626,0
+python_function,nn.Module: Linear_423,11,1536.9840000000002,188.525,0
+python_function,nn.Module: Linear_747,11,1536.875,192.912,0
+python_function,nn.Module: Linear_466,11,1535.7530000000002,251.513,0
+python_function,nn.Module: Linear_225,11,1535.354,171.749,0
+python_function,nn.Module: Linear_406,11,1535.242,216.238,0
+python_function,nn.Module: Linear_255,11,1533.611,192.512,0
+python_function,nn.Module: Linear_672,11,1533.167,261.529,0
+python_function,nn.Module: Linear_765,11,1532.9360000000001,178.94,0
+python_function,nn.Module: Linear_881,11,1532.407,153.53,0
+python_function,nn.Module: Linear_45,11,1530.864,184.669,0
+cpu_op,aten::set_,686,1530.7990000000007,27.362,757259603
+python_function,nn.Module: Linear_525,11,1526.5590000000002,190.979,0
+python_function,nn.Module: Linear_392,11,1526.1289999999997,178.399,0
+python_function,nn.Module: Linear_616,11,1524.877,181.514,0
+python_function,nn.Module: Linear_512,11,1524.004,175.094,0
+python_function,nn.Module: Linear_436,11,1523.892,203.548,0
+python_function,nn.Module: Linear_899,10,1522.5919999999999,225.743,0
+python_function,nn.Module: Linear_342,11,1522.5839999999998,268.38,0
+python_function,nn.Module: Linear_165,11,1521.159,173.0,0
+python_function,nn.Module: Linear_465,11,1520.0770000000002,166.56,0
+python_function,nn.Module: Linear_394,11,1519.517,270.653,0
+python_function,nn.Module: Linear_417,11,1518.4850000000001,184.899,0
+python_function,nn.Module: Linear_438,11,1518.1939999999997,266.416,0
+python_function,nn.Module: Linear_662,11,1515.7910000000002,175.405,0
+python_function,nn.Module: Linear_135,11,1515.611,162.584,0
+python_function,nn.Module: Linear_769,11,1513.789,245.625,0
+python_function,nn.Module: Linear_756,11,1513.621,191.54,0
+python_function,nn.Module: Linear_332,11,1513.3579999999997,174.814,0
+python_function,nn.Module: Linear_448,11,1513.297,237.091,0
+python_function,nn.Module: Linear_166,11,1511.7849999999999,203.869,0
+python_function,nn.Module: Linear_559,11,1511.0929999999996,261.639,0
+python_function,nn.Module: Linear_576,11,1510.374,222.508,0
+python_function,torch/_functorch/utils.py(34): <genexpr>,660,1509.7870000000019,14.673,0
+python_function,nn.Module: Linear_795,11,1509.1219999999998,163.666,0
+python_function,nn.Module: Linear_636,11,1508.6689999999999,166.881,0
+python_function,nn.Module: Linear_547,11,1507.7490000000003,225.643,0
+python_function,<built-in function len>,14260,1507.5699999997846,21.914,0
+python_function,nn.Module: Linear_372,11,1507.5280000000002,201.735,0
+python_function,nn.Module: Linear_602,11,1504.814,182.946,0
+python_function,nn.Module: Linear_642,11,1502.7520000000002,161.082,0
+python_function,nn.Module: Linear_106,11,1500.979,176.105,0
+python_function,nn.Module: Linear_872,11,1498.9640000000002,156.856,0
+python_function,nn.Module: Linear_877,11,1496.4499999999998,289.483,0
+python_function,nn.Module: Linear_315,11,1496.393,169.065,0
+python_function,nn.Module: Linear_511,11,1495.87,247.898,0
+python_function,nn.Module: Linear_739,11,1495.3089999999997,244.773,0
+python_function,nn.Module: Linear_542,11,1494.099,176.817,0
+cpu_op,aten::_reshape_alias,670,1492.6670000000036,23.998,739610419
+python_function,nn.Module: Linear_387,11,1490.7319999999997,186.963,0
+python_function,nn.Module: Linear_556,11,1490.651,219.924,0
+python_function,nn.Module: Linear_798,11,1490.551,216.388,0
+python_function,nn.Module: Linear_546,11,1490.011,179.0,0
+python_function,nn.Module: Linear_420,11,1489.999,183.376,0
+python_function,nn.Module: Linear_451,11,1489.279,244.813,0
+python_function,nn.Module: Linear_568,11,1489.269,201.275,0
+python_function,nn.Module: Linear_369,11,1487.1360000000002,167.873,0
+python_function,nn.Module: Linear_396,11,1486.7849999999999,190.057,0
+python_function,nn.Module: Linear_499,11,1485.464,209.518,0
+python_function,nn.Module: Linear_286,11,1485.0149999999999,167.763,0
+python_function,nn.Module: Linear_586,11,1484.885,178.329,0
+python_function,nn.Module: Linear_690,11,1484.7430000000002,180.943,0
+python_function,nn.Module: Linear_718,11,1483.6,171.278,0
+python_function,nn.Module: Linear_717,11,1483.4920000000002,199.802,0
+python_function,nn.Module: Linear_360,11,1483.2700000000002,230.38,0
+python_function,nn.Module: Linear_855,11,1482.7409999999998,150.094,0
+python_function,nn.Module: Linear_379,11,1482.4300000000003,254.358,0
+python_function,nn.Module: Linear_637,11,1482.1970000000001,174.153,0
+python_function,nn.Module: Linear_667,11,1481.8099999999997,197.029,0
+python_function,nn.Module: Linear_885,11,1481.346,164.046,0
+python_function,nn.Module: Linear_724,11,1480.5780000000002,200.393,0
+python_function,nn.Module: Linear_753,11,1480.536,279.287,0
+python_function,nn.Module: Linear_316,11,1479.6029999999998,162.334,0
+python_function,nn.Module: Linear_649,11,1477.972,206.964,0
+python_function,nn.Module: Linear_720,11,1477.803,212.873,0
+python_function,nn.Module: Linear_570,11,1477.6329999999998,202.177,0
+python_function,nn.Module: Linear_630,11,1472.945,160.341,0
+python_function,nn.Module: Linear_460,11,1472.476,209.007,0
+python_function,nn.Module: Linear_792,11,1471.7019999999998,179.511,0
+python_function,nn.Module: Linear_343,11,1471.6290000000001,274.589,0
+python_function,nn.Module: Linear_688,11,1471.2119999999998,208.686,0
+python_function,nn.Module: Linear_327,11,1471.003,199.713,0
+python_function,nn.Module: Linear_645,11,1470.509,182.496,0
+python_function,nn.Module: Linear_421,11,1469.529,207.094,0
+python_function,nn.Module: Linear_430,11,1468.6990000000003,198.23,0
+python_function,nn.Module: Linear_812,11,1466.8539999999998,143.755,0
+python_function,nn.Module: Linear_478,11,1466.776,181.955,0
+python_function,nn.Module: Linear_826,11,1466.335,162.965,0
+python_function,nn.Module: Linear_696,11,1464.951,174.663,0
+python_function,nn.Module: Linear_842,11,1464.2990000000004,145.678,0
+python_function,nn.Module: Linear_346,11,1463.89,178.229,0
+python_function,nn.Module: Linear_825,11,1463.239,147.681,0
+python_function,nn.Module: Linear_300,11,1463.1099999999997,185.851,0
+python_function,nn.Module: Linear_574,11,1463.039,188.125,0
+python_function,nn.Module: Linear_483,11,1462.9959999999999,215.036,0
+python_function,nn.Module: Linear_463,11,1461.6640000000002,204.149,0
+python_function,nn.Module: Linear_76,11,1461.047,210.889,0
+python_function,nn.Module: Linear_66,11,1460.304,211.912,0
+python_function,nn.Module: Linear_418,11,1459.064,173.492,0
+python_function,nn.Module: Linear_477,11,1458.713,226.775,0
+python_function,nn.Module: Linear_573,11,1458.6750000000002,165.74,0
+python_function,nn.Module: Linear_727,11,1458.671,160.001,0
+python_function,nn.Module: Linear_373,11,1458.131,212.823,0
+python_function,nn.Module: Linear_778,11,1458.1190000000001,179.18,0
+python_function,nn.Module: Linear_339,11,1457.171,184.499,0
+python_function,nn.Module: Linear_588,11,1456.396,169.224,0
+python_function,nn.Module: Linear_571,11,1456.237,169.475,0
+python_function,nn.Module: Linear_609,11,1455.3339999999998,173.481,0
+kernel,"void at::native::bitonicSortKVInPlace<-2, -1, 16, 16, c10::Half, long, at::native::GTOp<c10::Half, true>, unsigned int>(at::cuda::detail::TensorInfo<c10::Half, unsigned int>, unsigned int, unsigned int, unsigned int, at::cuda::detail::TensorInfo<long, unsigned int>, unsigned int, at::native::GTOp<c10::Half, true>)",300,1455.1079999999997,5.728,337239945
+python_function,nn.Module: Linear_357,11,1454.375,193.653,0
+python_function,nn.Module: Linear_537,11,1453.9740000000002,170.237,0
+python_function,nn.Module: Linear_736,11,1453.635,179.181,0
+python_function,nn.Module: Linear_669,11,1453.5720000000001,183.547,0
+kernel,"void at::native::sbtopk::gatherTopK<c10::Half, unsigned int, 1, false>(at::cuda::detail::TensorInfo<c10::Half const, unsigned int>, unsigned int, unsigned int, bool, unsigned int, unsigned int, at::cuda::detail::TensorInfo<c10::Half, unsigned int>, unsigned int, at::cuda::detail::TensorInfo<long, unsigned int>, unsigned int, c10::Half*)",330,1452.1959999999992,5.856,364301475
+python_function,nn.Module: Linear_306,11,1451.98,205.752,0
+python_function,nn.Module: Linear_519,11,1451.6209999999999,193.904,0
+python_function,nn.Module: Linear_303,11,1451.459,170.236,0
+python_function,nn.Module: Linear_706,11,1451.2700000000002,167.061,0
+python_function,nn.Module: Linear_226,11,1451.2269999999999,173.141,0
+python_function,nn.Module: Linear_409,11,1450.719,160.901,0
+python_function,nn.Module: Linear_607,11,1449.88,211.982,0
+python_function,nn.Module: Linear_493,11,1448.8259999999998,222.098,0
+python_function,nn.Module: Linear_733,11,1446.4209999999998,184.198,0
+python_function,nn.Module: Linear_450,11,1446.2530000000002,184.419,0
+python_function,nn.Module: Linear_6,11,1446.101,163.646,0
+python_function,nn.Module: Linear_432,11,1445.903,197.059,0
+python_function,nn.Module: Linear_307,11,1445.823,176.917,0
+python_function,nn.Module: Linear_840,11,1445.5020000000002,187.514,0
+python_function,nn.Module: Linear_627,11,1444.749,157.145,0
+python_function,nn.Module: Linear_751,11,1443.9889999999998,169.625,0
+python_function,nn.Module: Linear_793,11,1443.829,164.207,0
+python_function,nn.Module: Linear_738,11,1442.667,188.695,0
+python_function,nn.Module: Linear_676,11,1441.7749999999999,187.423,0
+python_function,nn.Module: Linear_426,11,1441.3660000000002,181.023,0
+python_function,nn.Module: Linear_846,11,1441.275,166.741,0
+python_function,nn.Module: Linear_486,11,1441.206,168.594,0
+python_function,nn.Module: Linear_708,11,1440.9629999999997,174.082,0
+python_function,utils/scheduler.py(159): add_noise,6,1440.163,264.333,0
+python_function,nn.Module: Linear_336,11,1439.521,195.776,0
+python_function,nn.Module: Linear_897,11,1438.9799999999998,160.27,0
+python_function,nn.Module: Linear_634,11,1437.7799999999997,164.427,0
+python_function,nn.Module: Linear_309,11,1437.5770000000002,189.577,0
+python_function,nn.Module: Linear_196,11,1435.205,158.037,0
+python_function,nn.Module: Linear_256,11,1435.1049999999998,158.858,0
+python_function,nn.Module: Linear_403,11,1435.0950000000003,195.867,0
+python_function,nn.Module: Linear_310,11,1434.585,257.122,0
+python_function,nn.Module: Linear_496,11,1434.1229999999998,171.819,0
+python_function,nn.Module: Linear_628,11,1434.002,163.245,0
+python_function,nn.Module: Linear_507,11,1433.7340000000002,184.479,0
+python_function,nn.Module: Linear_528,11,1433.2800000000002,179.691,0
+python_function,nn.Module: Linear_901,10,1433.233,274.81,0
+python_function,nn.Module: Linear_366,11,1432.8899999999999,190.829,0
+python_function,nn.Module: Linear_679,11,1432.6810000000003,184.418,0
+python_function,nn.Module: Linear_898,11,1432.5199999999998,163.326,0
+python_function,nn.Module: Linear_648,11,1432.4589999999998,209.437,0
+python_function,nn.Module: Linear_819,11,1431.516,185.129,0
+python_function,nn.Module: Linear_601,11,1431.429,221.597,0
+python_function,nn.Module: Linear_186,11,1429.2849999999999,169.135,0
+python_function,nn.Module: Linear_408,11,1428.963,160.942,0
+python_function,nn.Module: Linear_492,11,1428.5839999999998,194.784,0
+python_function,nn.Module: Linear_748,11,1428.5339999999997,176.115,0
+python_function,nn.Module: Linear_817,11,1428.2130000000002,155.974,0
+python_function,nn.Module: Linear_391,11,1427.7849999999999,177.087,0
+python_function,nn.Module: Linear_529,11,1427.5529999999999,233.855,0
+python_function,nn.Module: Linear_673,11,1427.0320000000002,168.844,0
+python_function,nn.Module: Linear_337,11,1426.902,190.297,0
+python_function,nn.Module: Linear_549,11,1425.8200000000002,173.201,0
+python_function,nn.Module: Linear_552,11,1425.2289999999998,166.951,0
+python_function,nn.Module: Linear_510,11,1424.9000000000003,178.379,0
+python_function,nn.Module: Linear_328,11,1424.3880000000001,181.254,0
+python_function,nn.Module: Linear_760,11,1424.268,212.151,0
+python_function,nn.Module: Linear_646,11,1424.1280000000002,175.404,0
+python_function,nn.Module: Linear_156,11,1423.998,169.184,0
+python_function,nn.Module: Linear_754,11,1423.636,178.469,0
+python_function,nn.Module: Linear_670,11,1423.6180000000004,171.579,0
+python_function,nn.Module: Linear_456,11,1423.556,184.989,0
+python_function,nn.Module: Linear_790,11,1421.893,163.275,0
+python_function,nn.Module: Linear_666,11,1421.696,176.857,0
+python_function,nn.Module: Linear_768,11,1421.655,191.169,0
+python_function,nn.Module: Linear_631,11,1421.034,149.404,0
+python_function,nn.Module: Linear_429,11,1420.0910000000003,188.034,0
+python_function,nn.Module: Linear_558,11,1419.924,170.167,0
+python_function,nn.Module: Linear_520,11,1419.801,223.099,0
+python_function,nn.Module: Linear_313,11,1419.27,180.493,0
+python_function,nn.Module: Linear_513,11,1419.19,252.445,0
+python_function,nn.Module: Linear_400,11,1418.94,206.072,0
+python_function,nn.Module: Linear_598,11,1418.6,164.077,0
+python_function,nn.Module: Linear_577,11,1418.119,165.399,0
+python_function,nn.Module: Linear_457,11,1417.789,191.59,0
+python_function,nn.Module: Linear_136,11,1416.0249999999999,163.977,0
+python_function,nn.Module: Linear_340,11,1416.003,196.517,0
+python_function,nn.Module: Linear_334,11,1415.913,162.814,0
+python_function,nn.Module: Linear_726,11,1415.8959999999997,165.299,0
+python_function,nn.Module: Linear_699,11,1415.846,160.942,0
+python_function,nn.Module: Linear_639,11,1415.766,152.779,0
+python_function,nn.Module: Linear_643,11,1414.8120000000001,151.757,0
+python_function,nn.Module: Linear_723,11,1414.613,158.758,0
+python_function,nn.Module: Linear_304,11,1414.352,156.685,0
+python_function,nn.Module: Linear_678,11,1413.681,183.938,0
+python_function,nn.Module: Linear_604,11,1413.361,189.807,0
+python_function,nn.Module: Linear_606,11,1413.0800000000002,174.242,0
+python_function,nn.Module: Linear_582,11,1412.2769999999998,185.069,0
+python_function,nn.Module: Linear_640,11,1412.0910000000001,155.894,0
+python_function,nn.Module: Linear_660,11,1411.73,173.542,0
+python_function,nn.Module: Linear_516,11,1411.6279999999997,179.16,0
+python_function,nn.Module: Linear_721,11,1411.238,163.275,0
+python_function,nn.Module: Linear_583,11,1411.1499999999999,172.18,0
+python_function,nn.Module: Linear_487,11,1411.0179999999998,167.542,0
+python_function,nn.Module: Linear_693,11,1410.9970000000003,158.548,0
+python_function,nn.Module: Linear_399,11,1410.7469999999998,202.607,0
+python_function,nn.Module: Linear_459,11,1410.647,199.112,0
+python_function,nn.Module: Linear_781,11,1410.0829999999999,164.056,0
+python_function,nn.Module: Linear_367,11,1409.554,165.469,0
+python_function,nn.Module: Linear_700,11,1409.2220000000002,187.303,0
+python_function,nn.Module: Linear_370,11,1409.185,173.932,0
+python_function,nn.Module: Linear_462,11,1408.9529999999997,186.031,0
+python_function,nn.Module: Linear_301,11,1408.813,166.861,0
+python_function,nn.Module: Linear_312,11,1408.763,160.08,0
+python_function,nn.Module: Linear_597,11,1408.2540000000001,163.916,0
+python_function,nn.Module: Linear_694,11,1407.533,187.183,0
+python_function,nn.Module: Linear_46,11,1406.8600000000001,177.488,0
+python_function,nn.Module: Linear_540,11,1406.149,176.075,0
+python_function,nn.Module: Linear_538,11,1405.429,186.823,0
+python_function,nn.Module: Linear_349,11,1405.319,164.127,0
+python_function,nn.Module: Linear_447,11,1404.317,173.191,0
+python_function,nn.Module: Linear_610,11,1404.237,183.537,0
+python_function,nn.Module: Linear_541,11,1403.767,171.338,0
+python_function,nn.Module: Linear_633,11,1403.5149999999999,155.533,0
+python_function,nn.Module: Linear_276,11,1403.2839999999999,173.571,0
+python_function,nn.Module: Linear_600,11,1402.3509999999999,162.804,0
+python_function,nn.Module: Linear_709,11,1401.4119999999998,173.952,0
+python_function,nn.Module: Linear_859,11,1399.377,163.646,0
+python_function,nn.Module: Linear_807,11,1399.189,144.326,0
+python_function,nn.Module: Linear_837,11,1398.489,136.723,0
+python_function,nn.Module: Linear_902,10,1398.478,161.362,0
+python_function,nn.Module: Linear_612,11,1398.158,169.636,0
+python_function,nn.Module: Linear_480,11,1396.935,156.615,0
+python_function,nn.Module: Linear_603,11,1396.587,170.747,0
+python_function,nn.Module: Linear_702,11,1396.275,177.247,0
+python_function,nn.Module: Linear_867,11,1395.892,147.501,0
+python_function,nn.Module: Linear_96,11,1395.8099999999995,158.818,0
+python_function,nn.Module: Linear_613,11,1394.3129999999999,175.495,0
+python_function,nn.Module: Linear_490,11,1394.0819999999999,170.557,0
+python_function,nn.Module: Linear_481,11,1392.985,185.52,0
+python_function,nn.Module: Linear_838,11,1392.6909999999998,139.919,0
+python_function,nn.Module: Linear_348,11,1392.669,170.136,0
+python_function,nn.Module: Linear_489,11,1392.43,182.867,0
+python_function,nn.Module: Linear_318,11,1392.0310000000002,160.161,0
+python_function,nn.Module: Linear_523,11,1391.5960000000002,164.727,0
+python_function,nn.Module: Linear_847,11,1390.1649999999997,147.571,0
+python_function,nn.Module: Linear_850,11,1389.705,150.917,0
+python_function,nn.Module: Linear_661,11,1389.5259999999998,171.358,0
+python_function,nn.Module: Linear_787,11,1389.491,153.129,0
+python_function,nn.Module: Linear_390,11,1388.9830000000002,170.647,0
+python_function,nn.Module: Linear_786,11,1388.8819999999998,167.341,0
+python_function,nn.Module: Linear_876,11,1388.673,140.6,0
+python_function,nn.Module: Linear_808,11,1388.663,136.534,0
+python_function,nn.Module: Linear_777,11,1388.5199999999998,183.717,0
+python_function,nn.Module: Linear_729,11,1388.362,181.003,0
+python_function,nn.Module: WanLayerNorm_51,11,1387.3300000000002,522.427,0
+python_function,nn.Module: Linear_36,11,1385.099,150.085,0
+python_function,nn.Module: Linear_658,11,1384.8470000000002,157.817,0
+python_function,nn.Module: Linear_468,11,1384.596,163.636,0
+python_function,nn.Module: Linear_811,11,1383.444,144.386,0
+python_function,nn.Module: Linear_886,11,1382.704,154.602,0
+python_function,nn.Module: Linear_814,11,1382.203,136.214,0
+python_function,nn.Module: Linear_829,11,1381.739,149.453,0
+python_function,nn.Module: Linear_697,11,1380.3899999999999,171.939,0
+python_function,nn.Module: Linear_763,11,1380.279,164.727,0
+python_function,nn.Module: Linear_454,11,1379.1490000000001,157.476,0
+python_function,nn.Module: Linear_216,11,1378.9170000000001,141.421,0
+python_function,nn.Module: Linear_331,11,1378.877,160.641,0
+python_function,nn.Module: Linear_762,11,1378.819,165.559,0
+python_function,nn.Module: Linear_873,11,1377.924,182.295,0
+python_function,nn.Module: Linear_730,11,1377.894,159.86,0
+python_function,nn.Module: Linear_397,11,1377.726,170.486,0
+python_function,nn.Module: Linear_759,11,1377.4249999999997,158.018,0
+python_function,nn.Module: Linear_517,11,1377.166,160.942,0
+python_function,nn.Module: Linear_333,11,1377.0229999999997,152.849,0
+python_function,nn.Module: Linear_330,11,1376.692,176.646,0
+python_function,nn.Module: Linear_484,11,1376.5510000000002,161.683,0
+python_function,nn.Module: Linear_657,11,1376.224,176.646,0
+python_function,nn.Module: Linear_319,11,1375.413,163.355,0
+python_function,nn.Module: Linear_580,11,1375.231,154.712,0
+python_function,nn.Module: Linear_703,11,1374.339,175.244,0
+python_function,nn.Module: Linear_439,11,1374.16,160.932,0
+python_function,nn.Module: Linear_858,11,1373.9789999999998,144.697,0
+python_function,wan/modules/causal_model_latentmem.py(1590): unpatchify,10,1372.719,152.218,0
+python_function,nn.Module: Linear_550,11,1370.274,174.473,0
+python_function,nn.Module: Linear_433,11,1370.0179999999998,165.9,0
+python_function,nn.Module: Linear_889,11,1368.7710000000002,150.456,0
+python_function,nn.Module: Linear_856,11,1368.64,153.57,0
+python_function,nn.Module: Linear_879,11,1368.421,137.115,0
+python_function,nn.Module: Linear_880,11,1367.3120000000001,131.967,0
+python_function,nn.Module: Linear_871,11,1365.465,135.762,0
+python_function,nn.Module: Linear_508,11,1364.764,168.173,0
+python_function,nn.Module: Linear_453,11,1363.4930000000002,163.066,0
+python_function,nn.Module: Linear_822,11,1360.8089999999997,135.722,0
+python_function,nn.Module: Linear_514,11,1359.418,175.725,0
+python_function,nn.Module: Linear_364,11,1359.374,163.035,0
+python_function,nn.Module: Linear_402,11,1359.1760000000002,169.254,0
+python_function,nn.Module: Linear_757,11,1358.2030000000002,174.733,0
+python_function,nn.Module: Linear_870,11,1354.8970000000002,133.348,0
+python_function,nn.Module: Linear_522,11,1353.808,155.533,0
+python_function,nn.Module: Linear_619,11,1353.776,155.523,0
+python_function,nn.Module: Linear_852,11,1353.7510000000002,138.317,0
+python_function,nn.Module: Linear_843,11,1353.6670000000001,145.969,0
+python_function,nn.Module: Linear_849,11,1353.459,131.025,0
+python_function,nn.Module: Linear_363,11,1352.927,157.176,0
+python_function,nn.Module: Linear_882,11,1352.256,134.35,0
+python_function,nn.Module: Linear_553,11,1349.46,155.874,0
+python_function,nn.Module: Linear_780,11,1347.6270000000002,149.955,0
+python_function,nn.Module: Linear_868,11,1347.608,134.981,0
+python_function,nn.Module: Linear_799,11,1346.1879999999999,135.222,0
+python_function,nn.Module: Linear_543,11,1344.2120000000002,165.94,0
+python_function,nn.Module: Linear_828,11,1343.652,139.388,0
+python_function,nn.Module: Linear_544,11,1342.991,152.939,0
+cpu_op,aten::abs,32,1337.5120000000002,58.392,34837864
+python_function,nn.Module: Linear_820,11,1337.0,131.786,0
+python_function,nn.Module: Linear_783,11,1336.082,153.06,0
+python_function,nn.Module: Linear_853,11,1334.5149999999999,142.813,0
+python_function,nn.Module: Linear_784,11,1333.3760000000002,149.324,0
+python_function,nn.Module: Linear_841,11,1333.0260000000003,141.311,0
+python_function,nn.Module: Linear_663,11,1332.864,151.557,0
+python_function,<built-in method unwrap_if_dead of PyCapsule object at 0x737f3c377000>,3300,1331.655000000021,13.781,0
+python_function,nn.Module: Linear_393,11,1327.888,161.302,0
+python_function,nn.Module: Linear_823,11,1326.294,134.871,0
+python_function,torch/_ops.py(995): <lambda>,1200,1323.361999999999,15.824,0
+python_function,nn.Module: Linear_874,11,1315.215,130.745,0
+python_function,nn.Module: Linear_883,11,1309.6280000000002,130.464,0
+python_function,torch/nn/parameter.py(10): __instancecheck__,958,1306.5240000000006,16.315,0
+python_function,<built-in method data_ptr of torch.storage.UntypedStorage object at 0x737abde3e260>,6120,1299.0750000000173,23.457,0
+python_function,nn.Module: Linear_813,11,1298.7060000000001,128.832,0
+python_function,nn.Module: Linear_900,10,1270.337,164.788,0
+python_function,nn.Module: Linear_904,10,1256.3629999999998,149.524,0
+python_function,nn.Module: Linear_903,10,1250.903,164.016,0
+python_function,<string>(2): __init__,2340,1226.2550000000049,15.294,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<float>, at::detail::Array<char*, 2> >(int, at::native::CUDAFunctorOnSelf_add<float>, at::detail::Array<char*, 2>)",989,1193.9300000000005,2.4,1091735078
+python_function,<built-in function max>,1891,1153.1450000000004,3.655,0
+python_function,torch/_VF.py(27): __getattr__,1180,1143.6930000000013,17.137,0
+python_function,<built-in method element_size of Tensor object at 0x737abc51c910>,6120,1114.166000000004,18.619,0
+kernel,"void at_cuda_detail::cub::DeviceScanInitKernel<at_cuda_detail::cub::ScanTileState<int, true> >(at_cuda_detail::cub::ScanTileState<int, true>, int)",1318,1110.578000000002,1.824,1455626580
+python_function,utils/wan_wrapper.py(247): <lambda>,40,1110.2679999999996,55.667,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::rsqrt_kernel_cuda(at::TensorIteratorBase&)::{lambda()#2}::operator()() const::{lambda()#2}::operator()() const::{lambda(float)#1}, at::detail::Array<char*, 2> >(int, at::native::rsqrt_kernel_cuda(at::TensorIteratorBase&)::{lambda()#2}::operator()() const::{lambda()#2}::operator()() const::{lambda(float)#1}, at::detail::Array<char*, 2>)",989,1061.7660000000005,2.272,1091736067
+python_function,nn.Module: WanLayerNorm_82,11,1051.074,171.538,0
+python_function,nn.Module: WanLayerNorm_34,11,1040.517,209.147,0
+python_function,peft/tuners/tuners_utils.py(1542): active_adapter,5276,1037.7170000000049,18.549,0
+python_function,nn.Module: WanLayerNorm_81,11,1023.883,217.731,0
+python_function,nn.Module: WanLayerNorm_46,11,1023.501,158.077,0
+python_function,nn.Module: WanLayerNorm_30,11,1019.6120000000001,165.989,0
+python_function,nn.Module: WanLayerNorm_86,11,1002.84,214.506,0
+python_function,<built-in method double of Tensor object at 0x737abde3b930>,40,999.9949999999998,50.82,0
+kernel,"void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#10}::operator()() const::{lambda(c10::Half)#1}, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#10}::operator()() const::{lambda(c10::Half)#1}, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",330,999.9689999999998,3.936,364289685
+python_function,nn.Module: WanLayerNorm_67,11,998.6940000000001,214.345,0
+python_function,nn.Module: WanLayerNorm_72,11,997.991,159.9,0
+python_function,nn.Module: WanLayerNorm_49,11,996.6899999999999,157.106,0
+python_function,nn.Module: WanLayerNorm_50,11,994.867,181.854,0
+python_function,nn.Module: WanLayerNorm_2,11,994.3749999999999,193.724,0
+python_function,nn.Module: WanLayerNorm_58,11,993.4259999999999,124.996,0
+python_function,nn.Module: WanLayerNorm_42,11,993.382,187.824,0
+python_function,nn.Module: WanLayerNorm_57,11,992.8439999999999,152.549,0
+python_function,nn.Module: WanLayerNorm_4,11,990.9110000000002,181.053,0
+python_function,nn.Module: WanLayerNorm_33,11,979.211,148.192,0
+python_function,nn.Module: WanLayerNorm_54,11,979.051,165.199,0
+python_function,nn.Module: WanLayerNorm_66,11,978.05,202.807,0
+python_function,nn.Module: WanLayerNorm_3,11,974.1139999999999,111.495,0
+python_function,nn.Module: WanLayerNorm_48,11,972.732,168.083,0
+python_function,nn.Module: WanLayerNorm_10,11,968.9060000000002,128.0,0
+python_function,nn.Module: WanLayerNorm_1,11,961.5239999999999,144.005,0
+python_function,nn.Module: WanLayerNorm_62,11,952.9209999999999,170.006,0
+python_function,<built-in method keys of dict object at 0x737b2bb96340>,3838,949.7070000000131,63.98,0
+python_function,nn.Module: WanLayerNorm_75,11,947.624,127.77,0
+python_function,nn.Module: WanLayerNorm_76,11,945.749,130.113,0
+python_function,<built-in method fill_ of Tensor object at 0x737abde434d0>,120,943.1980000000001,17.958,0
+python_function,nn.Module: WanLayerNorm_28,11,940.2520000000001,112.146,0
+python_function,nn.Module: WanLayerNorm_60,11,939.96,124.575,0
+python_function,nn.Module: WanLayerNorm_17,11,938.898,170.486,0
+python_function,nn.Module: WanLayerNorm_45,11,938.59,111.034,0
+python_function,nn.Module: WanLayerNorm_61,11,931.708,110.162,0
+python_function,nn.Module: WanLayerNorm_13,11,930.435,122.762,0
+python_function,nn.Module: WanLayerNorm_35,11,926.6999999999998,140.119,0
+python_function,nn.Module: WanLayerNorm_70,11,922.74,114.258,0
+python_function,nn.Module: WanLayerNorm_41,11,918.284,146.108,0
+python_function,nn.Module: WanLayerNorm_63,11,917.3559999999999,89.971,0
+python_function,nn.Module: WanLayerNorm_27,11,915.972,107.388,0
+python_function,nn.Module: WanLayerNorm_79,11,915.3529999999998,103.472,0
+python_function,nn.Module: WanLayerNorm_40,11,912.8480000000001,98.413,0
+python_function,nn.Module: WanLayerNorm_43,11,912.1160000000001,112.566,0
+python_function,nn.Module: WanLayerNorm_80,11,911.3580000000001,121.821,0
+python_function,<built-in method encode of str object at 0x737fbee66ca0>,2846,911.2360000000031,12.189,0
+python_function,nn.Module: WanLayerNorm_37,11,911.1969999999999,98.695,0
+python_function,nn.Module: WanLayerNorm_25,11,911.065,106.667,0
+python_function,nn.Module: WanLayerNorm_32,11,909.3609999999999,142.303,0
+python_function,nn.Module: WanLayerNorm_55,11,908.389,95.659,0
+python_function,nn.Module: WanLayerNorm_7,11,906.4380000000001,111.044,0
+python_function,nn.Module: WanLayerNorm_52,11,905.8989999999999,94.568,0
+python_function,nn.Module: WanLayerNorm_22,11,904.7639999999999,126.538,0
+python_function,nn.Module: WanLayerNorm_84,11,902.874,94.087,0
+python_function,nn.Module: WanLayerNorm_21,11,901.6919999999999,99.405,0
+python_function,nn.Module: WanLayerNorm_56,11,901.45,100.538,0
+python_function,nn.Module: WanLayerNorm_71,11,896.0820000000001,99.375,0
+python_function,nn.Module: WanLayerNorm_74,11,895.8720000000002,109.632,0
+python_function,torch/nn/parameter.py(216): __instancecheck__,958,894.6470000000005,16.526,0
+python_function,nn.Module: WanLayerNorm_85,11,893.895,93.847,0
+python_function,nn.Module: WanLayerNorm_64,11,893.147,97.673,0
+python_function,nn.Module: WanLayerNorm_88,11,892.2059999999999,97.212,0
+python_function,nn.Module: WanLayerNorm_18,11,888.309,90.611,0
+python_function,nn.Module: WanLayerNorm_69,11,881.8499999999999,102.931,0
+python_function,nn.Module: WanLayerNorm_65,11,881.5589999999999,114.499,0
+python_function,nn.Module: WanLayerNorm_39,11,880.614,93.245,0
+python_function,nn.Module: WanLayerNorm_87,11,880.0569999999999,90.221,0
+python_function,nn.Module: WanLayerNorm_44,11,879.9960000000001,100.307,0
+python_function,nn.Module: WanLayerNorm_24,11,879.787,95.28,0
+python_function,nn.Module: WanLayerNorm_68,11,878.1629999999999,118.566,0
+python_function,nn.Module: WanLayerNorm_36,11,877.4520000000001,94.167,0
+python_function,nn.Module: WanLayerNorm_8,11,877.0499999999998,107.658,0
+python_function,nn.Module: WanLayerNorm_29,11,875.67,112.796,0
+python_function,nn.Module: WanLayerNorm_23,11,873.1369999999998,137.185,0
+python_function,nn.Module: WanLayerNorm_5,11,871.8919999999999,108.881,0
+python_function,nn.Module: WanLayerNorm_9,11,871.2729999999999,88.859,0
+python_function,nn.Module: WanLayerNorm_12,11,870.2289999999999,87.947,0
+python_function,nn.Module: WanLayerNorm_77,11,867.2560000000001,98.234,0
+python_function,nn.Module: WanLayerNorm_16,11,866.463,103.091,0
+python_function,nn.Module: WanLayerNorm_78,11,861.6880000000001,111.774,0
+kernel,"void at::native::reduce_kernel<128, 4, at::native::ReduceOp<c10::Half, at::native::MeanOps<c10::Half, float, float, c10::Half>, unsigned int, c10::Half, 4> >(at::native::ReduceOp<c10::Half, at::native::MeanOps<c10::Half, float, float, c10::Half>, unsigned int, c10::Half, 4>)",150,859.6819999999994,6.432,153087990
+python_function,nn.Module: WanLayerNorm_53,11,856.3489999999999,101.088,0
+python_function,nn.Module: WanLayerNorm_19,11,855.5089999999999,86.936,0
+python_function,nn.Module: WanLayerNorm_89,11,851.541,96.822,0
+python_function,nn.Module: WanLayerNorm_11,11,850.9599999999999,99.085,0
+python_function,nn.Module: WanLayerNorm_38,11,850.882,91.623,0
+python_function,nn.Module: WanLayerNorm_47,11,850.6209999999999,111.865,0
+python_function,nn.Module: WanLayerNorm_59,11,845.2139999999999,108.961,0
+python_function,<built-in method stride of Tensor object at 0x737abde411d0>,1980,840.0890000000056,11.959,0
+python_function,nn.Module: WanLayerNorm_14,11,837.9519999999999,84.372,0
+python_function,nn.Module: WanLayerNorm_26,11,827.995,91.213,0
+python_function,nn.Module: WanLayerNorm_0,10,826.813,96.451,0
+python_function,utils/h200_group_runtime.py(17): fake_quantize_kv,330,826.5030000000005,12.509,0
+python_function,nn.Module: WanLayerNorm_20,11,825.863,105.825,0
+python_function,nn.Module: WanLayerNorm_83,11,825.7520000000001,81.247,0
+python_function,nn.Module: WanLayerNorm_90,10,819.1429999999999,111.645,0
+python_function,wan/modules/causal_model_latentmem.py(185): <genexpr>,2010,794.4030000000043,13.271,0
+python_function,<built-in method abs of Tensor object at 0x737abde38ff0>,16,792.672,61.647,0
+python_function,<built-in method _are_functorch_transforms_active of PyCapsule object at 0x737f3c35f330>,660,790.3460000000003,26.722,0
+python_function,<built-in method __exit__ of PyCapsule object at 0x737f3c35ef70>,660,780.9639999999991,9.505,0
+python_function,<built-in method pow of type object at 0x737fbe25e280>,10,757.645,221.787,0
+python_function,peft/tuners/tuners_utils.py(1537): disable_adapters,2638,746.463999999991,12.419,0
+python_function,wan/modules/attention.py(67): half,1980,743.7929999999975,18.149,0
+python_function,torch/backends/__init__.py(38): __get__,999,732.0509999999995,20.762,0
+python_function,tqdm/std.py(1182): __iter__,2,724.594,388.378,0
+python_function,<built-in function _has_torch_function_unary>,3232,701.8610000000006,20.623,0
+python_function,<frozen os>(795): decode,1316,693.5279999999981,94.077,0
+python_function,tqdm/std.py(1198): update,2,678.902,360.234,0
+python_function,utils/draftmap_retrieval.py(97): <genexpr>,2010,629.5700000000006,14.062,0
+python_function,torch/utils/_pytree.py(411): _tuple_flatten,2400,605.0819999999976,14.123,0
+python_function,<built-in method ones of type object at 0x737fbe25e280>,14,604.5559999999999,167.102,0
+python_function,tqdm/std.py(1325): refresh,2,598.6859999999999,319.82,0
+kernel,"void at::native::reduce_kernel<512, 1, at::native::ReduceOp<c10::Half, at::native::MeanOps<c10::Half, float, float, c10::Half>, unsigned int, c10::Half, 4> >(at::native::ReduceOp<c10::Half, at::native::MeanOps<c10::Half, float, float, c10::Half>, unsigned int, c10::Half, 4>)",180,569.7960000000005,3.744,211212825
+cpu_op,aten::sub,32,547.5660000000001,32.481,34838088
+python_function,tqdm/std.py(1464): display,2,544.532,290.194,0
+cpu_op,detach_,1340,542.1260000000002,10.837,1480343196
+cpu_op,aten::lift_fresh,3320,534.6469999999965,2.764,3666540446
+python_function,<built-in method pop of dict object at 0x737b2bc42dc0>,5296,533.7949999999993,15.965,0
+python_function,<built-in method values of dict object at 0x737b5831a4c0>,2899,516.9179999999994,12.92,0
+kernel,"void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)",660,510.9120000000007,2.4,728796420
+python_function,torch/nn/modules/activation.py(431): forward,20,508.0400000000001,50.139,0
+python_function,<built-in function ceil>,1320,496.31099999999964,11.969,0
+python_function,torch/nn/modules/container.py(240): __iter__,359,492.1479999999998,14.102,0
+python_function,<built-in function is_grad_enabled>,1649,488.5539999999983,17.578,0
+python_function,torch/nn/functional.py(2358): silu,20,469.88399999999996,48.175,0
+python_function,<built-in function set_eval_frame>,1320,461.30600000000004,18.369,0
+python_function,torch/_library/custom_ops.py(815): check,5940,457.3360000000286,35.286,0
+python_function,<built-in method add of set object at 0x737abe0d26c0>,2648,454.93699999999933,15.404,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::AUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, at::detail::Array<char*, 2> >(int, at::native::AUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, at::detail::Array<char*, 2>)",332,442.6229999999993,1.952,366576712
+python_function,omegaconf/dictconfig.py(341): __getattr__,2,440.128,283.113,0
+python_function,<built-in function silu>,20,417.5969999999999,38.631,0
+python_function,omegaconf/dictconfig.py(438): _get_impl,2,415.28999999999996,264.354,0
+python_function,nn.Module: SiLU_0,10,413.68700000000007,56.198,0
+python_function,<built-in method argmin of type object at 0x737fbe25e280>,16,411.98699999999997,41.535,0
+python_function,<built-in function next>,40,410.7099999999999,31.179,0
+cpu_op,aten::resolve_conj,1660,402.93599999999935,8.894,1833190204
+python_function,nn.Module: GELU_3,11,393.487,146.349,0
+python_function,torch/functional.py(210): einsum,10,386.835,44.289,0
+cuda_runtime,cudaPeekAtLastError,5300,382.4930000000096,2.503,5855270546
+python_function,<built-in function _has_torch_function_variadic>,999,379.0790000000001,17.057,0
+python_function,<built-in function _get_cudnn_enabled>,999,378.86100000000016,16.526,0
+python_function,<built-in method dim of Tensor object at 0x737abde395e0>,1030,356.6389999999994,14.532,0
+python_function,peft/peft_model.py(1002): __getattr__,70,355.647,54.516,0
+python_function,nn.Module: GELU_2,11,355.14399999999995,104.564,0
+cpu_op,aten::result_type,1010,352.2049999999987,7.982,1115150761
+cpu_op,aten::ones,14,349.432,37.468,15130661
+cpu_op,aten::silu,20,343.801,33.964,22083986
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<c10::Half>, at::detail::Array<char*, 1> >(int, at::native::FillFunctor<c10::Half>, at::detail::Array<char*, 1>)",330,342.29600000000016,1.28,364289355
+python_function,diffusers/models/modeling_utils.py(260): __getattr__,80,338.69399999999985,26.852,0
+cpu_op,aten::argmin,16,334.11400000000003,33.713,17419052
+kernel,"void (anonymous namespace)::softmax_warp_forward<float, float, float, 8, false, false>(float*, float const*, int, int, int, bool const*, int, bool)",150,332.3230000000003,2.848,184143855
+python_function,<built-in function iter>,1401,329.9129999999996,13.201,0
+kernel,"void (anonymous namespace)::softmax_warp_forward<float, float, float, 7, false, false>(float*, float const*, int, int, int, bool const*, int, bool)",150,323.73799999999994,2.304,153083190
+python_function,torch/_ops.py(696): _handle,660,312.83400000000006,153.07,0
+python_function,<built-in method __exit__ of torch._C.DisableTorchFunctionSubclass object at 0x737b2bfb4590>,1200,312.35400000000067,18.639,0
+python_function,nn.Module: GELU_11,11,298.63700000000006,44.299,0
+python_function,nn.Module: GELU_14,11,294.882,36.868,0
+python_function,<built-in method div of Tensor object at 0x737abde65d10>,10,293.16,42.507,0
+python_function,tqdm/std.py(1150): __str__,2,293.068,154.481,0
+python_function,nn.Module: GELU_29,11,292.737,46.522,0
+python_function,nn.Module: GELU_24,11,288.67100000000005,33.983,0
+kernel,sm90_xmma_gemm_bf16bf16_bf16f32_f32_tn_n_tilesize128x64x64_warpgroupsize1x1x1_execute_segment_k_off_kernel__5x_cublas,20,287.713,19.36,22084776
+python_function,nn.Module: GELU_13,11,287.651,36.077,0
+python_function,nn.Module: GELU_10,11,284.80600000000004,39.522,0
+python_function,<built-in method decode of bytes object at 0x5ae2813b03e0>,1316,284.3320000000004,13.791,0
+python_function,nn.Module: GELU_19,11,284.195,37.007,0
+python_function,<built-in function sqrt>,330,284.0640000000001,1.712,0
+python_function,nn.Module: GELU_28,11,283.675,36.347,0
+python_function,nn.Module: GELU_5,11,281.01,29.236,0
+python_function,<built-in method replace of str object at 0x737abe66da30>,330,280.971,15.835,0
+python_function,nn.Module: GELU_12,11,280.92,35.666,0
+python_function,nn.Module: GELU_1,11,278.968,34.464,0
+python_function,<built-in method update of dict object at 0x737b2bc43cc0>,331,278.32800000000026,14.483,0
+python_function,nn.Module: GELU_23,11,278.28400000000005,33.963,0
+python_function,nn.Module: GELU_17,11,277.675,31.139,0
+python_function,nn.Module: GELU_22,11,276.569,31.138,0
+python_function,nn.Module: GELU_21,11,275.83399999999995,32.311,0
+python_function,torch/autograd/function.py(592): _is_setup_context_defined,660,275.6020000000002,12.379,0
+python_function,<built-in method randn_like of type object at 0x737fbe25e280>,6,274.689,62.868,0
+python_function,nn.Module: GELU_18,11,274.688,32.21,0
+python_function,nn.Module: GELU_27,11,273.11800000000005,31.619,0
+python_function,nn.Module: GELU_26,11,271.92799999999994,29.586,0
+python_function,nn.Module: GELU_20,11,271.79499999999996,33.493,0
+python_function,nn.Module: GELU_6,11,269.71,28.395,0
+python_function,nn.Module: GELU_8,11,269.43100000000004,29.886,0
+python_function,nn.Module: GELU_9,11,268.711,27.804,0
+python_function,nn.Module: GELU_4,11,267.9,35.525,0
+python_function,nn.Module: GELU_15,11,267.26,28.875,0
+python_function,nn.Module: GELU_7,11,266.687,29.496,0
+python_function,nn.Module: GELU_25,11,266.26599999999996,31.088,0
+python_function,contextlib.py(132): __enter__,20,261.52,32.942,0
+python_function,nn.Module: GELU_16,11,261.159,29.487,0
+python_function,nn.Module: GELU_0,10,261.098,33.162,0
+python_function,<built-in function min>,330,250.79799999999994,2.434,0
+kernel,sm90_xmma_gemm_bf16bf16_bf16f32_f32_tn_n_tilesize64x64x64_warpgroupsize1x1x1_execute_segment_k_off_kernel__5x_cublas,20,249.54299999999998,17.312,22080752
+cpu_op,aten::randn_like,6,244.70299999999997,54.415,6379497
+python_function,tqdm/std.py(464): format_meter,2,239.624,128.861,0
+python_function,nn.Module: GELU_30,10,239.043,27.843,0
+python_function,<built-in method outer of type object at 0x737fbe25e280>,10,236.01000000000005,29.766,0
+python_function,torch/_tensor.py(33): wrapped,6,229.13,53.574,0
+python_function,<built-in method cos of type object at 0x737fbe25e280>,10,223.24200000000002,34.694,0
+cpu_op,aten::resolve_neg,1660,217.38300000000055,2.043,1833191864
+cpu_op,aten::div,10,215.50699999999998,24.879,11041683
+python_function,peft/peft_model.py(1011): _enable_peft_forward_hooks,10,214.636,30.608,0
+python_function,<built-in method einsum of type object at 0x737fbe25e280>,10,213.956,26.952,0
+python_function,<built-in method sin of type object at 0x737fbe25e280>,10,210.648,33.121,0
+python_function,torch/_tensor.py(1026): __rsub__,6,210.05899999999997,48.316,0
+python_function,omegaconf/basecontainer.py(64): _get_child,2,209.248,133.279,0
+cpu_op,aten::scalar_tensor,10,208.68699999999998,34.033,11041733
+python_function,contextlib.py(141): __exit__,20,205.92099999999996,26.421,0
+python_function,torch/nn/modules/linear.py(46): forward,2638,204.95600000000218,16.526,0
+cpu_op,aten::neg,10,195.536,30.448,11041693
+python_function,nn.Module: SiLU_1,10,191.268,21.103,0
+python_function,pipeline/causal_inference.py(19): avg_pool,6,190.69000000000003,62.889,0
+python_function,<built-in method rsub of type object at 0x737fbe25e280>,6,189.747,39.702,0
+cpu_op,aten::outer,10,189.657,23.487,11041783
+cpu_op,aten::cos,10,185.311,30.688,11041823
+kernel,sm90_xmma_fprop_implicit_gemm_bf16bf16_bf16f32_f32_nhwckrsc_nhwc_tilesize128x64x64_warpgroupsize1x1x1_g1_execute_segment_k_off_kernel__5x_cudnn,10,182.176,18.336,11041033
+cpu_op,aten::sin,10,178.841,29.776,11041833
+python_function,omegaconf/basecontainer.py(86): _resolve_with_default,2,172.5,104.103,0
+python_function,<built-in method __instancecheck__ of _ParameterMeta object at 0x5ae2c32143e0>,1916,170.5280000000013,12.99,0
+python_function,peft/tuners/tuners_utils.py(1398): __getattr__,30,165.62600000000003,29.186,0
+python_function,omegaconf/dictconfig.py(455): _get_node,2,162.675,106.366,0
+python_function,tqdm/_monitor.py(47): get_instances,2,156.073,138.967,0
+cuda_driver,cuLaunchKernel,20,152.53,12.74,22083966
+cpu_op,aten::rsub,6,148.684,31.129,6379701
+python_function,utils/draftmap_retrieval.py(25): __init__,330,140.27899999999994,4.317,0
+kernel,"void at::native::reduce_kernel<512, 1, at::native::ReduceOp<c10::BFloat16, at::native::MeanOps<c10::BFloat16, float, float, c10::BFloat16>, unsigned int, c10::BFloat16, 4> >(at::native::ReduceOp<c10::BFloat16, at::native::MeanOps<c10::BFloat16, float, float, c10::BFloat16>, unsigned int, c10::BFloat16, 4>)",6,140.224,23.872,6867909
+cpu_op,aten::einsum,10,134.70000000000002,15.404,11038779
+python_function,torch/_utils_internal.py(271): justknobs_check,1320,130.75700000000003,16.315,0
+cpu_op,aten::normal_,6,128.312,30.087,6379521
+python_function,tqdm/std.py(1441): moveto,4,119.998,58.601,0
+cpu_op,aten::add_,10,119.85800000000002,14.433,11041063
+python_function,<built-in method max of Tensor object at 0x737abde65c20>,10,119.06899999999999,17.928,0
+kernel,"void cudnn::engines_precompiled::nhwcToNchwKernel<__nv_bfloat16, __nv_bfloat16, float, true, false, (cudnnKernelDataType_t)0>(cudnn::engines_precompiled::nhwc2nchw_params_t<float>, __nv_bfloat16 const*, __nv_bfloat16*)",10,117.856,12.033,11041033
+python_function,_weakrefset.py(95): copy,2,110.984,99.976,0
+python_function,torch/_jit_internal.py(103): is_scripting,1200,109.57600000000022,5.959,0
+python_function,contextlib.py(299): helper,20,107.56600000000002,18.879,0
+python_function,torch/jit/__init__.py(128): annotate,1199,103.56499999999947,13.661,0
+python_function,<built-in method ones_like of type object at 0x737fbe25e280>,2,102.21000000000001,58.101,0
+kernel,"void at::native::(anonymous namespace)::CatArrayBatchedCopy_contig<at::native::(anonymous namespace)::OpaqueType<2u>, unsigned int, 2, 128, 1>(at::native::(anonymous namespace)::OpaqueType<2u>*, at::native::(anonymous namespace)::CatArrInputTensorMetadata<at::native::(anonymous namespace)::OpaqueType<2u>, unsigned int, 128, 1>, at::native::(anonymous namespace)::TensorSizeStride<unsigned int, 4u>, int, unsigned int)",10,101.82600000000001,11.392,11042213
+python_function,tqdm/std.py(457): print_status,2,99.607,54.736,0
+python_function,peft/peft_model.py(1017): _enable_peft_forward_hooks,10,96.674,19.951,0
+python_function,nn.Module: Identity_83,11,95.09800000000001,39.873,0
+python_function,_weakrefset.py(37): __init__,2,90.821,80.455,0
+python_function,torch/utils/_pytree.py(896): tree_iter,1200,90.39699999999961,5.719,0
+cpu_op,aten::le,10,87.495,12.95,11041303
+cpu_op,aten::max,10,84.872,10.176,11041263
+cpu_op,aten::ones_like,2,83.842,52.483,2289327
+python_function,tqdm/utils.py(194): inner,12,83.168,30.878,0
+python_function,nn.Module: Identity_234,11,82.22900000000001,23.347,0
+python_function,nn.Module: Identity_257,11,80.296,30.698,0
+python_function,peft/peft_model.py(1099): get_base_model,10,77.18,12.62,0
+python_function,tqdm/utils.py(378): disp_len,2,76.992,42.337,0
+python_function,nn.Module: Identity_163,11,76.892,18.439,0
+python_function,nn.Module: Identity_173,11,76.49800000000002,13.611,0
+python_function,nn.Module: Identity_223,11,74.82700000000001,10.697,0
+python_function,nn.Module: Identity_23,11,74.778,13.482,0
+python_function,omegaconf/dictconfig.py(274): _validate_and_normalize_key,2,74.24600000000001,49.307,0
+python_function,peft/peft_model.py(207): has_active_enabled_adapter,10,73.235,12.7,0
+python_function,<built-in method write of _io.TextIOWrapper object at 0x737fbfb159a0>,6,72.856,30.358,0
+python_function,<built-in function hasattr>,105,72.76799999999996,4.817,0
+python_function,nn.Module: Identity_207,11,72.634,23.908,0
+python_function,nn.Module: Identity_253,11,72.58299999999998,11.347,0
+python_function,_weakrefset.py(120): update,2,71.261,62.257,0
+python_function,nn.Module: Identity_263,11,70.9,12.53,0
+python_function,nn.Module: Identity_157,11,70.879,21.764,0
+python_function,nn.Module: Identity_293,11,70.752,12.72,0
+python_function,omegaconf/dictconfig.py(149): _validate_get,2,69.749,45.141,0
+python_function,nn.Module: Identity_110,11,69.217,21.504,0
+python_function,nn.Module: Identity_283,11,68.33800000000001,8.523,0
+python_function,nn.Module: Identity_244,11,67.927,12.67,0
+python_function,nn.Module: Identity_3,11,67.533,8.544,0
+python_function,nn.Module: Identity_213,11,67.477,8.543,0
+python_function,nn.Module: Identity_43,11,67.456,11.398,0
+python_function,nn.Module: Identity_133,11,67.397,8.243,0
+python_function,nn.Module: Identity_58,11,67.03600000000002,22.996,0
+python_function,nn.Module: Identity_128,11,66.925,18.449,0
+python_function,nn.Module: Identity_237,11,66.81400000000001,11.929,0
+python_function,nn.Module: Identity_233,11,66.49300000000001,7.491,0
+python_function,nn.Module: Identity_93,11,66.232,7.301,0
+python_function,nn.Module: Identity_273,11,66.173,7.622,0
+kernel,void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_64x64_32x6_tn_align8>(cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_64x64_32x6_tn_align8::Params),10,66.113,7.36,11042013
+python_function,nn.Module: Identity_59,11,66.103,18.519,0
+python_function,nn.Module: Identity_53,11,65.71300000000001,8.493,0
+python_function,nn.Module: Identity_183,11,65.592,11.018,0
+kernel,"void cudnn::engines_precompiled::nchwToNhwcKernel<__nv_bfloat16, __nv_bfloat16, float, false, true, (cudnnKernelDataType_t)0>(cudnn::engines_precompiled::nchw2nhwc_params_t<float>, __nv_bfloat16 const*, __nv_bfloat16*)",20,65.346,4.608,22082066
+python_function,nn.Module: Identity_193,11,65.02,7.742,0
+python_function,nn.Module: Identity_243,11,64.943,11.207,0
+python_function,contextlib.py(104): __init__,20,64.761,9.915,0
+python_function,nn.Module: Identity_153,11,64.71400000000001,8.654,0
+python_function,nn.Module: Identity_33,11,64.681,7.302,0
+python_function,tqdm/utils.py(374): _text_width,2,64.581,35.897,0
+python_function,nn.Module: Identity_63,11,64.49100000000001,9.425,0
+python_function,nn.Module: Identity_13,11,64.431,8.273,0
+python_function,nn.Module: Identity_113,11,63.961999999999996,7.702,0
+python_function,nn.Module: Identity_247,11,63.67099999999999,12.61,0
+python_function,nn.Module: Identity_238,11,63.50899999999999,11.678,0
+python_function,nn.Module: Identity_73,11,63.49,7.752,0
+python_function,nn.Module: Identity_229,11,63.227999999999994,13.451,0
+python_function,nn.Module: Identity_203,11,63.188,6.44,0
+python_function,nn.Module: Identity_107,11,62.546,13.04,0
+python_function,nn.Module: Identity_123,11,62.41799999999999,6.47,0
+python_function,nn.Module: Identity_240,11,62.126,7.742,0
+python_function,nn.Module: Identity_8,11,61.748,10.176,0
+python_function,nn.Module: Identity_103,11,61.745999999999995,6.931,0
+python_function,nn.Module: Identity_250,11,61.65500000000001,10.055,0
+python_function,nn.Module: Identity_284,11,61.638000000000005,12.75,0
+python_function,nn.Module: Identity_31,11,61.42599999999999,17.537,0
+python_function,nn.Module: Identity_47,11,61.419,11.198,0
+python_function,nn.Module: Identity_271,11,61.046,11.898,0
+python_function,nn.Module: Identity_143,11,60.903000000000006,6.48,0
+python_function,nn.Module: Identity_227,11,60.705,6.921,0
+python_function,nn.Module: Identity_72,11,60.67300000000001,18.429,0
+python_function,nn.Module: Identity_141,11,60.403000000000006,15.884,0
+python_function,nn.Module: Identity_14,11,60.053,7.482,0
+python_function,nn.Module: Identity_192,11,59.91299999999999,12.26,0
+python_function,<built-in method extend of list object at 0x737b2bbcfc00>,180,59.893000000000036,4.287,0
+python_function,nn.Module: Identity_0,11,59.72500000000001,8.022,0
+python_function,nn.Module: Identity_221,11,59.513000000000005,10.677,0
+python_function,nn.Module: Identity_298,10,59.283,15.043,0
+python_function,omegaconf/_utils.py(508): _is_missing_value,4,59.263000000000005,28.895,0
+python_function,nn.Module: Identity_7,11,58.972,7.591,0
+python_function,nn.Module: Identity_287,11,58.853,9.004,0
+python_function,nn.Module: Identity_82,11,58.76,11.207,0
+python_function,nn.Module: Identity_288,11,58.711,14.873,0
+python_function,nn.Module: Identity_84,11,58.34100000000001,10.727,0
+python_function,nn.Module: Identity_198,11,58.128,12.279,0
+python_function,nn.Module: Identity_248,11,57.958999999999996,7.742,0
+python_function,nn.Module: Identity_197,11,57.739000000000004,6.53,0
+python_function,nn.Module: Identity_190,11,57.619,6.681,0
+python_function,nn.Module: Identity_67,11,57.529999999999994,11.148,0
+python_function,nn.Module: Identity_204,11,57.48,7.922,0
+python_function,omegaconf/_utils.py(746): _get_value,2,57.16,35.306,0
+python_function,nn.Module: Identity_38,11,56.82899999999999,10.687,0
+python_function,nn.Module: Identity_214,11,56.78999999999999,7.662,0
+python_function,nn.Module: Identity_224,11,56.66799999999999,6.52,0
+python_function,nn.Module: Identity_230,11,56.168,7.773,0
+kernel,"void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1})",12,56.162000000000006,5.249,12759432
+python_function,nn.Module: Identity_150,11,56.128,6.54,0
+python_function,nn.Module: Identity_260,11,55.827999999999996,7.722,0
+python_function,nn.Module: Identity_278,11,55.595000000000006,11.257,0
+python_function,nn.Module: Identity_208,11,55.529,8.033,0
+python_function,nn.Module: Identity_117,11,55.437,6.3,0
+python_function,nn.Module: Identity_134,11,55.396,6.219,0
+python_function,nn.Module: Identity_127,11,55.348000000000006,6.75,0
+python_function,nn.Module: Identity_4,11,55.305,7.051,0
+python_function,nn.Module: Identity_217,11,55.288000000000004,6.54,0
+python_function,nn.Module: Identity_147,11,55.24599999999999,7.401,0
+python_function,nn.Module: Identity_188,11,55.228,6.23,0
+python_function,nn.Module: Identity_97,11,55.114999999999995,6.29,0
+python_function,nn.Module: Identity_10,11,55.077,6.37,0
+python_function,nn.Module: Identity_20,11,55.025999999999996,6.71,0
+python_function,nn.Module: Identity_220,11,54.96400000000001,7.632,0
+python_function,nn.Module: Identity_187,11,54.73500000000001,6.48,0
+python_function,nn.Module: Identity_277,11,54.705,6.45,0
+python_function,nn.Module: Identity_114,11,54.684999999999995,6.66,0
+python_function,nn.Module: Identity_17,11,54.683,5.819,0
+python_function,nn.Module: Identity_30,11,54.636,7.602,0
+python_function,nn.Module: Identity_77,11,54.62500000000001,6.51,0
+python_function,nn.Module: Identity_228,11,54.55499999999999,6.17,0
+python_function,nn.Module: Identity_57,11,54.525000000000006,6.43,0
+python_function,nn.Module: Identity_184,11,54.464,6.901,0
+python_function,nn.Module: Identity_222,11,54.46300000000001,6.32,0
+python_function,nn.Module: Identity_200,11,54.334,7.481,0
+python_function,nn.Module: Identity_144,11,54.21399999999999,7.132,0
+python_function,nn.Module: Identity_174,11,54.145,6.27,0
+python_function,nn.Module: Identity_177,11,54.09499999999999,5.168,0
+python_function,nn.Module: Identity_124,11,54.073,6.19,0
+python_function,nn.Module: Identity_130,11,54.055,6.36,0
+python_function,nn.Module: Identity_94,11,53.994,6.36,0
+python_function,nn.Module: Identity_54,11,53.934000000000005,5.96,0
+python_function,nn.Module: Identity_164,11,53.63199999999999,6.59,0
+python_function,nn.Module: Identity_34,11,53.613,5.439,0
+python_function,nn.Module: Identity_242,11,53.564,7.091,0
+python_function,nn.Module: Identity_194,11,53.544,6.511,0
+python_function,nn.Module: Identity_102,11,53.503,6.921,0
+python_function,nn.Module: Identity_297,11,53.442,5.528,0
+python_function,nn.Module: Identity_137,11,53.36399999999999,5.328,0
+python_function,nn.Module: Identity_27,11,53.30299999999999,5.459,0
+python_function,nn.Module: Identity_158,11,53.28300000000001,7.331,0
+python_function,nn.Module: Identity_18,11,53.281,6.33,0
+python_function,nn.Module: Identity_87,11,53.175000000000004,5.879,0
+python_function,nn.Module: Identity_154,11,53.173,5.859,0
+python_function,nn.Module: Identity_210,11,53.117,5.309,0
+python_function,nn.Module: Identity_180,11,53.102000000000004,5.659,0
+python_function,nn.Module: Identity_50,11,53.07299999999999,5.249,0
+python_function,nn.Module: Identity_24,11,53.013999999999996,5.359,0
+python_function,nn.Module: Identity_251,11,52.934999999999995,6.15,0
+python_function,nn.Module: Identity_254,11,52.901,6.3,0
+python_function,nn.Module: Identity_241,11,52.854000000000006,7.181,0
+python_function,nn.Module: Identity_191,11,52.835,7.742,0
+python_function,nn.Module: Identity_60,11,52.70099999999999,5.208,0
+python_function,nn.Module: Identity_140,11,52.683,5.288,0
+python_function,nn.Module: Identity_199,11,52.653000000000006,10.566,0
+python_function,nn.Module: Identity_152,11,52.653,6.49,0
+python_function,nn.Module: Identity_274,11,52.452,5.178,0
+python_function,nn.Module: Identity_44,11,52.431,5.128,0
+python_function,nn.Module: Identity_171,11,52.401,7.351,0
+python_function,nn.Module: Identity_37,11,52.38299999999999,5.519,0
+python_function,nn.Module: Identity_70,11,52.353,6.04,0
+python_function,nn.Module: Identity_181,11,52.314,7.201,0
+python_function,nn.Module: Identity_160,11,52.101000000000006,6.51,0
+python_function,nn.Module: Identity_267,11,52.09199999999999,5.098,0
+python_function,nn.Module: Identity_104,11,52.053000000000004,5.158,0
+python_function,nn.Module: Identity_168,11,52.031000000000006,5.919,0
+python_function,nn.Module: Identity_218,11,51.93000000000001,5.448,0
+python_function,nn.Module: Identity_270,11,51.910999999999994,5.429,0
+python_function,nn.Module: Identity_118,11,51.871,5.98,0
+python_function,nn.Module: Identity_167,11,51.842000000000006,5.068,0
+python_function,nn.Module: Identity_280,11,51.83,5.859,0
+python_function,nn.Module: Identity_100,11,51.802,5.319,0
+python_function,nn.Module: Identity_112,11,51.799,6.309,0
+python_function,nn.Module: Identity_80,11,51.734,5.569,0
+python_function,nn.Module: Identity_290,11,51.690999999999995,5.259,0
+python_function,nn.Module: Identity_201,11,51.632,7.602,0
+python_function,nn.Module: Identity_182,11,51.620000000000005,7.111,0
+python_function,nn.Module: Identity_239,11,51.57000000000001,5.638,0
+python_function,nn.Module: Identity_231,11,51.558,7.542,0
+python_function,nn.Module: Identity_170,11,51.49999999999999,4.968,0
+python_function,nn.Module: Identity_74,11,51.391000000000005,5.068,0
+python_function,nn.Module: Identity_232,11,51.33100000000001,6.129,0
+python_function,nn.Module: Identity_294,11,51.309000000000005,4.948,0
+python_function,nn.Module: Identity_122,11,51.302,6.37,0
+python_function,nn.Module: Identity_148,11,51.221,6.43,0
+python_function,nn.Module: Identity_32,11,51.16899999999999,5.729,0
+python_function,nn.Module: Identity_120,11,51.131,5.198,0
+python_function,nn.Module: Identity_40,11,51.10199999999999,4.918,0
+python_function,nn.Module: Identity_258,11,51.099000000000004,4.948,0
+python_function,nn.Module: Identity_78,11,50.968999999999994,5.91,0
+python_function,nn.Module: Identity_178,11,50.69800000000001,5.399,0
+python_function,nn.Module: Identity_108,11,50.57,5.068,0
+python_function,nn.Module: Identity_64,11,50.541000000000004,4.847,0
+python_function,nn.Module: Identity_90,11,50.540000000000006,5.559,0
+python_function,nn.Module: Identity_264,11,50.471999999999994,4.778,0
+python_function,nn.Module: Identity_252,11,50.47,5.879,0
+python_function,nn.Module: Identity_98,11,50.259,5.518,0
+python_function,nn.Module: Identity_1,11,50.218,5.648,0
+python_function,nn.Module: Identity_48,11,50.136,4.787,0
+python_function,nn.Module: Identity_69,11,50.116,7.141,0
+python_function,nn.Module: Identity_142,11,50.088,7.442,0
+python_function,nn.Module: Identity_138,11,50.059,6.06,0
+python_function,nn.Module: Identity_99,11,49.989000000000004,5.448,0
+kernel,"void (anonymous namespace)::softmax_warp_forward<float, float, float, 5, false, false>(float*, float const*, int, int, int, bool const*, int, bool)",30,49.91900000000001,1.92,27060990
+python_function,nn.Module: Identity_161,11,49.876999999999995,6.44,0
+python_function,nn.Module: Identity_92,11,49.738,5.709,0
+python_function,nn.Module: Identity_11,11,49.657,4.997,0
+python_function,nn.Module: Identity_261,11,49.565,5.959,0
+python_function,nn.Module: Identity_91,11,49.544999999999995,5.619,0
+python_function,nn.Module: Identity_268,11,49.467000000000006,5.809,0
+python_function,nn.Module: Identity_28,11,49.409,4.848,0
+python_function,nn.Module: Identity_259,11,49.387,7.923,0
+python_function,nn.Module: Identity_79,11,49.284000000000006,6.971,0
+python_function,nn.Module: Identity_62,11,49.276999999999994,6.08,0
+python_function,nn.Module: Identity_211,11,49.24699999999999,6.229,0
+python_function,nn.Module: Identity_81,11,49.236999999999995,5.238,0
+python_function,nn.Module: Identity_41,11,49.168,4.867,0
+python_function,nn.Module: Identity_68,11,49.116,4.767,0
+python_function,nn.Module: Identity_22,11,48.995000000000005,6.4,0
+python_function,nn.Module: Identity_101,11,48.885,5.649,0
+python_function,nn.Module: Identity_121,11,48.697,5.679,0
+python_function,nn.Module: Identity_88,11,48.657000000000004,4.778,0
+python_function,nn.Module: Identity_281,11,48.656,4.727,0
+python_function,nn.Module: Identity_131,11,48.637,4.988,0
+python_function,nn.Module: Identity_61,11,48.586000000000006,5.94,0
+python_function,nn.Module: Identity_39,11,48.574000000000005,5.619,0
+python_function,nn.Module: Identity_269,11,48.549,6.04,0
+python_function,nn.Module: Identity_21,11,48.434999999999995,5.438,0
+python_function,nn.Module: Identity_292,11,48.416000000000004,5.659,0
+python_function,nn.Module: Identity_71,11,48.337,5.809,0
+python_function,nn.Module: Identity_151,11,48.303999999999995,4.827,0
+python_function,nn.Module: Identity_169,11,48.303,6.61,0
+python_function,nn.Module: Identity_189,11,48.24700000000001,5.529,0
+python_function,nn.Module: Identity_119,11,48.197,5.909,0
+python_function,nn.Module: Identity_172,11,48.165,5.699,0
+python_function,nn.Module: Identity_12,11,48.15300000000001,4.977,0
+python_function,nn.Module: Identity_111,11,48.127,5.469,0
+python_function,nn.Module: Identity_262,11,48.09600000000001,4.978,0
+python_function,nn.Module: Identity_51,11,48.064,5.138,0
+python_function,nn.Module: Identity_2,11,48.02600000000001,4.737,0
+python_function,nn.Module: Identity_149,11,48.026,6.13,0
+python_function,nn.Module: Identity_272,11,47.94499999999999,4.657,0
+python_function,nn.Module: Identity_212,11,47.854000000000006,5.679,0
+python_function,nn.Module: Identity_291,11,47.806000000000004,4.627,0
+python_function,nn.Module: Identity_49,11,47.735,5.108,0
+python_function,nn.Module: Identity_89,11,47.514,6.17,0
+python_function,nn.Module: Identity_132,11,47.44499999999999,5.299,0
+python_function,nn.Module: Identity_19,11,47.443999999999996,5.008,0
+python_function,nn.Module: Identity_289,11,47.393,4.758,0
+python_function,nn.Module: Identity_162,11,47.254,4.927,0
+python_function,nn.Module: Identity_209,11,47.112,4.587,0
+kernel,"void at::native::reduce_kernel<512, 1, at::native::ReduceOp<double, at::native::ArgMinOps<double>, unsigned int, long, 4> >(at::native::ReduceOp<double, at::native::ArgMinOps<double>, unsigned int, long, 4>)",10,47.073,4.993,11039399
+python_function,nn.Module: Identity_219,11,46.892,4.707,0
+python_function,nn.Module: Identity_109,11,46.888,5.379,0
+python_function,nn.Module: Identity_159,11,46.812000000000005,4.707,0
+python_function,nn.Module: Identity_129,11,46.676,4.768,0
+python_function,nn.Module: Identity_279,11,46.663,4.537,0
+python_function,nn.Module: Identity_139,11,46.61400000000001,4.567,0
+python_function,nn.Module: Identity_179,11,46.593,4.968,0
+python_function,nn.Module: Identity_202,11,46.532,5.529,0
+python_function,nn.Module: Identity_9,11,46.501999999999995,4.797,0
+python_function,nn.Module: Identity_42,11,46.251000000000005,4.537,0
+python_function,nn.Module: Identity_249,11,46.233,4.577,0
+python_function,nn.Module: Identity_29,11,46.17300000000001,4.527,0
+python_function,nn.Module: Identity_52,11,46.07200000000001,4.888,0
+kernel,void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_32x32_128x2_tn_align8>(cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_32x32_128x2_tn_align8::Params),10,45.601000000000006,4.928,11041953
+python_function,nn.Module: Identity_299,10,45.468999999999994,5.919,0
+python_function,nn.Module: Identity_282,11,45.290000000000006,4.447,0
+kernel,"void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<double, double, double, at::native::binary_internal::MulFunctor<double> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<double, double, double, at::native::binary_internal::MulFunctor<double> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<double, double, double, at::native::binary_internal::MulFunctor<double> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<double, double, double, at::native::binary_internal::MulFunctor<double> > const&)::{lambda(int)#1})",20,44.15500000000001,3.04,22081292
+cpu_op,aten::expand_as,10,44.109,5.949,11041643
+python_function,torch/_tensor.py(1083): __len__,8,42.717,7.421,0
+python_function,torch/nn/modules/container.py(354): __iter__,20,42.668,8.163,0
+python_function,tqdm/utils.py(375): <genexpr>,132,40.773000000000025,5.598,0
+cuda_runtime,cudaEventRecord,10,38.751999999999995,4.336,11041033
+python_function,peft/peft_model.py(182): peft_config,20,38.27,4.106,0
+python_function,omegaconf/base.py(706): _maybe_resolve_interpolation,2,37.429,21.574,0
+python_function,<built-in method setdefault of dict object at 0x737e49850c40>,180,36.772000000000006,0.611,0
+kernel,"void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl<at::native::(anonymous namespace)::pow_tensor_tensor_kernel(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#6}::operator()() const::{lambda(double, double)#1}>(at::TensorIteratorBase&, at::native::(anonymous namespace)::pow_tensor_tensor_kernel(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#6}::operator()() const::{lambda(double, double)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl<at::native::(anonymous namespace)::pow_tensor_tensor_kernel(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#6}::operator()() const::{lambda(double, double)#1}>(at::TensorIteratorBase&, at::native::(anonymous namespace)::pow_tensor_tensor_kernel(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#6}::operator()() const::{lambda(double, double)#1} const&)::{lambda(int)#1})",10,35.04,3.648,11041773
+python_function,tqdm/std.py(1446): format_dict,2,34.044,17.027,0
+cpu_op,aten::is_nonzero,10,33.693,4.356,11041313
+python_function,tqdm/std.py(102): acquire,3,33.632999999999996,11.558,0
+python_function,omegaconf/dictconfig.py(144): _is_typed,2,33.062,19.661,0
+kernel,"void at::native::(anonymous namespace)::distribution_elementwise_grid_stride_kernel<float, 4, at::native::templates::cuda::normal_and_transform<c10::BFloat16, float, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1}>(at::TensorIteratorBase&, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1})::{lambda(curandStatePhilox4_32_10*)#2}, at::native::(anonymous namespace)::distribution_nullary_kernel<c10::BFloat16, float, float4, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_and_transform<c10::BFloat16, float, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1}>(at::TensorIteratorBase&, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1})::{lambda(curandStatePhilox4_32_10*)#2}, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1}>(at::TensorIteratorBase&, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_and_transform<c10::BFloat16, float, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1}>(at::TensorIteratorBase&, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1})::{lambda(curandStatePhilox4_32_10*)#2} const&, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1})::{lambda(int, float)#1}>(int, at::PhiloxCudaState, at::native::templates::cuda::normal_and_transform<c10::BFloat16, float, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1}>(at::TensorIteratorBase&, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1})::{lambda(curandStatePhilox4_32_10*)#2}, at::native::(anonymous namespace)::distribution_nullary_kernel<c10::BFloat16, float, float4, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_and_transform<c10::BFloat16, float, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1}>(at::TensorIteratorBase&, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1})::{lambda(curandStatePhilox4_32_10*)#2}, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1}>(at::TensorIteratorBase&, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_and_transform<c10::BFloat16, float, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1}>(at::TensorIteratorBase&, at::CUDAGeneratorImpl*, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1})::{lambda(curandStatePhilox4_32_10*)#2} const&, at::native::templates::cuda::normal_kernel<at::CUDAGeneratorImpl*>(at::TensorBase const&, double, double, at::CUDAGeneratorImpl*)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(float)#1})::{lambda(int, float)#1})",6,31.680000000000003,5.44,6379521
+kernel,"void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl<at::native::CUDAFunctor_add<double> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<double> const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl<at::native::CUDAFunctor_add<double> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<double> const&)::{lambda(int)#1})",10,31.392999999999997,3.457,11039299
+kernel,"void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<double> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<double> const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<double> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<double> const&)::{lambda(int)#1})",10,29.663999999999998,3.039,11039489
+python_function,<frozen abc>(117): __instancecheck__,12,29.607,13.891,0
+python_function,<built-in method format of str object at 0x737fbf124db0>,4,28.474999999999998,7.522,0
+python_function,omegaconf/dictconfig.py(277): _s_validate_and_normalize_key,2,28.415,16.646,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::silu_kernel(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#6}::operator()() const::{lambda(c10::BFloat16)#1}, at::detail::Array<char*, 2> >(int, at::native::(anonymous namespace)::silu_kernel(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#6}::operator()() const::{lambda(c10::BFloat16)#1}, at::detail::Array<char*, 2>)",20,27.550000000000008,1.568,22083986
+kernel,"void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::ArgMinOps<float>, unsigned int, long, 4> >(at::native::ReduceOp<float, at::native::ArgMinOps<float>, unsigned int, long, 4>)",6,27.52,4.832,6379653
+python_function,_weakrefset.py(63): __iter__,4,24.528,18.599,0
+python_function,_weakrefset.py(70): __iter__,8,24.357,16.445,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::cos_kernel_cuda(at::TensorIteratorBase&)::{lambda()#2}::operator()() const::{lambda()#1}::operator()() const::{lambda(double)#1}, at::detail::Array<char*, 2> >(int, at::native::cos_kernel_cuda(at::TensorIteratorBase&)::{lambda()#2}::operator()() const::{lambda()#1}::operator()() const::{lambda(double)#1}, at::detail::Array<char*, 2>)",10,24.030999999999995,2.496,11041823
+python_function,omegaconf/_utils.py(541): get_value_kind,2,23.927999999999997,11.979,0
+python_function,peft/peft_model.py(1640): active_peft_config,10,23.708000000000002,3.776,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::sin_kernel_cuda(at::TensorIteratorBase&)::{lambda()#2}::operator()() const::{lambda()#1}::operator()() const::{lambda(double)#1}, at::detail::Array<char*, 2> >(int, at::native::sin_kernel_cuda(at::TensorIteratorBase&)::{lambda()#2}::operator()() const::{lambda()#1}::operator()() const::{lambda(double)#1}, at::detail::Array<char*, 2>)",10,23.198999999999998,2.656,11041833
+python_function,<built-in function _abc_instancecheck>,12,23.037,10.697,0
+python_function,<built-in method now of type object at 0x737fbed64b80>,2,21.514000000000003,12.72,0
+python_function,contextlib.py(772): __init__,119,20.512,0.52,0
+python_function,_weakrefset.py(27): __exit__,4,19.400999999999996,14.523,0
+python_function,tqdm/std.py(231): __call__,12,19.348000000000003,4.607,0
+kernel,"void cublasLt::splitKreduce_kernel<32, 16, int, __nv_bfloat16, __nv_bfloat16, float, __nv_bfloat16, true, true, false>(cublasLt::cublasSplitKParams<float>, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, void*, long, float*, int*)",10,19.073,1.984,11042013
+kernel,"void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&)::{lambda(int)#1})",10,18.430999999999997,1.92,11039419
+kernel,"void at::native::unrolled_elementwise_kernel<at::native::AUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::AUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",14,18.080000000000005,2.176,15130717
+python_function,_weakrefset.py(85): add,4,17.879,12.31,0
+cuda_runtime,cudaStreamIsCapturing,22,17.628,1.543,23800075
+python_function,tqdm/std.py(110): __enter__,1,17.247,17.247,0
+python_function,tqdm/std.py(400): format_interval,4,16.806,7.772,0
+python_function,omegaconf/_utils.py(676): is_dict,2,15.814,9.785,0
+python_function,contextlib.py(775): __enter__,119,15.307999999999987,0.33,0
+python_function,<built-in function east_asian_width>,130,15.146999999999988,4.718,0
+python_function,threading.py(311): _acquire_restore,1,14.693,14.693,0
+python_function,contextlib.py(778): __exit__,120,13.445000000000004,0.31,0
+python_function,tqdm/std.py(451): fp_write,2,13.370000000000001,6.75,0
+python_function,<frozen importlib._bootstrap>(1390): _handle_fromlist,6,12.579,5.769,0
+kernel,"void at::native::(anonymous namespace)::CatArrayBatchedCopy_aligned16_contig<at::native::(anonymous namespace)::OpaqueType<8u>, unsigned int, 2, 128, 1>(at::native::(anonymous namespace)::OpaqueType<8u>*, at::native::(anonymous namespace)::CatArrInputTensorMetadata<at::native::(anonymous namespace)::OpaqueType<8u>, unsigned int, 128, 1>, at::native::(anonymous namespace)::TensorSizeStride<unsigned int, 4u>, int, unsigned int)",10,12.447999999999999,1.504,11041843
+python_function,tqdm/utils.py(273): _is_ascii,4,12.189,3.666,0
+python_function,tqdm/std.py(153): __init__,2,11.547999999999998,5.919,0
+python_function,omegaconf/base.py(189): _get_flag,2,11.489,6.941,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, at::detail::Array<char*, 3> >(int, at::native::CUDAFunctor_add<float>, at::detail::Array<char*, 3>)",6,11.104,2.016,6379725
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<double, double, double, at::native::binary_internal::MulFunctor<double> >, at::detail::Array<char*, 2> >(int, at::native::BUnaryFunctor<double, double, double, at::native::binary_internal::MulFunctor<double> >, at::detail::Array<char*, 2>)",10,11.04,1.248,11041683
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::AbsFunctor<double>, at::detail::Array<char*, 2> >(int, at::native::AbsFunctor<double>, at::detail::Array<char*, 2>)",10,10.943999999999999,1.184,11039339
+python_function,tqdm/std.py(106): release,3,10.637,4.327,0
+python_function,<built-in method acquire of _thread.RLock object at 0x737e5cd92c00>,3,10.447,7.612,0
+kernel,"void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<float> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<float> const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<float> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<float> const&)::{lambda(int)#1})",6,10.272,2.08,6379593
+python_function,_weakrefset.py(53): _commit_removals,4,10.217000000000002,8.083,0
+kernel,"void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&)::{lambda(int)#1})",6,10.208,1.984,6379665
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::neg_kernel_cuda(at::TensorIteratorBase&)::{lambda()#2}::operator()() const::{lambda()#6}::operator()() const::{lambda(double)#1}, at::detail::Array<char*, 2> >(int, at::native::neg_kernel_cuda(at::TensorIteratorBase&)::{lambda()#2}::operator()() const::{lambda()#6}::operator()() const::{lambda(double)#1}, at::detail::Array<char*, 2>)",10,10.081,1.216,11041693
+cuda_runtime,cudaStreamGetPriority,10,9.692,1.071,11041033
+python_function,<frozen importlib._bootstrap>(645): parent,4,9.415000000000001,5.609,0
+python_function,tqdm/utils.py(370): _term_move_up,4,9.123999999999999,4.948,0
+python_function,peft/tuners/lora/model.py(444): _enable_peft_forward_hooks,10,8.892,0.971,0
+python_function,tqdm/std.py(186): __format__,2,8.764,4.387,0
+python_function,tqdm/std.py(1157): __hash__,4,8.734,6.671,0
+python_function,tqdm/std.py(760): get_lock,1,8.703,8.703,0
+cuda_runtime,cudaDeviceGetStreamPriorityRange,10,8.081,0.931,11041033
+python_function,omegaconf/_utils.py(625): is_primitive_dict,2,7.821,4.877,0
+python_function,omegaconf/_utils.py(567): _is_interpolation,2,7.220000000000001,3.645,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnOther_add<float>, at::detail::Array<char*, 2> >(int, at::native::CUDAFunctorOnOther_add<float>, at::detail::Array<char*, 2>)",6,7.106,1.377,6379707
+python_function,<built-in method acquire of _multiprocessing.SemLock object at 0x737b502a6de0>,3,7.031000000000001,4.597,0
+python_function,_weakrefset.py(21): __enter__,4,6.961,5.308,0
+python_function,tqdm/std.py(113): __exit__,1,6.85,6.85,0
+kernel,"void at::native::vectorized_elementwise_kernel<4, at::native::AbsFunctor<float>, at::detail::Array<char*, 2> >(int, at::native::AbsFunctor<float>, at::detail::Array<char*, 2>)",6,6.337,1.057,6379617
+python_function,<built-in method sub of re.Pattern object at 0x737e0944b230>,2,6.308999999999999,3.545,0
+python_function,<built-in method flush of _io.TextIOWrapper object at 0x737fbfb159a0>,6,6.098,3.906,0
+python_function,peft/tuners/lora/model.py(452): _enable_peft_forward_hooks,10,5.811,4.688,0
+python_function,<built-in function _has_torch_function>,16,5.119999999999999,0.511,0
+python_function,<built-in function time>,9,5.048,2.694,0
+python_function,threading.py(302): __exit__,1,4.978,4.978,0
+python_function,<built-in method rpartition of str object at 0x737e5de1edd0>,4,3.8770000000000002,2.084,0
+python_function,tqdm/utils.py(112): __format__,2,3.576,1.953,0
+python_function,<built-in method items of dict object at 0x737b2b889e40>,10,2.875,0.44,0
+python_function,threading.py(601): is_set,3,2.705,2.434,0
+python_function,_weakrefset.py(17): __init__,4,2.6340000000000003,1.923,0
+python_function,<built-in method pop of list object at 0x737b2bbceb00>,4,2.504,1.863,0
+python_function,peft/config.py(337): is_prompt_learning,20,2.402,0.351,0
+python_function,<built-in function allocate_lock>,1,2.233,2.233,0
+python_function,<built-in function ord>,42,2.1819999999999995,0.481,0
+python_function,omegaconf/_utils.py(462): get_type_of,2,1.903,1.072,0
+python_function,<built-in method release of _thread.RLock object at 0x737e5cd92c00>,3,1.892,0.821,0
+python_function,<built-in function divmod>,10,1.8220000000000003,0.45,0
+python_function,<built-in method release of _multiprocessing.SemLock object at 0x737b502a6de0>,3,1.6620000000000001,0.581,0
+python_function,tqdm/std.py(167): colour,2,1.624,1.423,0
+python_function,omegaconf/nodes.py(31): _value,8,1.5950000000000002,0.551,0
+python_function,omegaconf/_utils.py(516): _is_missing_literal,4,1.451,0.53,0
+python_function,threading.py(314): _is_owned,1,1.412,1.412,0
+python_function,<built-in method remove of set object at 0x737e5ce2a260>,4,1.042,0.752,0
+python_function,threading.py(299): __enter__,1,0.921,0.921,0
+python_function,tqdm/utils.py(108): __init__,2,0.882,0.511,0
+python_function,<built-in method remove of collections.deque object at 0x737abe603b50>,1,0.831,0.831,0
+python_function,<built-in method __exit__ of _thread.lock object at 0x737b2b85a500>,1,0.791,0.791,0
+python_function,<built-in function abs>,2,0.702,0.361,0
+python_function,threading.py(308): _release_save,1,0.521,0.521,0
+python_function,<built-in method append of collections.deque object at 0x737abe603b50>,1,0.461,0.461,0
+python_function,tqdm/std.py(163): colour,2,0.341,0.171,0
+python_function,<built-in method __enter__ of _thread.lock object at 0x737b2b85a500>,1,0.21,0.21,0
+python_function,<built-in method release of _thread.lock object at 0x737b2b85a500>,1,0.111,0.111,0

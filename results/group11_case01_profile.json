@@ -1,0 +1,222 @@
+{
+  "case": "case_01",
+  "protocol": "instrumented single-case rerun; algorithm and outputs unchanged",
+  "total_group11_latency_s": 189,
+  "phases_ms": {
+    "Draft-Q pool": {
+      "count": 5220,
+      "sum": 303.280396386981,
+      "mean": 0.058099692794440806,
+      "p50": 0.05709938704967499,
+      "p95": 0.10776892304420471,
+      "max": 0.1777084544301033
+    },
+    "DraftMap score": {
+      "count": 5220,
+      "sum": 6938.321080058813,
+      "mean": 1.329180283536171,
+      "p50": 1.3594944030046463,
+      "p95": 1.903347671031952,
+      "max": 28.93923595547676
+    },
+    "DraftMap aggregate": {
+      "count": 5220,
+      "sum": 0.0,
+      "mean": 0.0,
+      "p50": 0.0,
+      "p95": 0.0,
+      "max": 0.0
+    },
+    "DraftMap top-k": {
+      "count": 5220,
+      "sum": 146.92449942231178,
+      "mean": 0.028146455828029077,
+      "p50": 0.02478901296854019,
+      "p95": 0.03499537706375122,
+      "max": 5.362728610634804
+    },
+    "H2D copy": {
+      "count": 30270,
+      "sum": 771.6380665078759,
+      "mean": 0.025491842302870035,
+      "p50": 0.023788772523403168,
+      "p95": 0.033231452107429504,
+      "max": 0.10118912905454636
+    },
+    "BF16 attention": {
+      "count": 6000,
+      "sum": 1832.1020044386387,
+      "mean": 0.30535033407310647,
+      "p50": 0.28152111917734146,
+      "p95": 0.4121866077184677,
+      "max": 3.5499343648552895
+    }
+  },
+  "counts": {
+    "NUM_ATTENTION_CALLS": 6000,
+    "NUM_DRAFTMAP_CALLS": 5220,
+    "NUM_DRAFT_Q_POOL_CALLS": 5220,
+    "NUM_DRAFT_K_SCORE_CALLS": 5220,
+    "NUM_TOPK_CALLS": 5220,
+    "NUM_CPU_KV_FETCH_CALLS": 30270,
+    "NUM_H2D_COPY_CALLS": 60540
+  },
+  "total_full_kv_h2d_bytes": 290127052800,
+  "total_full_kv_h2d_calls": 60540,
+  "mean_h2d_bytes": 9584640.0,
+  "effective_h2d_gbps": 375.98851766476287,
+  "unique_fetched_chunk_layer_pairs": 919,
+  "total_fetch_requests": 30270,
+  "repeated_fetch_requests": 29351,
+  "kv_token_stats": {
+    "count": 6000,
+    "sum": 102679200.0,
+    "mean": 17113.2,
+    "p50": 18720.0,
+    "p95": 18720.0,
+    "max": 18720.0
+  },
+  "kv_token_histogram": {
+    "4680": 150,
+    "9360": 630,
+    "10920": 150,
+    "15600": 150,
+    "18720": 4920
+  },
+  "top_repeated_fetches": [
+    {
+      "layer": 0,
+      "chunk_id": 0,
+      "fetch_count": 174,
+      "total_bytes": 1667727360
+    },
+    {
+      "layer": 27,
+      "chunk_id": 0,
+      "fetch_count": 174,
+      "total_bytes": 1667727360
+    },
+    {
+      "layer": 1,
+      "chunk_id": 0,
+      "fetch_count": 171,
+      "total_bytes": 1638973440
+    },
+    {
+      "layer": 0,
+      "chunk_id": 1,
+      "fetch_count": 169,
+      "total_bytes": 1619804160
+    },
+    {
+      "layer": 0,
+      "chunk_id": 3,
+      "fetch_count": 169,
+      "total_bytes": 1619804160
+    },
+    {
+      "layer": 6,
+      "chunk_id": 1,
+      "fetch_count": 169,
+      "total_bytes": 1619804160
+    },
+    {
+      "layer": 16,
+      "chunk_id": 1,
+      "fetch_count": 169,
+      "total_bytes": 1619804160
+    },
+    {
+      "layer": 21,
+      "chunk_id": 1,
+      "fetch_count": 169,
+      "total_bytes": 1619804160
+    },
+    {
+      "layer": 23,
+      "chunk_id": 1,
+      "fetch_count": 169,
+      "total_bytes": 1619804160
+    },
+    {
+      "layer": 27,
+      "chunk_id": 1,
+      "fetch_count": 169,
+      "total_bytes": 1619804160
+    },
+    {
+      "layer": 29,
+      "chunk_id": 1,
+      "fetch_count": 169,
+      "total_bytes": 1619804160
+    },
+    {
+      "layer": 20,
+      "chunk_id": 1,
+      "fetch_count": 167,
+      "total_bytes": 1600634880
+    },
+    {
+      "layer": 18,
+      "chunk_id": 1,
+      "fetch_count": 164,
+      "total_bytes": 1571880960
+    },
+    {
+      "layer": 6,
+      "chunk_id": 4,
+      "fetch_count": 164,
+      "total_bytes": 1571880960
+    },
+    {
+      "layer": 7,
+      "chunk_id": 4,
+      "fetch_count": 164,
+      "total_bytes": 1571880960
+    },
+    {
+      "layer": 8,
+      "chunk_id": 4,
+      "fetch_count": 164,
+      "total_bytes": 1571880960
+    },
+    {
+      "layer": 12,
+      "chunk_id": 4,
+      "fetch_count": 164,
+      "total_bytes": 1571880960
+    },
+    {
+      "layer": 13,
+      "chunk_id": 4,
+      "fetch_count": 164,
+      "total_bytes": 1571880960
+    },
+    {
+      "layer": 14,
+      "chunk_id": 4,
+      "fetch_count": 164,
+      "total_bytes": 1571880960
+    },
+    {
+      "layer": 16,
+      "chunk_id": 4,
+      "fetch_count": 164,
+      "total_bytes": 1571880960
+    }
+  ],
+  "memory": {
+    "GPU_KV_MEASURED_BYTES": 3450470400,
+    "CPU_KV_MEASURED_BYTES": 31054233600,
+    "GPU_DRAFT_PERSISTENT_BYTES": 248832000,
+    "CPU_DRAFT_PERSISTENT_BYTES": 0,
+    "DRAFT_H2D_BYTES": 0,
+    "DRAFT_H2D_CALLS": 0,
+    "PERSISTENT_STORAGE_MODE": "BF16_FAKE_QUANT",
+    "GPU_KV_MEASURED_GiB": 3.2135009765625,
+    "CPU_KV_MEASURED_GiB": 28.9215087890625,
+    "GPU_DRAFT_PERSISTENT_GiB": 0.23174285888671875,
+    "CPU_DRAFT_PERSISTENT_GiB": 0.0,
+    "KV_COMPRESSION_RATIO": 1.0
+  }
+}

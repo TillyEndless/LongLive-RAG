@@ -1,0 +1,18 @@
+phase,group11_s,longlive_rag_s,delta_s,note
+wrapper total,77.94811591692269,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+retrieval bookkeeping,0.0036177262663841248,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+archive lookup,0.0036177262663841248,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+selected list build,NOT_AVAILABLE,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+H2D host,0.8418382313102484,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+K gather,0.09407015889883041,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+V gather,0.09407015889883041,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+K cat,0.05730207450687885,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+V cat,0.05730207450687885,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+contiguous,NOT_PRESENT,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+reshape/transpose,NOT_AVAILABLE,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+mask/layout,NOT_AVAILABLE,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+RoPE/position,NOT_AVAILABLE,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+BF16 attention,1.9261962436139584,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+post-attention,2.5419612461701035,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+cache bookkeeping,0.0,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused
+misc wrapper,NOT_AVAILABLE,NOT_AVAILABLE,NOT_AVAILABLE,previous sync-distorted control not reused

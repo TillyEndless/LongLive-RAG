@@ -1,0 +1,15 @@
+{
+  "group": 13,
+  "case": "case_01",
+  "video": "/data/zxl/LongLive-RAG-group11_15_h200/results/group13_corrected_case01_rerun4/rank0-0-0_lora.mp4",
+  "frames": 474,
+  "fps": 16.0,
+  "resolution": "832x480",
+  "first_frame": 0,
+  "return_frame": 237,
+  "DINO": 0.8150491714477539,
+  "SSIM": 0.17070141852555173,
+  "PSNR": 8.225869476998962,
+  "LPIPS": "NOT_AVAILABLE",
+  "protocol": "canonical frame 0 vs num_frames//2; DINOv2-small CLS; raw RGB SSIM/PSNR"
+}

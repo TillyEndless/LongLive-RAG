@@ -1,0 +1,78 @@
+{
+  "streams": [
+    {
+      "id": "default",
+      "role": "all target Group11.1/12/14 operations; no explicit copy stream in target paths"
+    },
+    {
+      "id": "prefetch_stream",
+      "role": "not active for Group11.1/12/14; created only by prefetch helper"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "route_cpu_gpu",
+      "op": "DraftMap routing / selection",
+      "stream": "default"
+    },
+    {
+      "id": "h2d",
+      "op": "historical K/V H2D",
+      "stream": "default",
+      "source_pinned": false
+    },
+    {
+      "id": "dequant",
+      "op": "low-bit decode/materialize",
+      "stream": "default"
+    },
+    {
+      "id": "gather",
+      "op": "selected K/V gather/repack",
+      "stream": "default"
+    },
+    {
+      "id": "attn",
+      "op": "dense FlashAttention or SDPA",
+      "stream": "default"
+    },
+    {
+      "id": "out",
+      "op": "output projection",
+      "stream": "default"
+    }
+  ],
+  "edges": [
+    [
+      "route_cpu_gpu",
+      "h2d",
+      "selection IDs required before historical fetch"
+    ],
+    [
+      "h2d",
+      "dequant",
+      "selected history must be materialized"
+    ],
+    [
+      "dequant",
+      "gather",
+      "dequantized tensors are gathered/stacked"
+    ],
+    [
+      "gather",
+      "attn",
+      "dense attention consumes k_cat/v_cat"
+    ],
+    [
+      "attn",
+      "out",
+      "attention output feeds self.o"
+    ]
+  ],
+  "overlap": {
+    "H2D_vs_compute": "not established; target copies use default stream and source rows report unpinned CPU memory; no copy-stream event/wait pair",
+    "routing_vs_compute": "not overlapped in target call order; routing precedes prepare_attention_kv and attention",
+    "D2H_vs_compute": "not applicable to target attention path; video .cpu occurs after pipeline",
+    "prefetch_vs_compute": "not active for target groups"
+  }
+}

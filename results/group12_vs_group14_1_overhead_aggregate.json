@@ -1,0 +1,78 @@
+{
+  "matched_contract": {
+    "case": "case_01",
+    "window": 12,
+    "seed": 0,
+    "attention_calls": 6000,
+    "profile_interval": "full matched case",
+    "protocol": "same checkpoint/config family"
+  },
+  "group12": {
+    "attention_calls": 6000,
+    "wrapper_s": 75.4869820093736,
+    "attention_kernel_s": 10.71686086845398,
+    "draft_q_pool_s": 0.3350338228046894,
+    "draft_score_matmul_softmax_s": 6.144553117454052,
+    "importance_reduction_s": 0.0,
+    "topk_selection_s": 0.14988243952393532,
+    "gather_repack_s": 0.2942883837968111,
+    "fetch_end_to_end_work_s": 11.104022656567395,
+    "h2d_copy_work_s": 0.0,
+    "route_rows": 5220,
+    "fetch_rows": 5220,
+    "h2d_rows": 30270,
+    "dequant_s": "NOT_AVAILABLE",
+    "rope_s": "NOT_AVAILABLE",
+    "mask_layout_s": "NOT_AVAILABLE",
+    "host_sync_wait_s": "NOT_AVAILABLE"
+  },
+  "group14_1": {
+    "attention_calls": 6000,
+    "wrapper_s": 80.51911899168044,
+    "attention_kernel_s": 8.655209821760655,
+    "draft_q_pool_s": 0.3468304928392172,
+    "draft_score_matmul_softmax_s": 5.764901018701494,
+    "importance_reduction_s": 0.0,
+    "topk_selection_s": 0.147436267696321,
+    "gather_repack_s": 0.2976874057203531,
+    "fetch_end_to_end_work_s": 11.148217250593007,
+    "h2d_copy_work_s": 0.0,
+    "route_rows": 5220,
+    "fetch_rows": 5220,
+    "h2d_rows": 30270,
+    "dequant_s": "NOT_AVAILABLE",
+    "rope_s": "NOT_AVAILABLE",
+    "mask_layout_s": "NOT_AVAILABLE",
+    "host_sync_wait_s": "NOT_AVAILABLE"
+  },
+  "known_equation": {
+    "group12_wrapper_s": 75.487,
+    "group14_1_wrapper_s": 80.519,
+    "group12_kernel_s": 10.717,
+    "group14_1_kernel_s": 8.655,
+    "attention_kernel_saved_s": 2.062,
+    "additional_non_kernel_s": 7.094000000000008
+  },
+  "deltas": {
+    "routing_score_delta_s": -0.36785542871803045,
+    "block_selection_delta_s": -0.0024461718276143074,
+    "gather_repack_delta_s": 0.0033990219235420227,
+    "dequant_materialization_delta_s": "NOT_AVAILABLE",
+    "rope_delta_s": "NOT_AVAILABLE",
+    "mask_layout_delta_s": "NOT_AVAILABLE",
+    "host_sync_wait_delta_s": "NOT_AVAILABLE",
+    "measured_work_delta_s": -0.36690257862210274
+  },
+  "explained_critical_path_s": "NOT_IDENTIFIABLE_FROM_EXISTING_TRACE",
+  "residual_s": "NOT_IDENTIFIABLE_FROM_EXISTING_TRACE",
+  "decode_order": "FULL_DECODE_THEN_GATHER",
+  "default_stream_serialized": "YES for recorded attention path; exact subphase overlap NOT_MEASURED",
+  "root_cause_classification": "UNRESOLVED_WITH_EXISTING_TRACE",
+  "break_even_retained_ratio": "NOT_IDENTIFIABLE_YET",
+  "source_evidence": {
+    "routing": "utils/persistent_draftmap.py:route_draftmap",
+    "prepare": "utils/h200_group_runtime.py:prepare_attention_kv",
+    "attention": "wan/modules/causal_model_latentmem.py:CausalWanSelfAttention.forward",
+    "fetch": "wan/modules/causal_model_latentmem.py:fetch/repack region"
+  }
+}

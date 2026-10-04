@@ -1,0 +1,12 @@
+stage,original_file_line,group11_file_line,classification,can_reuse_original,reason
+QKV projection,wan/modules/causal_model.py:117-123; latentmem.py:147-154,wan/modules/causal_model_latentmem.py:261-273,DUPLICATED_LONGLIVE_LOGIC,YES,"same linear/norm Q,K,V semantics"
+current/local KV handling,wan/modules/causal_model_latentmem.py:265-425,wan/modules/causal_model_latentmem.py:350-529,DUPLICATED_LONGLIVE_LOGIC,YES,same roll/direct insert and relative-RoPE cache update
+historical KV ownership,latentmem.py:285-297; 1186-1223,latentmem.py:386-402; 1213-1223,SEMANTICALLY_DIFFERENT_LONGLIVE_LOGIC,PARTIAL,Group11 adds Draft-K sidecar; full BF16 ownership is same concept
+retrieval decision,pipeline/causal_inference.py:267-304,latentmem.py:165-223 and pipeline:310-313,ESSENTIAL_GROUP11_LOGIC,"YES, producer only",replace descriptor/top-k producer with DraftMap selector
+selected IDs,pipeline/causal_inference.py:294-302,latentmem.py:190-223,ESSENTIAL_GROUP11_LOGIC,PARTIAL,"same [B,k] shape; require canonical provenance assertion/adapter"
+history fetch,latentmem.py:440-465,latentmem.py:562-635,DUPLICATED_LONGLIVE_LOGIC,YES,same CPU/archive lookup and H2D materialization
+working-set build,latentmem.py:456-481,latentmem.py:636-673,DUPLICATED_LONGLIVE_LOGIC,YES,same stack/view and sink/history/local parts
+RoPE/layout,latentmem.py:408-411; 462-465,latentmem.py:491-515; 641-647,DUPLICATED_LONGLIVE_LOGIC,YES,same relative frame handling; preserve provenance
+BF16 attention,latentmem.py:483-500,latentmem.py:679-685,DUPLICATED_LONGLIVE_LOGIC,YES,same attention dispatch
+output,latentmem.py:502-508,latentmem.py:701-714,DUPLICATED_LONGLIVE_LOGIC,YES,same flatten/output projection
+cache bookkeeping,latentmem.py:1186-1260,latentmem.py:1174-1260,SEMANTICALLY_DIFFERENT_LONGLIVE_LOGIC,PARTIAL,reuse full-cache update; retain atomic Draft-K sidecar update

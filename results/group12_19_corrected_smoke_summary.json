@@ -1,0 +1,25 @@
+{
+  "canonical_runs_launched": false,
+  "synthetic_smoke": {
+    "group12": "PASS",
+    "group13": "PASS",
+    "group14": "PASS_PATH_COVERED",
+    "group15": "PASS_PATH_COVERED"
+  },
+  "real_inference_smoke": {
+    "group12": "PENDING",
+    "group13": "PENDING",
+    "group14": "PENDING",
+    "group15": "PENDING",
+    "group16": "NOT_AVAILABLE",
+    "group17": "NOT_AVAILABLE",
+    "group18": "NOT_AVAILABLE",
+    "group19": "NOT_AVAILABLE"
+  },
+  "assertions": [
+    "CPU archive payloads are torch.bfloat16",
+    "H2D fetch returns BF16",
+    "fake quant/dequant output is BF16",
+    "final attention remains BF16"
+  ]
+}

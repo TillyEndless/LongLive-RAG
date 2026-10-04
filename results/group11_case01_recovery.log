@@ -1,0 +1,120 @@
+START group11.1_case01 2026-09-28T10:21:24+08:00
+Single GPU mode on device cuda
+Free VRAM 89.0491943359375 GB
+Traceback (most recent call last):
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/diffusers/configuration_utils.py", line 424, in load_config
+    config_file = hf_hub_download(
+                  ^^^^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 87, in _inner_fn
+    validate_repo_id(arg_value)
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 135, in validate_repo_id
+    raise HFValidationError(
+huggingface_hub.errors.HFValidationError: Repo id must be in the form 'repo_name' or 'namespace/repo_name': 'wan_models/Wan2.1-T2V-1.3B/'. Use `repo_type` argument if needed.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/data/zxl/LongLive-RAG-group11_15_h200/inference.py", line 154, in <module>
+    pipeline = CausalInferencePipeline(config, device=device)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/LongLive-RAG-group11_15_h200/pipeline/causal_inference.py", line 56, in __init__
+    self.generator = WanDiffusionWrapper(
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/LongLive-RAG-group11_15_h200/utils/wan_wrapper.py", line 186, in __init__
+    self.model = CausalWanModelLatentMem.from_pretrained(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 91, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/diffusers/models/modeling_utils.py", line 1110, in from_pretrained
+    config, unused_kwargs, commit_hash = cls.load_config(
+                                         ^^^^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 91, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/SolarWM_wan5b_direct/.conda-wan/lib/python3.12/site-packages/diffusers/configuration_utils.py", line 460, in load_config
+    raise EnvironmentError(
+OSError: We couldn't connect to 'https://huggingface.co' to load this model, couldn't find it in the cached files and it looks like wan_models/Wan2.1-T2V-1.3B/ is not the path to a directory containing a config.json file.
+Checkout your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/diffusers/installation#offline-mode'.
+END group11.1_case01 rc=1 2026-09-28T10:22:09+08:00
+START group11.1_case01 2026-09-28T10:25:15+08:00
+START group11.1_case01 2026-09-28T10:25:53+08:00
+START group11.1_case01 2026-09-28T10:28:28+08:00
+Single GPU mode on device cuda
+Free VRAM 113.48040771484375 GB
+/data/zxl/LongLive-RAG-group11_15_h200/wan/modules/vae.py:634: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  torch.load(pretrained_path, map_location=device), assign=True)
+KV inference with 3 frames per block
+/data/zxl/LongLive-RAG-group11_15_h200/inference.py:158: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  state_dict = torch.load(config.generator_ckpt, map_location="cpu")
+LoRA enabled with config: {'type': 'lora', 'rank': 256, 'alpha': 256, 'dropout': 0.0, 'dtype': 'bfloat16', 'verbose': False}
+Applying LoRA to generator (inference)...
+LoRA target modules for generator: 300 Linear layers
+peft_config LoraConfig(task_type=None, peft_type=<PeftType.LORA: 'LORA'>, auto_mapping=None, peft_version='0.20.0', base_model_name_or_path=None, revision=None, inference_mode=False, r=256, target_modules={'k', 'ffn.2', 'ffn.0', 'q', 'o', 'v'}, exclude_modules=None, lora_alpha=256, lora_dropout=0.0, fan_in_fan_out=False, bias='none', use_rslora=False, modules_to_save=None, init_lora_weights=True, layers_to_transform=None, layers_pattern=None, rank_pattern={}, alpha_pattern={}, megatron_config=None, megatron_core='megatron.core', trainable_token_indices=None, loftq_config={}, eva_config=None, corda_config=None, lora_ga_config=None, use_dora=False, velora_config=None, alora_invocation_tokens=None, use_qalora=False, qalora_group_size=16, monteclora_config=None, layer_replication=None, runtime_config=LoraRuntimeConfig(ephemeral_gpu_offload=False), lora_bias=False, target_parameters=None, use_bdlora=None, arrow_config=None, ensure_weight_tying=False)
+trainable params: 349,962,240 || all params: 1,768,959,040 || trainable%: 19.7835
+Loading LoRA checkpoint from /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_lora.pt
+/data/zxl/LongLive-RAG-group11_15_h200/inference.py:203: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  lora_checkpoint = torch.load(lora_ckpt_path, map_location="cpu")
+LoRA weights loaded for generator
+Number of prompts: 10
+0it [00:00, ?it/s]sampled_noise.device cuda:0
+prompts ['A stylish woman walks down a bustling Tokyo street filled with warm glowing neon and animated city signage. She wears a black leather jacket over a long red dress and black boots, carrying a black purse. She sports sunglasses and red lipstick, walking confidently and casually. The street is damp and reflective, creating a mirror effect of the colorful lights. Many pedestrians walk about, adding to the vibrant atmosphere. Medium shot, dynamic walking perspective.']
+Moving DynamicSwap_WanTextEncoder to cuda:0 with preserved memory: 82.40476083755493 GB
+kv_cache_size: 18720 (policy: int->local+cpu_offload, size=12 frames, frame_seq_length: 1560, num_output_frames: 120)
+[inference] local_attn_size set on model: 12
+
+Generating blocks:   0%|          | 0/40 [00:00<?, ?it/s][A
+Generating blocks:   2%|▎         | 1/40 [00:01<00:52,  1.35s/it][A
+Generating blocks:   5%|▌         | 2/40 [00:02<00:51,  1.34s/it][A
+Generating blocks:   8%|▊         | 3/40 [00:04<00:58,  1.59s/it][A
+Generating blocks:  10%|█         | 4/40 [00:06<01:01,  1.70s/it][A
+Generating blocks:  12%|█▎        | 5/40 [00:09<01:15,  2.17s/it][A
+Generating blocks:  15%|█▌        | 6/40 [00:14<01:46,  3.13s/it][A
+Generating blocks:  18%|█▊        | 7/40 [00:21<02:22,  4.32s/it][A
+Generating blocks:  20%|██        | 8/40 [00:26<02:27,  4.62s/it][A
+Generating blocks:  22%|██▎       | 9/40 [00:34<02:52,  5.57s/it][A
+Generating blocks:  25%|██▌       | 10/40 [00:49<04:22,  8.74s/it][A
+Generating blocks:  28%|██▊       | 11/40 [00:57<04:00,  8.29s/it][A
+Generating blocks:  30%|███       | 12/40 [01:03<03:38,  7.79s/it][A
+Generating blocks:  32%|███▎      | 13/40 [01:12<03:36,  8.04s/it][A
+Generating blocks:  35%|███▌      | 14/40 [01:19<03:23,  7.84s/it][A
+Generating blocks:  38%|███▊      | 15/40 [01:26<03:05,  7.43s/it][A
+Generating blocks:  40%|████      | 16/40 [01:34<03:03,  7.64s/it][A
+Generating blocks:  42%|████▎     | 17/40 [01:41<02:52,  7.49s/it][A
+Generating blocks:  45%|████▌     | 18/40 [01:48<02:38,  7.22s/it][A
+Generating blocks:  48%|████▊     | 19/40 [02:00<03:02,  8.69s/it][A
+Generating blocks:  50%|█████     | 20/40 [02:08<02:48,  8.40s/it][A
+Generating blocks:  52%|█████▎    | 21/40 [02:16<02:39,  8.41s/it][A
+Generating blocks:  55%|█████▌    | 22/40 [02:22<02:20,  7.79s/it][A
+Generating blocks:  57%|█████▊    | 23/40 [02:30<02:10,  7.68s/it][A
+Generating blocks:  60%|██████    | 24/40 [02:40<02:13,  8.34s/it][A
+Generating blocks:  62%|██████▎   | 25/40 [02:49<02:07,  8.52s/it][A
+Generating blocks:  65%|██████▌   | 26/40 [02:55<01:49,  7.84s/it][A
+Generating blocks:  68%|██████▊   | 27/40 [03:03<01:43,  7.94s/it][A
+Generating blocks:  70%|███████   | 28/40 [03:11<01:35,  7.94s/it][A
+Generating blocks:  72%|███████▎  | 29/40 [03:21<01:33,  8.53s/it][A
+Generating blocks:  75%|███████▌  | 30/40 [03:33<01:35,  9.57s/it][A
+Generating blocks:  78%|███████▊  | 31/40 [03:38<01:13,  8.15s/it][A
+Generating blocks:  80%|████████  | 32/40 [03:42<00:56,  7.08s/it][A
+Generating blocks:  82%|████████▎ | 33/40 [03:47<00:44,  6.29s/it][A
+Generating blocks:  85%|████████▌ | 34/40 [03:54<00:38,  6.46s/it][A
+Generating blocks:  88%|████████▊ | 35/40 [03:59<00:30,  6.12s/it][A
+Generating blocks:  90%|█████████ | 36/40 [04:04<00:22,  5.71s/it][A
+Generating blocks:  92%|█████████▎| 37/40 [04:22<00:28,  9.36s/it][A
+Generating blocks:  95%|█████████▌| 38/40 [04:29<00:17,  8.83s/it][A
+Generating blocks:  98%|█████████▊| 39/40 [04:34<00:07,  7.58s/it][A
+Generating blocks: 100%|██████████| 40/40 [04:37<00:00,  6.33s/it][AGenerating blocks: 100%|██████████| 40/40 [04:37<00:00,  6.94s/it]
+0it [05:00, ?it/s]
+END group11.1_case01 rc=0 2026-09-28T10:35:48+08:00
+START group11.2_case01 2026-09-28T10:35:48+08:00
+Single GPU mode on device cuda
+Free VRAM 116.8714599609375 GB
+Traceback (most recent call last):
+  File "/data/zxl/LongLive-RAG-group11_15_h200/inference.py", line 154, in <module>
+    pipeline = CausalInferencePipeline(config, device=device)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/zxl/LongLive-RAG-group11_15_h200/pipeline/causal_inference.py", line 56, in __init__
+    self.generator = WanDiffusionWrapper(
+                     ^^^^^^^^^^^^^^^^^^^^
+TypeError: WanDiffusionWrapper.__init__() got an unexpected keyword argument 'retrieval_query_mode'
+END group11.2_case01 rc=1 2026-09-28T10:39:19+08:00

@@ -1,0 +1,578 @@
+{
+  "11.1.group": {
+    "value": "11.1",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.method": {
+    "value": "LongLive + Draft Attention",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.window": {
+    "value": 12,
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.kv_strategy": {
+    "value": "BF16 full CPU history",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.query_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.key_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.value_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.gpu_kv_gib": {
+    "value": 3.2135,
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.cpu_kv_gib": {
+    "value": 28.9215,
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.draft_gpu_gib": {
+    "value": 0.2317,
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.transient_gpu_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.1.compression": {
+    "value": "N/A",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.1.fetch_strategy": {
+    "value": "layer-wise current-Q fetch",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.dino": {
+    "value": 0.8291,
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.ssim": {
+    "value": 0.3718,
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.psnr": {
+    "value": 10.7762,
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.e2e_latency_s": {
+    "value": 218.8,
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.exposed_h2d_ms_per_call": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.1.wrapper_latency_ms_per_call": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.1.selected_id_exact_rate": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.1.final_latent_exact": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.1.quality_source": {
+    "value": "validated Group11.1 reference; historical E2E",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.status": {
+    "value": "REFERENCE_VALIDATED",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.1.provenance_path": {
+    "value": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "source_path": "/data/zxl/LongLive-RAG-group11_15_h200/reports/group11_final.md",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.group": {
+    "value": "11.2",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.method": {
+    "value": "LongLive + Draft Attention",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.window": {
+    "value": 12,
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.kv_strategy": {
+    "value": "BF16 full CPU history",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.query_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.key_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.value_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.gpu_kv_gib": {
+    "value": 3.2135009766,
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.cpu_kv_gib": {
+    "value": 28.9215087891,
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.draft_gpu_gib": {
+    "value": 0.633430481,
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.transient_gpu_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.compression": {
+    "value": "N/A",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.fetch_strategy": {
+    "value": "layer-wise previous-Q retrieval",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.dino": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.ssim": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.psnr": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.e2e_latency_s": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.exposed_h2d_ms_per_call": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.wrapper_latency_ms_per_call": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.selected_id_exact_rate": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.final_latent_exact": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.2.quality_source": {
+    "value": "NOT_AVAILABLE: independent frozen evaluation pending",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.status": {
+    "value": "GATE_PASS_EXISTING",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.2.provenance_path": {
+    "value": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "source_path": "/data/zxl/LongLive-RAG-group11_qprev_h200/results/group11_qprev_original_wrapper_alignment.json",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.group": {
+    "value": "11.3",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.method": {
+    "value": "LongLive + Draft Attention",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.window": {
+    "value": 12,
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.kv_strategy": {
+    "value": "BF16 full CPU history",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.query_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.key_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.value_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.gpu_kv_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.cpu_kv_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.draft_gpu_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.transient_gpu_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.compression": {
+    "value": "N/A",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.fetch_strategy": {
+    "value": "current-layer chunk-streaming Flash Fetch",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.dino": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.ssim": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.psnr": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.e2e_latency_s": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.exposed_h2d_ms_per_call": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.wrapper_latency_ms_per_call": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.selected_id_exact_rate": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.final_latent_exact": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.quality_source": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.3.status": {
+    "value": "RUNNING_OR_PENDING",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.3.provenance_path": {
+    "value": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "source_path": "/data/zxl/LongLive-RAG-group11_flashfetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.group": {
+    "value": "11.4",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.method": {
+    "value": "LongLive + Draft Attention",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.window": {
+    "value": 12,
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.kv_strategy": {
+    "value": "BF16 full CPU history",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.query_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.key_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.value_precision": {
+    "value": "BF16",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.gpu_kv_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.cpu_kv_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.draft_gpu_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.transient_gpu_gib": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.compression": {
+    "value": "N/A",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.fetch_strategy": {
+    "value": "one-layer-ahead speculative prefetch + correction fetch",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.dino": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.ssim": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.psnr": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.e2e_latency_s": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.exposed_h2d_ms_per_call": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.wrapper_latency_ms_per_call": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.selected_id_exact_rate": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.final_latent_exact": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.quality_source": {
+    "value": "NOT_AVAILABLE",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": false
+  },
+  "11.4.status": {
+    "value": "RUNNING_OR_PENDING",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  },
+  "11.4.provenance_path": {
+    "value": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "source_path": "/data/zxl/LongLive-RAG-group11_next_layer_prefetch_h200/results",
+    "metric_producer": "aggregate_group11_accel_results.py",
+    "measured": true
+  }
+}

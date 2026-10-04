@@ -1,0 +1,251 @@
+{
+  "audit": "group14_15_gpu_memory_value_provenance_corrected_table",
+  "scope": {
+    "inference_run": false,
+    "benchmark_run": false,
+    "source_modified": false,
+    "existing_results_modified": false
+  },
+  "table_semantics": {
+    "gpu_local_window_kv": "current local dense BF16 K/V",
+    "gpu_history_kv": "historical persistent GPU KV resident amount; exact source field not located",
+    "gpu_actual_persistent_kv": "local + historical persistent KV; Draft-K is excluded",
+    "draft_gpu_memory": "separate field GPU_DRAFT_PERSISTENT_BYTES; do not add to GPU actual persistent KV"
+  },
+  "source_code": {
+    "actual_persistent_field": {
+      "file": "utils/runtime_memory_measurement.py",
+      "lines": "239-246",
+      "formula": "GPU_KV_MEASURED_BYTES + GPU_PACKED_K_BYTES + GPU_PACKED_V_BYTES + GPU_PACKED_SCALE_BYTES + GPU_PACKED_METADATA_BYTES",
+      "draft_included": false,
+      "transient_included": false
+    },
+    "local_field": {
+      "file": "utils/runtime_memory_measurement.py",
+      "lines": "170-175",
+      "fields": [
+        "GPU_KV_MEASURED_BYTES",
+        "GPU_LOCAL_BF16_KV_BYTES"
+      ],
+      "measured_example_gib": 3.2135009765625
+    },
+    "draft_field": {
+      "file": "utils/runtime_memory_measurement.py",
+      "lines": "198-203,239-242",
+      "field": "GPU_DRAFT_PERSISTENT_BYTES",
+      "measured_example_gib": 0.23174285888671875,
+      "included_in_actual_persistent": false
+    }
+  },
+  "exact_search": {
+    "target_values_searched": [
+      1.6068,
+      3.2135,
+      4.5517,
+      7.7652,
+      2.4783,
+      5.6918,
+      3.7889,
+      7.0024,
+      2.6303,
+      5.8438,
+      1.997,
+      5.2105,
+      3.227,
+      6.4405,
+      2.1532,
+      5.3667,
+      1.5181,
+      4.7316,
+      1.0684,
+      4.2819,
+      1.7853,
+      4.9988
+    ],
+    "exact_memory_rows_found": false,
+    "note": "No exact target rows were found in results/reports. Matching decimal substrings in profiling artifacts, when present, are timing fields rather than confirmed memory rows."
+  },
+  "rows": [
+    {
+      "group": "9",
+      "gpu_local_window_kv_gib": 1.6068,
+      "gpu_history_kv_gib": 0.0,
+      "gpu_actual_persistent_kv_gib": 1.6068,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "10",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 0.0,
+      "gpu_actual_persistent_kv_gib": 3.2135,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "4.1",
+      "gpu_local_window_kv_gib": 1.6068,
+      "gpu_history_kv_gib": 0.0,
+      "gpu_actual_persistent_kv_gib": 1.6068,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "4.2",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 0.0,
+      "gpu_actual_persistent_kv_gib": 3.2135,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "11.1",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 0.0,
+      "gpu_actual_persistent_kv_gib": 3.2135,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "11.2",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 0.0,
+      "gpu_actual_persistent_kv_gib": 3.2135,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "11.3",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 0.0,
+      "gpu_actual_persistent_kv_gib": 3.2135,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "11.4",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 0.0,
+      "gpu_actual_persistent_kv_gib": 3.2135,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "12",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 4.5517,
+      "gpu_actual_persistent_kv_gib": 7.7652,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "13",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 2.4783,
+      "gpu_actual_persistent_kv_gib": 5.6918,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "14.1",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 3.7889,
+      "gpu_actual_persistent_kv_gib": 7.0024,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "14.2",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 2.6303,
+      "gpu_actual_persistent_kv_gib": 5.8438,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "14.3",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 1.997,
+      "gpu_actual_persistent_kv_gib": 5.2105,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "14.4",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 3.227,
+      "gpu_actual_persistent_kv_gib": 6.4405,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "15.1",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 2.1532,
+      "gpu_actual_persistent_kv_gib": 5.3667,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "15.2",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 1.5181,
+      "gpu_actual_persistent_kv_gib": 4.7316,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "15.3",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 1.0684,
+      "gpu_actual_persistent_kv_gib": 4.2819,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    },
+    {
+      "group": "15.4",
+      "gpu_local_window_kv_gib": 3.2135,
+      "gpu_history_kv_gib": 1.7853,
+      "gpu_actual_persistent_kv_gib": 4.9988,
+      "arithmetic_residual_gib": 0.0,
+      "formula": "GPU local window KV + GPU history KV",
+      "formula_status": "ARITHMETICALLY_CONFIRMED_FROM_SUPPLIED_TABLE",
+      "repository_provenance": "NOT_FOUND_AS_EXACT_ROW"
+    }
+  ],
+  "conclusion": "The corrected three-column table is arithmetically consistent with GPU actual persistent KV = local window KV + history KV, and excludes the separate Draft-K memory. However, the historical component and table-generation artifact are not currently traceable to a raw emitted field; retain provenance as unverified until the producing summary is located."
+}

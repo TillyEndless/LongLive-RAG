@@ -1,0 +1,18 @@
+{
+  "wrapper_total_s": 77.94811591692269,
+  "wrapper_entry": "wan/modules/causal_model_latentmem.py:CausalWanSelfAttention.forward",
+  "wrapper_region": "lines 515-689; exact historical label was not present in source",
+  "inner_bf16_attention": "wan/modules/attention.py:attention line 139; callsite causal_model_latentmem.py:663-668",
+  "fetch_rows": 5220,
+  "attention_calls": 6000,
+  "fetch_end_to_end_s": 13.46050849556923,
+  "h2d_host_s": 0.8418382313102484,
+  "cat_s": 0.1146041490137577,
+  "gather_s": 0.18814031779766083,
+  "bf16_attention_host_s": 1.9261962436139584,
+  "wrapper_exclusive_accounted_s": 15.386704739183187,
+  "wrapper_exclusive_unattributed_s": 62.5614111777395,
+  "coverage_percent": 19.739674985322775,
+  "profile_overhead": "NOT_AVAILABLE",
+  "nsys": "NOT_AVAILABLE_DISK_FULL"
+}

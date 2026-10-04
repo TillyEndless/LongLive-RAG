@@ -1,0 +1,65 @@
+Single GPU mode on device cuda
+Free VRAM 139.27496337890625 GB
+/data/zxl/LongLive-RAG-group11_15_h200/wan/modules/vae.py:634: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  torch.load(pretrained_path, map_location=device), assign=True)
+KV inference with 3 frames per block
+/data/zxl/LongLive-RAG-group11_15_h200/inference.py:87: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  state_dict = torch.load(config.generator_ckpt, map_location="cpu")
+LoRA enabled with config: {'type': 'lora', 'rank': 256, 'alpha': 256, 'dropout': 0.0, 'dtype': 'bfloat16', 'verbose': False}
+Applying LoRA to generator (inference)...
+LoRA target modules for generator: 300 Linear layers
+peft_config LoraConfig(task_type=None, peft_type=<PeftType.LORA: 'LORA'>, auto_mapping=None, peft_version='0.20.0', base_model_name_or_path=None, revision=None, inference_mode=False, r=256, target_modules={'ffn.0', 'v', 'o', 'k', 'q', 'ffn.2'}, exclude_modules=None, lora_alpha=256, lora_dropout=0.0, fan_in_fan_out=False, bias='none', use_rslora=False, modules_to_save=None, init_lora_weights=True, layers_to_transform=None, layers_pattern=None, rank_pattern={}, alpha_pattern={}, megatron_config=None, megatron_core='megatron.core', trainable_token_indices=None, loftq_config={}, eva_config=None, corda_config=None, lora_ga_config=None, use_dora=False, velora_config=None, alora_invocation_tokens=None, use_qalora=False, qalora_group_size=16, monteclora_config=None, layer_replication=None, runtime_config=LoraRuntimeConfig(ephemeral_gpu_offload=False), lora_bias=False, target_parameters=None, use_bdlora=None, arrow_config=None, ensure_weight_tying=False)
+trainable params: 349,962,240 || all params: 1,768,959,040 || trainable%: 19.7835
+Loading LoRA checkpoint from /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_lora.pt
+/data/zxl/LongLive-RAG-group11_15_h200/inference.py:132: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  lora_checkpoint = torch.load(lora_ckpt_path, map_location="cpu")
+LoRA weights loaded for generator
+Number of prompts: 10
+0it [00:00, ?it/s]sampled_noise.device cuda:0
+prompts ['A stylish woman walks down a bustling Tokyo street filled with warm glowing neon and animated city signage. She wears a black leather jacket over a long red dress and black boots, carrying a black purse. She sports sunglasses and red lipstick, walking confidently and casually. The street is damp and reflective, creating a mirror effect of the colorful lights. Many pedestrians walk about, adding to the vibrant atmosphere. Medium shot, dynamic walking perspective.']
+Moving DynamicSwap_WanTextEncoder to cuda:0 with preserved memory: 130.03873300552368 GB
+kv_cache_size: 18720 (policy: int->local+cpu_offload, size=12 frames, frame_seq_length: 1560, num_output_frames: 120)
+[inference] local_attn_size set on model: 12
+
+Generating blocks:   0%|          | 0/40 [00:00<?, ?it/s][A
+Generating blocks:   2%|▎         | 1/40 [00:01<00:39,  1.01s/it][A
+Generating blocks:   5%|▌         | 2/40 [00:01<00:34,  1.09it/s][A
+Generating blocks:   8%|▊         | 3/40 [00:02<00:32,  1.14it/s][A
+Generating blocks:  10%|█         | 4/40 [00:03<00:31,  1.16it/s][A
+Generating blocks:  12%|█▎        | 5/40 [00:08<01:17,  2.21s/it][A
+Generating blocks:  15%|█▌        | 6/40 [00:11<01:23,  2.46s/it][A
+Generating blocks:  18%|█▊        | 7/40 [00:14<01:26,  2.61s/it][A
+Generating blocks:  20%|██        | 8/40 [00:16<01:25,  2.67s/it][A
+Generating blocks:  22%|██▎       | 9/40 [00:19<01:25,  2.76s/it][A
+Generating blocks:  25%|██▌       | 10/40 [00:23<01:33,  3.13s/it][A
+Generating blocks:  28%|██▊       | 11/40 [00:26<01:31,  3.14s/it][A
+Generating blocks:  30%|███       | 12/40 [00:29<01:22,  2.95s/it][A
+Generating blocks:  32%|███▎      | 13/40 [00:31<01:14,  2.77s/it][A
+Generating blocks:  35%|███▌      | 14/40 [00:34<01:08,  2.65s/it][A
+Generating blocks:  38%|███▊      | 15/40 [00:36<01:06,  2.67s/it][A
+Generating blocks:  40%|████      | 16/40 [00:39<01:01,  2.56s/it][A
+Generating blocks:  42%|████▎     | 17/40 [00:41<00:57,  2.50s/it][A
+Generating blocks:  45%|████▌     | 18/40 [00:43<00:54,  2.48s/it][A
+Generating blocks:  48%|████▊     | 19/40 [00:47<00:59,  2.82s/it][A
+Generating blocks:  50%|█████     | 20/40 [00:50<00:58,  2.92s/it][A
+Generating blocks:  52%|█████▎    | 21/40 [00:53<00:56,  2.96s/it][A
+Generating blocks:  55%|█████▌    | 22/40 [00:56<00:54,  3.01s/it][A
+Generating blocks:  57%|█████▊    | 23/40 [00:59<00:48,  2.84s/it][A
+Generating blocks:  60%|██████    | 24/40 [01:01<00:43,  2.72s/it][A
+Generating blocks:  62%|██████▎   | 25/40 [01:04<00:39,  2.62s/it][A
+Generating blocks:  65%|██████▌   | 26/40 [01:06<00:35,  2.55s/it][A
+Generating blocks:  68%|██████▊   | 27/40 [01:09<00:34,  2.67s/it][A
+Generating blocks:  70%|███████   | 28/40 [01:12<00:32,  2.69s/it][A
+Generating blocks:  72%|███████▎  | 29/40 [01:14<00:28,  2.61s/it][A
+Generating blocks:  75%|███████▌  | 30/40 [01:17<00:27,  2.70s/it][A
+Generating blocks:  78%|███████▊  | 31/40 [01:20<00:24,  2.76s/it][A
+Generating blocks:  80%|████████  | 32/40 [01:22<00:21,  2.67s/it][A
+Generating blocks:  82%|████████▎ | 33/40 [01:25<00:18,  2.62s/it][A
+Generating blocks:  85%|████████▌ | 34/40 [01:28<00:15,  2.63s/it][A
+Generating blocks:  88%|████████▊ | 35/40 [01:30<00:13,  2.62s/it][A
+Generating blocks:  90%|█████████ | 36/40 [01:33<00:10,  2.68s/it][A
+Generating blocks:  92%|█████████▎| 37/40 [01:36<00:08,  2.83s/it][A
+Generating blocks:  95%|█████████▌| 38/40 [01:39<00:05,  2.82s/it][A
+Generating blocks:  98%|█████████▊| 39/40 [01:41<00:02,  2.67s/it][A
+Generating blocks: 100%|██████████| 40/40 [01:43<00:00,  2.52s/it][AGenerating blocks: 100%|██████████| 40/40 [01:43<00:00,  2.60s/it]
+0it [02:04, ?it/s]

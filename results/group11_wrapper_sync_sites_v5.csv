@@ -1,0 +1,7 @@
+site,calls,duration_s,classification
+cudaStreamSynchronize,12282,2.1126476570000055,runtime_api_observation
+cudaHostAlloc,540,2.5426027990000004,runtime_api_observation
+cudaMemcpyAsync,21842,0.24830831400000136,runtime_api_observation
+cudaLaunchKernel,72000,0.35915479700000025,runtime_api_observation
+cudaLaunchKernelExC,8294,0.07624550499999991,runtime_api_observation
+cudaEventRecord,10,3.8752e-05,runtime_api_observation

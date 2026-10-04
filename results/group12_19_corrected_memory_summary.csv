@@ -1,0 +1,9 @@
+group,status,CPU_HISTORY_BF16_BYTES,GPU_LOCAL_KV_ACTUAL_BYTES,GPU_RETRIEVED_KV_ACTUAL_BYTES,GPU_DRAFT_K_BYTES,GPU_DRAFT_Q_BYTES,GPU_LOWBIT_METADATA_BYTES,H2D_SOURCE_DTYPE,GPU_KV_COMPRESSION_RATIO,note
+12,SMOKE_ONLY,NA,NA,NA,NA,NA,NA,bfloat16,NA,real corrected measurement pending
+13,SMOKE_ONLY,NA,NA,NA,NA,NA,NA,bfloat16,NA,real corrected measurement pending
+14,SMOKE_ONLY,NA,NA,NA,NA,NA,NA,bfloat16,NA,real corrected measurement pending
+15,SMOKE_ONLY,NA,NA,NA,NA,NA,NA,bfloat16,NA,real corrected measurement pending
+16,BLOCKED,NA,NA,NA,NA,NA,NA,NA,NA,H200 native implementation unavailable
+17,BLOCKED,NA,NA,NA,NA,NA,NA,NA,NA,H200 native implementation unavailable
+18,BLOCKED,NA,NA,NA,NA,NA,NA,NA,NA,H200 native implementation unavailable
+19,BLOCKED,NA,NA,NA,NA,NA,NA,NA,NA,H200 native implementation unavailable

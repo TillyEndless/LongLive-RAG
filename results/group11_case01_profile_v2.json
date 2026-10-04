@@ -1,0 +1,19 @@
+{
+  "status": "PARTIAL_DIAGNOSTIC_COMPLETE",
+  "source_commit": "25d7e7a52a50a28e1c7fbc7d4eaf1493a7fe0098",
+  "case": "case01",
+  "production_semantics_unchanged": true,
+  "root_fs_free": "0 KB",
+  "profile_output_fs": "/data/zxl",
+  "profile_output_free": "~1.1 TB",
+  "draftmap_calls": 5220,
+  "attention_calls": 6000,
+  "fetch_requests": 30270,
+  "unique_layer_chunk_pairs": 919,
+  "repeated_fetch_requests": 29351,
+  "h2d_bytes": 290127052800,
+  "mean_kv_tokens": 17113.2,
+  "reuse_ablation": "NOT_RUN",
+  "nsys": "FAILED_DISK_FULL",
+  "root_cause_coverage": "<80%"
+}

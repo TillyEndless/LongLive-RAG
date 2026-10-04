@@ -1,0 +1,34 @@
+{
+  "strategy": "Group11.1 CURRENT_Q",
+  "source": {
+    "worktree": "/data/zxl/LongLive-RAG-group11_15_h200",
+    "head": "410948eb7e328513e7751ac2d44193115363cee4",
+    "file": "wan/modules/causal_model_latentmem.py"
+  },
+  "static_only": true,
+  "CURRENT_Q_SOURCE_EXACT": "YES",
+  "SELECTED_IDS_USED_DIRECTLY": "YES",
+  "NO_QPREV_STATE": "YES (config retrieval_query_mode defaults to current_q)",
+  "NO_NEXT_LAYER_PREDICTION": "YES",
+  "NO_SPECULATIVE_FETCH": "YES",
+  "NO_HOT_CACHE_REUSE": "YES by Group11.1 config; optional GROUP11_REUSE_CACHE code is disabled",
+  "FINAL_WORKING_SET_EQUALS_SELECTED_PLUS_LOCAL": "YES",
+  "call_graph": [
+    "current Q -> _online_memory_indices (248-343)",
+    "DraftChunkRecord / DraftMap score_history (278-293)",
+    "select_topk (294-296)",
+    "selected GPU IDs returned (343)",
+    "history lookup and H2D in forward (930-1057)",
+    "RoPE and stack/cat (1060-1114)",
+    "BF16 attention (1122-1154)"
+  ],
+  "evidence": {
+    "config": "configs/g11_1.yaml:15-17; no retrieval_query_mode, group11_fetch_mode, or reuse flag",
+    "current_query": "wan/modules/causal_model_latentmem.py:259-260, 263-273",
+    "selection_return": "wan/modules/causal_model_latentmem.py:294-343",
+    "working_set": "wan/modules/causal_model_latentmem.py:1093-1114"
+  },
+  "limitations": [
+    "The CPU ID conversion used for trace/provenance remains a possible control overhead, but does not alter the selected GPU tensor."
+  ]
+}

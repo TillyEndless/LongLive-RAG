@@ -1,0 +1,75 @@
+{
+  "matched_interval": "temporal blocks 6-7",
+  "same_gpu": "GPU0",
+  "event_pairs_installed": true,
+  "single_final_synchronize": true,
+  "group11": {
+    "QKV_Q": {
+      "calls": 300,
+      "cuda_ms": 20.342911954969168,
+      "host_ms": 41.574888000000016
+    },
+    "QKV_K": {
+      "calls": 300,
+      "cuda_ms": 19.567296002060175,
+      "host_ms": 40.838108
+    },
+    "QKV_V": {
+      "calls": 300,
+      "cuda_ms": 26.849759969860315,
+      "host_ms": 40.63380700000001
+    },
+    "BF16_ATTENTION": {
+      "calls": 300,
+      "cuda_ms": 528.0477111339569,
+      "host_ms": 105.51650400000003
+    },
+    "OUTPUT_PROJECTION": {
+      "calls": 300,
+      "cuda_ms": 14.574304018169641,
+      "host_ms": 54.855039
+    },
+    "ATTN_WRAPPER": {
+      "calls": 300,
+      "cuda_ms": 4393.255624294281,
+      "host_ms": 4222.6143139999995
+    }
+  },
+  "longlive": {
+    "QKV_Q": {
+      "calls": 300,
+      "cuda_ms": 15.127776008099318,
+      "host_ms": 40.756136
+    },
+    "QKV_K": {
+      "calls": 300,
+      "cuda_ms": 15.961056057363749,
+      "host_ms": 40.276652000000006
+    },
+    "QKV_V": {
+      "calls": 300,
+      "cuda_ms": 15.968832027167082,
+      "host_ms": 40.09377
+    },
+    "BF16_ATTENTION": {
+      "calls": 300,
+      "cuda_ms": 551.6418256759644,
+      "host_ms": 90.00451100000006
+    },
+    "OUTPUT_PROJECTION": {
+      "calls": 300,
+      "cuda_ms": 14.03609598428011,
+      "host_ms": 43.12416899999999
+    },
+    "ATTN_WRAPPER": {
+      "calls": 300,
+      "cuda_ms": 1053.4879033565521,
+      "host_ms": 886.7955849999998
+    }
+  },
+  "wrapper_cuda_delta_s": 3.339767720937729,
+  "attention_cuda_delta_s": -0.023594114542007445,
+  "torch_profiler_matched": "NOT_RUN",
+  "runtime_api_delta": "NOT_AVAILABLE",
+  "coverage_percent": "NOT_COMPUTABLE"
+}

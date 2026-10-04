@@ -1,0 +1,227 @@
+{
+  "source": {
+    "matched_case": "case_01",
+    "attention_calls": {
+      "group12": 6000,
+      "group14_1_baseline": 6000,
+      "group14_1_gpu_only": 6000
+    },
+    "group12_baseline": "results/group12_vs_group14_1_critical_path_runs_v2/group12/case_01/rank0-0-0_lora_runtime.json",
+    "group14_1_baseline": "results/group14_1_routing_decomposition_case01/case_01/rank0-0-0_lora_runtime.json",
+    "group14_1_gpu_only": "results/group14_1_gpu_only_routing_case01/case_01/rank0-0-0_lora_runtime.json"
+  },
+  "routing_components": {
+    "q_pool": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.39208538800000003,
+      "group14_gpu_only_host_s": 0.400582761,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.4714102397859097,
+      "group14_gpu_only_cuda_s": 0.47120262403041124
+    },
+    "k_pool": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.512589534,
+      "group14_gpu_only_host_s": 0.509686282,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 1.562285215035081,
+      "group14_gpu_only_cuda_s": 1.5669559675529598
+    },
+    "score_matmul": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 1.2598045930000001,
+      "group14_gpu_only_host_s": 1.2540558510000002,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.12428563148435205,
+      "group14_gpu_only_cuda_s": 0.11945238370634616
+    },
+    "softmax": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.327593441,
+      "group14_gpu_only_host_s": 0.32735270000000005,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.12092515205778182,
+      "group14_gpu_only_cuda_s": 0.11808342419657857
+    },
+    "importance_reduction": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.179143415,
+      "group14_gpu_only_host_s": 0.185820342,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.0756230080043897,
+      "group14_gpu_only_cuda_s": 0.0738986240811646
+    },
+    "topk": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.512699197,
+      "group14_gpu_only_host_s": 0.5176444450000001,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.29528515204787253,
+      "group14_gpu_only_cuda_s": 0.2971851521730423
+    },
+    "id_construction": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.375396881,
+      "group14_gpu_only_host_s": 0.389802439,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.2923159681260586,
+      "group14_gpu_only_cuda_s": 0.30943910403549674
+    },
+    "token_expansion": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.48411667999999997,
+      "group14_gpu_only_host_s": 0.502123502,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.2827840001164004,
+      "group14_gpu_only_cuda_s": 0.3590802559843287
+    },
+    "token_clamp": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.17252145400000002,
+      "group14_gpu_only_host_s": 0.187246738,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.1066799039253965,
+      "group14_gpu_only_cuda_s": 0.10998595193726941
+    },
+    "metadata_python": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.094926218,
+      "group14_gpu_only_host_s": 0.103149012,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.037040031923446806,
+      "group14_gpu_only_cuda_s": 0.009232544031459839
+    },
+    "gather_k": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.377696687,
+      "group14_gpu_only_host_s": 0.177140803,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.6394764176793396,
+      "group14_gpu_only_cuda_s": 0.42981331163085995
+    },
+    "gather_v": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.139320556,
+      "group14_gpu_only_host_s": 0.147194266,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.3807161928433925,
+      "group14_gpu_only_cuda_s": 0.3826188483741134
+    },
+    "route_parent": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 6.660410432,
+      "group14_gpu_only_host_s": 5.741721321,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 5.589254532277584,
+      "group14_gpu_only_cuda_s": 4.6527199684679506
+    },
+    "route_detach_ids": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.889318212,
+      "group14_gpu_only_host_s": 0.0,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.15344876802153887,
+      "group14_gpu_only_cuda_s": 0.0
+    },
+    "route_detach_scores": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.21107689500000001,
+      "group14_gpu_only_host_s": 0.0,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.15865567993558943,
+      "group14_gpu_only_cuda_s": 0.0
+    },
+    "route_tolist_ids": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.120046451,
+      "group14_gpu_only_host_s": 0.0,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.06623600004101173,
+      "group14_gpu_only_cuda_s": 0.0
+    },
+    "route_tolist_scores": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.14196966,
+      "group14_gpu_only_host_s": 0.0,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.08843567999568767,
+      "group14_gpu_only_cuda_s": 0.0
+    },
+    "online_detach": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.380726314,
+      "group14_gpu_only_host_s": 0.380057596,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.23893388805910945,
+      "group14_gpu_only_cuda_s": 0.23975027207285166
+    },
+    "online_tolist": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.100669953,
+      "group14_gpu_only_host_s": 0.10404738899999999,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.04546975993458181,
+      "group14_gpu_only_cuda_s": 0.04772723193280399
+    },
+    "fetch_detach": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 1.369821625,
+      "group14_gpu_only_host_s": 1.359096149,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.1295428799893707,
+      "group14_gpu_only_cuda_s": 0.1304937280341983
+    },
+    "fetch_tolist": {
+      "group12_host_s": 0.0,
+      "group14_host_s": 0.090809177,
+      "group14_gpu_only_host_s": 0.100701983,
+      "group12_cuda_s": 0.0,
+      "group14_cuda_s": 0.04170412805816159,
+      "group14_gpu_only_cuda_s": 0.048193055985029785
+    }
+  },
+  "routing_other": {
+    "host_s": 0.47010517000000007,
+    "cuda_s": 0.733651491254335
+  },
+  "required_fields": {
+    "ROUTING_TOTAL_S": 6.660410432,
+    "Q_POOL_S": 0.39208538800000003,
+    "K_POOL_S": 0.512589534,
+    "SCORE_MATMUL_S": 1.2598045930000001,
+    "SOFTMAX_S": 0.327593441,
+    "IMPORTANCE_REDUCTION_S": 0.179143415,
+    "TOPK_S": 0.512699197,
+    "ID_CONSTRUCTION_S": 0.859513561,
+    "ROUTING_OTHER_S": 0.47010517000000007,
+    "CPU_SYNC_BASELINE_S": 1.100395107,
+    "CPU_SYNC_GPU_ONLY_S": 0.0,
+    "GATHER_BASELINE_S": 0.517017243,
+    "GATHER_GPU_ONLY_S": 0.324335069,
+    "ATTENTION_KERNEL_BASELINE_S": 8.528730938017368,
+    "ATTENTION_KERNEL_GPU_ONLY_S": 8.14947622102499,
+    "WRAPPER_BASELINE_S": 79.58225362654775,
+    "WRAPPER_GPU_ONLY_S": 78.43530898913741,
+    "NET_WRAPPER_SAVING_S": 1.1469446374103427,
+    "NET_WRAPPER_SPEEDUP": 1.0146228102138182,
+    "SPARSE_OVERHEAD_BUDGET_S": 2.061651,
+    "CURRENT_POSITIVE_OVERHEAD_S": 6.373226,
+    "OVERHEAD_REDUCTION_REQUIRED_FOR_BREAK_EVEN_S": 4.3115749999999995
+  },
+  "correctness_gate": {
+    "selected_history_ids_exact": true,
+    "selected_token_ids_exact": true,
+    "selected_order_exact": true,
+    "K_exact": true,
+    "V_exact": true,
+    "final_BF16_attention_exact": true,
+    "retained_fraction": 0.75
+  },
+  "decisions": {
+    "GPU_ONLY_SELECTION_FEASIBLE": "YES (sparse provenance path only)",
+    "CPU_SYNC_REMOVAL_EFFECTIVE": "YES for sparse provenance CPU conversion; NO for historical archive indexing",
+    "ROUTING_DOMINANT_SUBCOMPONENT": "DRAFTMAP_ROUTE_PARENT / score+pooling+selection aggregate",
+    "BREAK_EVEN_REACHED": "NO",
+    "NEXT_OPTIMIZATION": "batch/vectorize DraftMap routing and remove Python archive-list indexing before attempting selective decode"
+  }
+}

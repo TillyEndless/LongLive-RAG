@@ -1,0 +1,2 @@
+status,tool,scope,detail
+NOT_AVAILABLE,py-spy/scalene/line_profiler,CausalWanSelfAttention.forward,No installed line profiler; torch.profiler record-function and CPU operator data used instead

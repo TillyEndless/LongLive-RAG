@@ -1,0 +1,7 @@
+phase,group11_bounded_s,longlive_rag_s,delta_s,note
+bounded_wrapper_interval,154.88356907714845,NOT_AVAILABLE,NOT_AVAILABLE,No aligned LongLive torch.profiler capture; old control was sync-distorted
+G11_WRAPPER_record_function_sum,13.547006412000005,NOT_AVAILABLE,NOT_AVAILABLE,No aligned LongLive torch.profiler capture; old control was sync-distorted
+BF16_attention_record_function_sum,0.8259852309999994,NOT_AVAILABLE,NOT_AVAILABLE,No aligned LongLive torch.profiler capture; old control was sync-distorted
+GPU_kernel_duration_sum,1.7811477720000013,NOT_AVAILABLE,NOT_AVAILABLE,No aligned LongLive torch.profiler capture; old control was sync-distorted
+GPU_memcpy_duration_sum,0.5444055950000023,NOT_AVAILABLE,NOT_AVAILABLE,No aligned LongLive torch.profiler capture; old control was sync-distorted
+cudaStreamSynchronize_api_sum,2.1126476570000055,NOT_AVAILABLE,NOT_AVAILABLE,No aligned LongLive torch.profiler capture; old control was sync-distorted
