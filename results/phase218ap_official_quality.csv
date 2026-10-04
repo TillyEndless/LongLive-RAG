@@ -1,0 +1,3 @@
+label,case,video,frames,fps,width,height,dino,ssim,psnr,lpips,lpips_status,status
+baseline,case_01,/data/zxl/LongLive-RAG-group11_1-w1-phase218ao/results/phase218ap_eval/outputs/baseline/case_01/baseline.mp4,474,16.0,832,480,0.8445296287536621,0.17438817016583752,9.032005155039505,0.5627127885818481,available,OK
+w1,case_01,/data/zxl/LongLive-RAG-group11_1-w1-phase218ao/results/phase218ap_eval/outputs/w1/case_01/w1.mp4,474,16.0,832,480,0.8707666993141174,0.1732239530381112,8.987080038978018,0.5634891390800476,available,OK

@@ -1,0 +1,3 @@
+mode,e2e_s,transformer_s,validity
+baseline,119.1131180562079,106.3547869194299,baseline_complete
+w1_corrected_exploratory,113.39737264066935,100.50624381937087,unsynchronized_exploratory_not_certified

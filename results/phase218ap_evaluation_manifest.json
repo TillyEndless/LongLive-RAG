@@ -1,0 +1,80 @@
+{
+  "protocol": "canonical evaluator frame0-vs-frame237; paired temporal metrics compare corresponding Baseline/W1 frames",
+  "evaluator_source": "/data/zxl/DraftMap-RAG/scripts/evaluate_canonical3_case.py",
+  "evaluator_sha256": "85e642015bb185009a7f68648735ead32dd3c85485a66c8c1de301c9f66e10e5",
+  "unified_pipeline": "/data/zxl/DraftMap-RAG/evaluation/unified_pipeline.py",
+  "unified_pipeline_sha256": "57475b6be2e37af6016626f67fa9cc21fd0517339560ba68e64db35554652aec",
+  "videos": [
+    {
+      "label": "baseline",
+      "path": "/data/zxl/LongLive-RAG-group11_1-w1-phase218ao/results/baseline_smoke/case_01/rank0-0-0_lora.mp4",
+      "sha256": "0c6f7ab7c0d3c09bd60c31a20a87c8503eaea14baf7e04ef823e9d5c4177a686"
+    },
+    {
+      "label": "w1",
+      "path": "/data/zxl/LongLive-RAG-group11_1-w1-phase218ao/results/w1_corrected/case_01/rank0-0-0_lora.mp4",
+      "sha256": "c7d6a7b4eee7fe84ce7b2211a4989e434b02ffb349324ff916923857ab8ed6b5"
+    }
+  ],
+  "official": [
+    {
+      "label": "baseline",
+      "case": "case_01",
+      "video": "/data/zxl/LongLive-RAG-group11_1-w1-phase218ao/results/phase218ap_eval/outputs/baseline/case_01/baseline.mp4",
+      "frames": 474,
+      "fps": 16.0,
+      "width": 832,
+      "height": 480,
+      "dino": 0.8445296287536621,
+      "ssim": 0.17438817016583752,
+      "psnr": 9.032005155039505,
+      "lpips": 0.5627127885818481,
+      "lpips_status": "available",
+      "status": "OK"
+    },
+    {
+      "label": "w1",
+      "case": "case_01",
+      "video": "/data/zxl/LongLive-RAG-group11_1-w1-phase218ao/results/phase218ap_eval/outputs/w1/case_01/w1.mp4",
+      "frames": 474,
+      "fps": 16.0,
+      "width": 832,
+      "height": 480,
+      "dino": 0.8707666993141174,
+      "ssim": 0.1732239530381112,
+      "psnr": 8.987080038978018,
+      "lpips": 0.5634891390800476,
+      "lpips_status": "available",
+      "status": "OK"
+    }
+  ],
+  "temporal_summary": {
+    "frames": 474,
+    "mean": {
+      "dino": 0.8787102601785637,
+      "ssim": 0.6662745980659976,
+      "psnr": Infinity,
+      "lpips": 0.2362702894396945
+    },
+    "std": {
+      "dino": 0.2682376843459593,
+      "ssim": 0.3068976536101541,
+      "psnr": NaN,
+      "lpips": 0.2845711688946957
+    },
+    "first_frame": {
+      "dino": 0.9999679923057556,
+      "ssim": 0.999010364670157,
+      "psnr": 52.507926607125206,
+      "lpips": 0.00022854954295326024
+    },
+    "last_frame": {
+      "dino": 0.9035088419914246,
+      "ssim": 0.40031425137148274,
+      "psnr": 13.516244671971238,
+      "lpips": 0.3601555824279785
+    }
+  },
+  "retrieval_trace_comparison": "4770/4770 draftmap rows matched on compared fields; no first divergence detected",
+  "quality_reference": "No ground-truth reference supplied; official rows are evaluator's fixed intra-video frame0-vs-frame237 protocol, not GT quality."
+}
