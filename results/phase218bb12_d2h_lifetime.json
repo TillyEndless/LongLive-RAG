@@ -1,0 +1,8 @@
+{
+  "destination_pinned": true,
+  "event_query_before_sync": false,
+  "event_after_sync": true,
+  "content_after_event": true,
+  "source_retained_until_event": true,
+  "note": "bounded CUDA event test only; not a full model lifecycle capture"
+}

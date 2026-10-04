@@ -1,0 +1,19 @@
+{
+  "worktree": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb/",
+  "source_head": "410948eb7e328513e7751ac2d44193115363cee4",
+  "gate_a_physical_allocation": "PASS_STATIC",
+  "gate_b_committed_state_replay": "NOT_MEASURED",
+  "gate_c_all_ready_attention_parity": "NOT_MEASURED",
+  "gate_d_ao_w1_source_wiring": "PASS_STATIC",
+  "ready_for_f3": false,
+  "ready_for_f120": false,
+  "f120_run": false,
+  "unified_evaluation": "NOT_RUN",
+  "physical_cache_frames": 4,
+  "logical_local_attn_size": 20,
+  "memory_size": 16,
+  "sink_size": 1,
+  "physical_allocation_bytes_30_layers": 1150156800,
+  "logical_w20_allocation_bytes_30_layers": 5750784000,
+  "ao_w1_mode": "W1_STREAMING_UNSYNCHRONIZED_EXPLORATORY"
+}

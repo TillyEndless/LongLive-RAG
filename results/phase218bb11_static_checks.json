@@ -1,0 +1,16 @@
+{
+  "worktree": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb/",
+  "source_head": "410948eb7e328513e7751ac2d44193115363cee4",
+  "py_compile": "PASS",
+  "physical4_allocation": {"bytes": 1150156800, "gib": 1.071167060136795},
+  "active_current_q_eligibility": "STATIC_PASS",
+  "ao_w1_helper_identical": "YES_NORMALIZED_BODY",
+  "ao_w1_direct_final_buffer": "STATIC_PASS",
+  "ao_post_attention_join": "STATIC_PASS",
+  "gate_b_committed_state_replay": "NOT_MEASURED",
+  "gate_c_all_ready_attention_parity": "NOT_MEASURED",
+  "d2h_lifetime_safe": "UNRESOLVED",
+  "ready_for_f120": false,
+  "f120_run": false,
+  "unified_evaluation": "NOT_RUN"
+}

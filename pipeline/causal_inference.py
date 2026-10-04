@@ -16,6 +16,7 @@ import torch.distributed as dist
 from ae.config import AEConfig
 from ae.model import LatentAE
 from utils.unified_latency_profiler import UnifiedLatencyProfiler
+from utils.critical_path_trace import CriticalPathTrace, set_active_trace
 
 
 def avg_pool(latent_frame: torch.Tensor) -> torch.Tensor:
@@ -52,7 +53,7 @@ class CausalInferencePipeline(torch.nn.Module):
         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
         # WanDiffusionWrapper init.
         model_args_clean = dict(getattr(args, "model_kwargs", {}))
-        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id", "group11_fetch_mode"]:
+        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "q_sparse_ratio", "kv_promotion_ratio", "promotion_ratio", "promotion_source", "materialization_mode", "gpu_k_storage", "gpu_v_storage", "group_id", "group11_fetch_mode", "flash_fetch_mode", "physical_kv_cache_frames"]:
             model_args_clean.pop(key, None)
 
         self.generator = WanDiffusionWrapper(
@@ -76,13 +77,17 @@ class CausalInferencePipeline(torch.nn.Module):
         self.args = args
         self.num_frame_per_block = getattr(args, "num_frame_per_block", 1)
         self.local_attn_size = args.model_kwargs.local_attn_size
+        self.physical_kv_cache_frames = getattr(args.model_kwargs, "physical_kv_cache_frames", None)
 
         # Retrieval autoencoder (optional). compression_method ∈ {"avg_pool", "ae"}.
         self.compression_method = getattr(args.model_kwargs, "compression_method", "avg_pool")
         self.retrieval_backend = getattr(args.model_kwargs, "retrieval_backend", "original")
         self.retrieval_query_mode = str(getattr(args.model_kwargs, "retrieval_query_mode", "current_q"))
-        if self.retrieval_query_mode not in {"current_q", "previous_q"}:
-            raise ValueError("retrieval_query_mode must be current_q or previous_q")
+        if self.retrieval_query_mode == "previous_q":
+            # Historical alias: preserve the original direct previous-Q mode.
+            self.retrieval_query_mode = "previous_q_direct"
+        if self.retrieval_query_mode not in {"current_q", "previous_q_direct", "previous_q_prefetch"}:
+            raise ValueError("retrieval_query_mode must be current_q, previous_q_direct, or previous_q_prefetch")
         if self.retrieval_backend not in {"original", "draftmap", "draftmap_online"}:
             raise ValueError("retrieval_backend must be 'original', 'draftmap', or 'draftmap_online'")
         self.draftmap_index = None
@@ -96,6 +101,8 @@ class CausalInferencePipeline(torch.nn.Module):
         self.generator.model.group_runtime_trace = []
         self.generator.model.group11_profile = {
             "NUM_ATTENTION_CALLS": 0, "NUM_DRAFTMAP_CALLS": 0,
+            "BOOTSTRAP_CALLS": 0, "PREVIOUS_Q_RETRIEVAL_CALLS": 0,
+            "Q_HISTORY_PERSISTED_CALLS": 0,
             "NUM_DRAFT_Q_POOL_CALLS": 0, "NUM_DRAFT_K_SCORE_CALLS": 0,
             "NUM_TOPK_CALLS": 0, "NUM_CPU_KV_FETCH_CALLS": 0,
             "NUM_H2D_COPY_CALLS": 0, "TOTAL_FULL_KV_H2D_BYTES": 0,
@@ -107,14 +114,40 @@ class CausalInferencePipeline(torch.nn.Module):
             "E2E_LATENCY_MS": 0.0,
             "TRANSFORMER_LATENCY_MS": 0.0,
             "WRAPPER_LATENCY_MS": 0.0,
+            "NON_TRANSFORMER_E2E_MS": 0.0,
+            "SELF_ATTN_WRAPPER_MS": None,
             "EXPOSED_H2D_MS": 0.0,
             "EXPOSED_H2D_CALLS": 0,
             "RUNTIME_INSTRUMENTATION_VERSION": "v1",
+            "rag_fetch_events": [], "rag_attention_rows": [],
+            "RAG_STRATEGY_PROFILE_VERSION": "v1",
+            "QPREFETCH_PREDICTIONS": 0,
+            "QPREFETCH_REQUESTED_IDS": 0,
+            "QPREFETCH_H2D_COUNT": 0,
+            "QPREFETCH_HITS": 0,
+            "QPREFETCH_MISSES": 0,
+            "QPREFETCH_STALE_REJECTS": 0,
+            "QPREFETCH_TEMPORAL_ALIGNMENT_PASS": 0,
+            "QPREFETCH_TEMPORAL_ALIGNMENT_FAIL": 0,
+            "DEMAND_H2D_ON_VALID_PREFETCH_HIT": 0,
+            "CURRENT_INVOCATION_QPREV_RETRIEVAL_COUNT": 0,
+            "NON_BOOTSTRAP_PREFETCH_MISS": 0,
+            "NON_BOOTSTRAP_FALLBACK_COUNT": 0,
+            "CURRENT_Q_RETRIEVAL_AFTER_BOOTSTRAP": 0,
+            "EXACT_Q_T_MINUS_1_ALIGNMENT": "PASS_PENDING_SMOKE",
+            "TEMPORAL_PREFETCH_VALID": "PENDING",
+            "FINAL_WORKING_SET_EQUALS_QPREV_PREDICTION": "PENDING",
+            "TEMPORAL_PREFETCH_MODE": "previous_q_prefetch",
         }
         self.unified_latency_profiler = UnifiedLatencyProfiler(
             enabled=bool(getattr(args, "unified_latency_profile", False))
         )
         self.generator.model.unified_latency_profiler = self.unified_latency_profiler
+        self.critical_path_trace = CriticalPathTrace(
+            enabled=os.environ.get("CRITICAL_PATH_TRACE", "0") == "1"
+        )
+        set_active_trace(self.critical_path_trace)
+        self.generator.model.critical_path_trace = self.critical_path_trace
         group_mode = str(getattr(args.model_kwargs, "group_runtime_mode", "baseline"))
         self.compressed_history_mode = {
             "group12_corrected": "int8_fp8",
@@ -123,7 +156,14 @@ class CausalInferencePipeline(torch.nn.Module):
             "group15_corrected": "nvfp4",
         }.get(group_mode)
         sparse_ratio = float(getattr(args.model_kwargs, "group_sparse_ratio", 0.0))
+        self.q_sparse_ratio = float(getattr(args.model_kwargs, "q_sparse_ratio", sparse_ratio))
+        self.promotion_ratio = float(getattr(args.model_kwargs, "kv_promotion_ratio", getattr(args.model_kwargs, "promotion_ratio", 0.0)))
+        self.promotion_source = str(getattr(args.model_kwargs, "promotion_source", "draftmap"))
+        self.materialization_mode = str(getattr(args.model_kwargs, "materialization_mode", "serial_reference"))
         fetch_mode = str(getattr(args.model_kwargs, "group11_fetch_mode", "serial_full"))
+        flash_fetch_mode = str(getattr(args.model_kwargs, "flash_fetch_mode", "serial_reference"))
+        if fetch_mode in {"flashfetch_async", "async_double_buffer"} and flash_fetch_mode == "serial_reference":
+            flash_fetch_mode = "async_double_buffer"
         self.group11_fetch_mode = fetch_mode
         for block in getattr(self.generator.model, "blocks", []):
             block.self_attn.retrieval_backend = self.retrieval_backend
@@ -132,9 +172,15 @@ class CausalInferencePipeline(torch.nn.Module):
             block.self_attn.draftmap_trace = self.generator.model.draftmap_trace
             block.self_attn.group11_profile = self.generator.model.group11_profile
             block.self_attn.unified_latency_profiler = self.unified_latency_profiler
+            block.self_attn.critical_path_trace = self.critical_path_trace
             block.self_attn.group_runtime_mode = group_mode
             block.self_attn.group_sparse_ratio = sparse_ratio
+            block.self_attn.q_sparse_ratio = self.q_sparse_ratio
+            block.self_attn.promotion_ratio = self.promotion_ratio
+            block.self_attn.promotion_source = self.promotion_source
+            block.self_attn.materialization_mode = self.materialization_mode
             block.self_attn.group11_fetch_mode = fetch_mode
+            block.self_attn.flash_fetch_mode = flash_fetch_mode
             block.self_attn.group_runtime_trace = self.generator.model.group_runtime_trace
         self.ae_model = None
         if self.compression_method == "ae":
@@ -195,6 +241,9 @@ class CausalInferencePipeline(torch.nn.Module):
         """
         e2e_start = time.perf_counter()
         self.unified_latency_profiler.reset()
+        if self.critical_path_trace.enabled:
+            self.critical_path_trace.reset()
+            set_active_trace(self.critical_path_trace)
         transformer_start = None
         transformer_end = None
 
@@ -249,6 +298,9 @@ class CausalInferencePipeline(torch.nn.Module):
             # global attention
             kv_cache_size = num_output_frames * self.frame_seq_length
             kv_policy = "global (-1)"
+        if self.physical_kv_cache_frames is not None:
+            kv_cache_size = int(self.physical_kv_cache_frames) * self.frame_seq_length
+            kv_policy += f", physical={int(self.physical_kv_cache_frames)} frames"
         print(f"kv_cache_size: {kv_cache_size} (policy: {kv_policy}, frame_seq_length: {self.frame_seq_length}, num_output_frames: {num_output_frames})")
 
         self._initialize_kv_cache(
@@ -460,11 +512,69 @@ class CausalInferencePipeline(torch.nn.Module):
                 profile_state["UNIFIED_LATENCY_PROFILE"] = self.unified_latency_profiler.finalize()
         profile_state = getattr(self.generator.model, "group11_profile", None)
         if isinstance(profile_state, dict):
+            for _block in getattr(self.generator.model, "blocks", []):
+                finalize_rag = getattr(getattr(_block, "self_attn", None), "_finalize_rag_cuda_events", None)
+                if callable(finalize_rag):
+                    finalize_rag()
+            if self.retrieval_query_mode == "previous_q_prefetch":
+                temporal_events = []
+                for layer_id, cache in enumerate(self.kv_cache1 or []):
+                        for valid_id, state in cache.get("temporal_qprev_event_state", {}).items():
+                            h2d_ms = None
+                            wait_ms = None
+                            try:
+                                h2d_ms = float(state["h2d_start_event"].elapsed_time(state["h2d_end_event"]))
+                            except Exception:
+                                pass
+                            try:
+                                if state.get("target_wait_start_event") is not None:
+                                    wait_ms = float(state["target_wait_start_event"].elapsed_time(state["target_wait_end_event"]))
+                            except Exception:
+                                pass
+                            temporal_events.append({
+                                "layer_id": int(state.get("target_layer", layer_id)),
+                                "target_valid_invocation_id": int(valid_id),
+                                "target_invocation_id": state.get("target_invocation_id"),
+                                "source_invocation_id": state.get("source_invocation_id"),
+                                "requested_ids": int(state.get("requested_ids", 0)),
+                                "selected_ids": list(state.get("selected_ids", [])),
+                                "q_ready_host": state.get("q_ready_host"),
+                                "predict_start_host": state.get("predict_start_host"),
+                                "predict_end_host": state.get("predict_end_host"),
+                                "predict_work_ms": state.get("predict_work_ms"),
+                                "host_control_ms": state.get("host_control_ms"),
+                                "archive_lookup_ms": state.get("archive_lookup_ms"),
+                                "prefetch_prepare_ms": state.get("prefetch_prepare_ms"),
+                                "h2d_enqueue_host": state.get("h2d_enqueue_host"),
+                                "h2d_work_ms": h2d_ms,
+                                "target_invocation_start_host": state.get("target_invocation_start_host"),
+                                "target_consumer_need_host": state.get("target_consumer_need_host"),
+                                "target_wait_event_ms": wait_ms,
+                                "target_wait_call_host_ms": state.get("target_wait_call_host_ms"),
+                                "kv_assembly_ms": state.get("kv_assembly_ms"),
+                                "fa_start_host": state.get("fa_start_host"),
+                                "fa_end_host": state.get("fa_end_host"),
+                            })
+                profile_state["TEMPORAL_PREFETCH_EVENTS"] = temporal_events
+            if self.critical_path_trace.enabled:
+                profile_state["CRITICAL_PATH_PROFILE"] = self.critical_path_trace.finalize()
             e2e_ms = (e2e_end - e2e_start) * 1000.0
             transformer_ms = ((transformer_end or e2e_end) - (transformer_start or e2e_start)) * 1000.0
             profile_state["E2E_LATENCY_MS"] = float(e2e_ms)
             profile_state["TRANSFORMER_LATENCY_MS"] = float(transformer_ms)
             profile_state["WRAPPER_LATENCY_MS"] = float(max(e2e_ms - transformer_ms, 0.0))
+            profile_state["NON_TRANSFORMER_E2E_MS"] = float(max(e2e_ms - transformer_ms, 0.0))
+            phase_ms = profile_state.get("model_phase_ms", {})
+            self_attn_wrapper_ms = phase_ms.get("attention_wrapper")
+            profile_state["SELF_ATTN_WRAPPER_MS"] = (float(self_attn_wrapper_ms)
+                                                      if self_attn_wrapper_ms is not None else None)
+            if self.retrieval_query_mode == "previous_q_prefetch":
+                fail = int(profile_state.get("QPREFETCH_TEMPORAL_ALIGNMENT_FAIL", 0))
+                miss = int(profile_state.get("NON_BOOTSTRAP_PREFETCH_MISS", 0))
+                fallback = int(profile_state.get("NON_BOOTSTRAP_FALLBACK_COUNT", 0))
+                profile_state["EXACT_Q_T_MINUS_1_ALIGNMENT"] = "PASS" if fail == 0 else "FAIL"
+                profile_state["TEMPORAL_PREFETCH_VALID"] = "YES" if miss == 0 and fallback == 0 and fail == 0 else "NO"
+                profile_state["FINAL_WORKING_SET_EQUALS_QPREV_PREDICTION"] = "YES" if profile_state["TEMPORAL_PREFETCH_VALID"] == "YES" else "NO"
 
         if return_latents:
             return video, output.to(noise.device)
@@ -498,14 +608,20 @@ class CausalInferencePipeline(torch.nn.Module):
                 "gpu_draft_k_frames": [],
                 "local_draft_k_frames": [],
                 "compressed_history_archive": (
-                    CompressedHistoryArchive(self.compressed_history_mode)
-                    if self.compressed_history_mode is not None else None
+                    CompressedHistoryArchive(
+                        self.compressed_history_mode,
+                        promotion_ratio=self.promotion_ratio,
+                        promotion_source=self.promotion_source,
+                        materialization_mode=self.materialization_mode,
+                    ) if self.compressed_history_mode is not None else None
                 ),
                 "compressed_history_entries": [],
                 "evicted_compressed_entries": 0,
                 "retrieved_archived_entries": 0,
                 "transient_dequant_gpu_bytes": 0,
                 "transient_dequant_gpu_peak_bytes": 0,
+                "transient_promotion_gpu_bytes": 0,
+                "transient_promotion_gpu_peak_bytes": 0,
                 "next_layer_prefetch": {},
                 "next_layer_prefetch_trace": [],
                 "prefetch_scheduled_bytes": 0,
@@ -521,10 +637,15 @@ class CausalInferencePipeline(torch.nn.Module):
                 "draft_q_history_meta": None,
                 "draft_q_pending": None,
                 "draft_q_retrieval_started": False,
+                "temporal_qprev_predictions": {},
+                "temporal_qprev_prefetch": {},
+                "temporal_qprev_staging_slots": {},
+                "temporal_qprev_consumed_slots": [],
+                "temporal_qprev_consumer_event": None,
             })
 
         self.kv_cache1 = kv_cache1  # always store the clean cache
-        if str(getattr(self, "group11_fetch_mode", "serial_full")) == "next_layer_prefetch":
+        if str(getattr(self, "group11_fetch_mode", "serial_full")) in {"next_layer_prefetch", "next_layer_prefetch_direct"}:
             for block in getattr(self.generator.model, "blocks", []):
                 block.self_attn.prefetch_kv_cache = kv_cache1
 

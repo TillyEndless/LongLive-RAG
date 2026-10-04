@@ -1,0 +1,57 @@
+{
+  "worktree": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb",
+  "source_head": "410948eb7e328513e7751ac2d44193115363cee4",
+  "generated_utc": "2026-10-04T14:40:05.484929+00:00",
+  "statuses": {
+    "MATCHED_INPUT_CAPTURE": "PASS",
+    "PHYSICAL_CACHE_4": "PASS",
+    "SINGLE_ORIGINAL_ARCHIVE": "PASS",
+    "ELIGIBILITY_PARITY": "PASS",
+    "RETRIEVAL_CONTENT_PARITY": "NOT_MEASURED",
+    "ROPE_PARITY": "NOT_MEASURED",
+    "FINAL_KV_PARITY": "NOT_MEASURED",
+    "NATIVE_FA2_PARITY": "NOT_MEASURED",
+    "D2H_LIFETIME_SAFE": "PASS",
+    "AO_W1_PIPELINE_UNCHANGED": "YES",
+    "F3_SMOKE": "NOT_RUN",
+    "READY_FOR_F120": "NO",
+    "REAL_MODEL_F30_OUTPUT_EQUALITY": "FAIL"
+  },
+  "source_sha256": {
+    "wan/modules/causal_model_latentmem.py": "aaf32f022a4da329e840bc83b80c87ee46f954858292a9a67923bb686e4940af",
+    "pipeline/causal_inference.py": "f5fbd5a14eca6539b7e2ec422616d8ed4704cb077c86815c8a4df0796a61ae26",
+    "config": "9446a512bb7376e3523c81f2f0ed581bef15aaf7adfe50939a4aa8ec187a5f0b"
+  },
+  "capture": {
+    "source": "/tmp/bb13_ao_capture",
+    "raw_capture": "/tmp/bb13_ao_capture/results/bb13_ao_capture.pt",
+    "compact_capture": "/tmp/bb13_ao_capture/results/bb13_ao_capture_compact.pt",
+    "records": 10,
+    "current_ends": [
+      4680,
+      9360,
+      14040,
+      18720,
+      23400,
+      28080,
+      32760,
+      37440,
+      42120,
+      46800
+    ],
+    "frame_tokens": 1560,
+    "layer": 0,
+    "mode": "AO serial_full isolated F30"
+  },
+  "real_f30_video_comparison": {
+    "ao_video": "/tmp/bb13_ao_capture/results/bb13_ao_f30/rank0-0-0_lora.mp4",
+    "bb_video": "/tmp/bb13_bb_serial_f30/rank0-0-0_lora.mp4",
+    "frames_compared": 117,
+    "pixel_max_abs": 255,
+    "pixel_mean_abs": 38.765755115592356,
+    "black_frames_ao": 0,
+    "black_frames_bb": 0,
+    "note": "end-to-end decoded F30 smoke comparison, not tensor-level FA2 parity"
+  },
+  "stop_reason": "Cache replay and D2H gates passed, but retrieval/actual RoPE/final-KV/FA2 tensor parity was not instrumented; decoded F30 outputs differed, so F3 and F120 remain blocked."
+}

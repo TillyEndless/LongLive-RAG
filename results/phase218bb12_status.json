@@ -1,0 +1,36 @@
+{
+  "worktree": "/data/zxl/LongLive-RAG-group11_1-w1-phase218bb",
+  "source_head": "410948eb7e328513e7751ac2d44193115363cee4",
+  "generated_utc": "2026-10-04T14:09:43.258805+00:00",
+  "changes": {
+    "runtime_frame_seqlen_metadata": "PASS",
+    "duplicate_physical_cache_override_removed": "PASS",
+    "hardcoded_1560_in_apply_cache_updates": "REMOVED",
+    "native_attention_math_changed": "NO",
+    "ao_w1_helper_replaced": "NO"
+  },
+  "tests": {
+    "py_compile": "PASS",
+    "cache_update_runtime_frame_test": "PASS",
+    "d2h_event_lifetime_small_cuda_test": "PASS",
+    "real_committed_state_replay": "NOT_MEASURED",
+    "real_rope_parity": "NOT_MEASURED",
+    "all_ready_attention_parity": "NOT_MEASURED",
+    "f3_smoke": "NOT_RUN",
+    "f120": "NOT_RUN",
+    "unified_evaluation": "NOT_RUN"
+  },
+  "sha256_after": {
+    "pipeline/causal_inference.py": "f5fbd5a14eca6539b7e2ec422616d8ed4704cb077c86815c8a4df0796a61ae26",
+    "wan/modules/causal_model_latentmem.py": "fb62890a86aad02adcb5fc1895dec4512b96553b0fafdc1311dc3eb0b1ce5a77"
+  },
+  "d2h_observation": {
+    "destination_pinned": true,
+    "event_query_before_sync": false,
+    "event_after_sync": true,
+    "content_after_event": true,
+    "source_retained_until_event": true,
+    "note": "bounded CUDA event test only; not a full model lifecycle capture"
+  },
+  "stop_reason": "No authoritative AO/BB real committed-state capture exists in this BB worktree; parity gates remain unmeasured."
+}
