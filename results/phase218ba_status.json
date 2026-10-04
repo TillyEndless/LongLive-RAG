@@ -1,0 +1,41 @@
+{
+  "phase": "BA-1",
+  "base": {
+    "tree": "/data/zxl/LongLive-RAG-group11_1-w1-phase218ba",
+    "source": "AO restored source",
+    "head": "410948eb7e328513e7751ac2d44193115363cee4"
+  },
+  "configuration": {
+    "local_attn_size": 20,
+    "memory_size": 16,
+    "sink_size": 1,
+    "recent_exclude": 5,
+    "physical_kv_cache_frames": 4,
+    "num_frame_per_block": 3
+  },
+  "allocation": {
+    "layers": 30,
+    "ao_w20_bytes": 5750784000,
+    "ba_physical4_bytes": 1150156800,
+    "ao_shape": [1, 31200, 12, 128],
+    "ba_shape": [1, 6240, 12, 128],
+    "status": "PASS"
+  },
+  "state_replay": {
+    "blocks": 16,
+    "raw_frame_identity": "PASS",
+    "retrieval_equivalence": "PASS",
+    "archive_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28],
+    "ba_pending_count": 16
+  },
+  "rope": {
+    "implementation": "causal_online_rope",
+    "positions": [0, 17, 18, 19],
+    "max_abs": 0.0,
+    "mean_abs": 0.0,
+    "status": "PASS"
+  },
+  "attention_parity": "NOT_MEASURED",
+  "short_run_latency": "NOT_MEASURED",
+  "ready_for_f120": "NO"
+}

@@ -1,0 +1,15 @@
+{
+  "source_files": {
+    "pipeline/causal_inference.py": "dcdb0795874d98156cbca48d695ca901fc129d76b06c8da49c291d29b3c3826a",
+    "wan/modules/causal_model_latentmem.py": "9d4b491089baa14e024374897106605539da69467f58dcadf892295886a32df9",
+    "configs/g11_1_w20_r16_s1_f120_w1_4frame.yaml": "c346dd5e9618932597e03cf8fe552f8720236178305009103e62eba94c09a9cb"
+  },
+  "tests": {
+    "results/phase218ba_gate.json": "940fb285ce16e63f3f44beeeaac5f4e172ebe1f9dc3efcce56abaa6ca2162888"
+  },
+  "provenance": {
+    "base_head": "410948eb7e328513e7751ac2d44193115363cee4",
+    "attention_parity": "NOT_MEASURED",
+    "short_run_latency": "NOT_MEASURED"
+  }
+}

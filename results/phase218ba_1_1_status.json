@@ -1,0 +1,18 @@
+{
+  "phase": "BA-1.1",
+  "output_isolation": "PASS",
+  "output_folder": "/data/zxl/LongLive-RAG-group11_1-w1-phase218ba/results/w1_4frame/case_01",
+  "compressed_mode_physical4": "REJECTED",
+  "frame_seq_length_source": "cache.frame_seq_length",
+  "actual_per_block_sentinel_replay": "PASS",
+  "retrieval_equivalence": "PASS_TESTED_REPLAY",
+  "rope_parity": {"status": "PASS_IMPLEMENTATION_LEVEL", "max_abs": 0.0},
+  "async_d2h_lifetime": "EXPLICIT_BATCH_EVENT_GUARDED",
+  "promotion_wait_timing": "NOT_MEASURED",
+  "raw_qkv_parity": "NOT_MEASURED",
+  "final_kv_parity": "NOT_MEASURED",
+  "native_fa2_output_parity": "NOT_MEASURED",
+  "short_run_latency": "NOT_MEASURED",
+  "ready_for_f120": "NO",
+  "reason": "No matched all-ready AO-vs-BA real-state QKV/output artifact available; unsynchronized AO W1 is not used as reference."
+}

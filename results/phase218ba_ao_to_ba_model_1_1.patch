@@ -1,0 +1,103 @@
+--- /data/zxl/LongLive-RAG-group11_1-w1-phase218ao/wan/modules/causal_model_latentmem.py	2026-10-04 14:58:27.514284726 +0800
++++ wan/modules/causal_model_latentmem.py	2026-10-04 19:46:21.908314634 +0800
+@@ -710,6 +710,10 @@
+                     
+                     evicted_k_frames = [f.to("cpu", non_blocking=True) for f in ev_k_split]
+                     evicted_v_frames = [f.to("cpu", non_blocking=True) for f in ev_v_split]
++                evicted_ready_event = None
++                if evicted_k_frames and temp_k.is_cuda:
++                    evicted_ready_event = torch.cuda.Event()
++                    evicted_ready_event.record(torch.cuda.current_stream(device=temp_k.device))
+                 evicted_draft_k_frames = kv_cache.get("local_draft_k_frames", [])[sink_tokens // frame_seqlen:sink_tokens // frame_seqlen + num_evicted_frames]
+ 
+                 # Apply rolling update to the temporary cache
+@@ -731,9 +735,11 @@
+                 # === causal online RoPE Application ===
+                 # For query: use relative indices based on position in window
+                 # Query frames are at the end of the window: [local_attn_size - num_new_frames, ..., local_attn_size - 1]
++                logical_end_frame = min(
++                    int(current_end // frame_seqlen), int(self.local_attn_size))
+                 query_relative_indices = torch.arange(
+-                    self.local_attn_size - num_new_frames, 
+-                    self.local_attn_size, 
++                    logical_end_frame - num_new_frames,
++                    logical_end_frame,
+                     device=q.device
+                 )
+                 rope_start = time.perf_counter()
+@@ -747,7 +753,16 @@
+                 # Sink frames: [0, 1, ..., sink_size - 1]
+                 # Rolling window frames: [sink_size, sink_size + 1, ..., local_end_index/frame_seqlen - 1]
+                 num_cache_frames = local_end_index // frame_seqlen
+-                cache_relative_indices = torch.arange(0, num_cache_frames, device=k.device)
++                # The physical cache may retain only Sink + the current local
++                # frames.  Preserve AO's logical W20 RoPE positions rather than
++                # renumbering those resident local frames from zero.
++                local_frame_count = max(0, num_cache_frames - self.sink_size)
++                local_start_frame = max(
++                    self.sink_size, logical_end_frame - local_frame_count)
++                cache_relative_indices = torch.cat([
++                    torch.arange(0, self.sink_size, device=k.device),
++                    torch.arange(local_start_frame, logical_end_frame, device=k.device),
++                ])
+                 
+                 # Create a grid_sizes for the cached K
+                 cache_grid_sizes = grid_sizes.clone()
+@@ -775,6 +790,7 @@
+                     "is_recompute": is_recompute,
+                     "evicted_k_frames": evicted_k_frames,
+                     "evicted_v_frames": evicted_v_frames,
++                    "evicted_ready_event": evicted_ready_event,
+                     "evicted_draft_k_frames": evicted_draft_k_frames,
+                     "new_draft_k_frames": draft_k_frames,
+                 }
+@@ -1679,9 +1695,46 @@
+                                 cache.setdefault("compressed_history_entries", []).append(rec)
+                                 cache["evicted_compressed_entries"] = int(cache.get("evicted_compressed_entries", 0)) + 1
+                         else:
+-                            cache.setdefault("cpu_k_frames", []).extend(update_info["evicted_k_frames"])
+-                            cache.setdefault("cpu_v_frames", []).extend(update_info["evicted_v_frames"])
+-                        cache.setdefault("gpu_draft_k_frames", []).extend(update_info.get("evicted_draft_k_frames", []))
++                            # A smaller physical cache can evict frames before the
++                            # original logical W20 boundary. Keep those frames on
++                            # CPU, but do not expose them to retrieval until they
++                            # would have been logically evicted by the AO cache.
++                            cache.setdefault("logical_history_pending_k_frames", []).extend(
++                                update_info["evicted_k_frames"])
++                            cache.setdefault("logical_history_pending_v_frames", []).extend(
++                                update_info["evicted_v_frames"])
++                            cache.setdefault("logical_history_pending_draft_k_frames", []).extend(
++                                update_info.get("evicted_draft_k_frames", []))
++                            if update_info.get("evicted_ready_event") is not None:
++                                cache.setdefault("logical_history_pending_ready_events", []).append(
++                                    update_info["evicted_ready_event"])
++
++                            logical_cap = int(cache.get("logical_local_attn_frames", 20))
++                            frame_seq_length = int(cache["frame_seq_length"])
++                            total_frames = int(current_end) // frame_seq_length
++                            desired_archived = max(0, total_frames - logical_cap)
++                            visible_archived = len(cache.get("cpu_k_frames", []))
++                            promote = max(0, min(
++                                desired_archived - visible_archived,
++                                len(cache["logical_history_pending_k_frames"]),
++                            ))
++                            if promote:
++                                # Explicitly establish host-read readiness for
++                                # nonblocking D2H batches before exposing them to
++                                # retrieval. This is one batch wait at logical
++                                # promotion, not a per-frame blocking D2H.
++                                for ready_event in cache.get(
++                                        "logical_history_pending_ready_events", []):
++                                    ready_event.synchronize()
++                                cache["cpu_k_frames"].extend(
++                                    cache["logical_history_pending_k_frames"][:promote])
++                                cache["cpu_v_frames"].extend(
++                                    cache["logical_history_pending_v_frames"][:promote])
++                                cache["gpu_draft_k_frames"].extend(
++                                    cache["logical_history_pending_draft_k_frames"][:promote])
++                                del cache["logical_history_pending_k_frames"][:promote]
++                                del cache["logical_history_pending_v_frames"][:promote]
++                                del cache["logical_history_pending_draft_k_frames"][:promote]
+                         
+                 elif update_info["action"] == "direct_insert":
+                     # Direct insert

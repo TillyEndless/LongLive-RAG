@@ -1,0 +1,15 @@
+{
+  "phase": "BA-1.2",
+  "event_bookkeeping_bounded": "PASS",
+  "d2h_batch_lifetime": "PASS_EVENT_GUARDED",
+  "existing_destination_pinned_observed": true,
+  "useful_h2d_or_d2h_overlap": "NOT_PROVEN",
+  "replay_regression": "PASS",
+  "real_retrieval_parity": "NOT_MEASURED",
+  "raw_qkv_parity": "NOT_MEASURED",
+  "final_kv_parity": "NOT_MEASURED",
+  "native_fa2_output_parity": "NOT_MEASURED",
+  "ready_for_short_performance_test": "NO",
+  "ready_for_f120": "NO",
+  "blocker": "No matched AO/BA all-ready real-state QKV and stock Native FA2 output artifacts were available."
+}

@@ -1,0 +1,70 @@
+--- /data/zxl/LongLive-RAG-group11_1-w1-phase218ao/pipeline/causal_inference.py	2026-10-04 14:33:05.616430672 +0800
++++ pipeline/causal_inference.py	2026-10-04 19:45:00.528120218 +0800
+@@ -52,7 +52,7 @@
+         # Filter pipeline-specific settings out of model_kwargs so they don't reach the
+         # WanDiffusionWrapper init.
+         model_args_clean = dict(getattr(args, "model_kwargs", {}))
+-        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id", "group11_fetch_mode"]:
++        for key in ["compression_method", "ae_ckpt", "recent_exclude", "retrieval_backend", "retrieval_query_mode", "group_runtime_mode", "group_sparse_ratio", "group_id", "group11_fetch_mode", "physical_kv_cache_frames"]:
+             model_args_clean.pop(key, None)
+ 
+         self.generator = WanDiffusionWrapper(
+@@ -76,6 +76,14 @@
+         self.args = args
+         self.num_frame_per_block = getattr(args, "num_frame_per_block", 1)
+         self.local_attn_size = args.model_kwargs.local_attn_size
++        physical_kv_frames = getattr(args.model_kwargs, "physical_kv_cache_frames", None)
++        if physical_kv_frames is None:
++            physical_kv_frames = self.local_attn_size
++        if int(physical_kv_frames) != -1 and int(physical_kv_frames) <= 0:
++            raise ValueError("physical_kv_cache_frames must be positive or -1")
++        if int(physical_kv_frames) != -1 and int(self.local_attn_size) != -1 and int(physical_kv_frames) > int(self.local_attn_size):
++            raise ValueError("physical_kv_cache_frames cannot exceed logical local_attn_size")
++        self.physical_kv_cache_frames = int(physical_kv_frames)
+ 
+         # Retrieval autoencoder (optional). compression_method ∈ {"avg_pool", "ae"}.
+         self.compression_method = getattr(args.model_kwargs, "compression_method", "avg_pool")
+@@ -122,6 +130,11 @@
+             "group14_corrected": "int8_fp8",
+             "group15_corrected": "nvfp4",
+         }.get(group_mode)
++        if (self.compressed_history_mode is not None and
++                self.physical_kv_cache_frames < self.local_attn_size):
++            raise ValueError(
++                "physical_kv_cache_frames < local_attn_size is unsupported with "
++                "compressed_history_mode; logical promotion is not implemented")
+         sparse_ratio = float(getattr(args.model_kwargs, "group_sparse_ratio", 0.0))
+         fetch_mode = str(getattr(args.model_kwargs, "group11_fetch_mode", "serial_full"))
+         self.group11_fetch_mode = fetch_mode
+@@ -238,13 +251,14 @@
+         local_attn_cfg = getattr(self.args.model_kwargs, "local_attn_size", -1)
+         memory_size_cfg = getattr(self.args.model_kwargs, "memory_size", 0)
+         kv_policy = ""
++        physical_local_cfg = int(getattr(self, "physical_kv_cache_frames", local_attn_cfg))
+         if memory_size_cfg > 0 and local_attn_cfg != -1:
+-            kv_cache_size = local_attn_cfg * self.frame_seq_length
+-            kv_policy = f"int->local+cpu_offload, size={local_attn_cfg} frames"
++            kv_cache_size = physical_local_cfg * self.frame_seq_length
++            kv_policy = f"int->local+cpu_offload, logical={local_attn_cfg} frames, physical={physical_local_cfg} frames"
+         elif local_attn_cfg != -1:
+             # local attention
+-            kv_cache_size = local_attn_cfg * self.frame_seq_length
+-            kv_policy = f"int->local, size={local_attn_cfg}"
++            kv_cache_size = physical_local_cfg * self.frame_seq_length
++            kv_policy = f"int->local, logical={local_attn_cfg} frames, physical={physical_local_cfg} frames"
+         else:
+             # global attention
+             kv_cache_size = num_output_frames * self.frame_seq_length
+@@ -495,6 +509,12 @@
+                 "local_end_index": torch.tensor([0], dtype=torch.long, device=device),
+                 "cpu_k_frames": [],
+                 "cpu_v_frames": [],
++                "logical_history_pending_k_frames": [],
++                "logical_history_pending_v_frames": [],
++                "logical_history_pending_draft_k_frames": [],
++                "logical_history_pending_ready_events": [],
++                "logical_local_attn_frames": int(self.local_attn_size),
++                "frame_seq_length": int(self.frame_seq_length),
+                 "gpu_draft_k_frames": [],
+                 "local_draft_k_frames": [],
+                 "compressed_history_archive": (

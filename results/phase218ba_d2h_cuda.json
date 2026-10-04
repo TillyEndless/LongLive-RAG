@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "torch": "2.5.1+cu124",
+  "cuda": "12.4",
+  "pin_memory_status": "AVAILABLE",
+  "paths": [
+    {
+      "label": "existing_to_cpu_non_blocking",
+      "destination_is_pinned": true,
+      "event_query_before_stream_sync": false,
+      "event_query_after_stream_sync": true,
+      "event_elapsed_ms": 21.766368865966797,
+      "checksum": 45932523552768.0
+    },
+    {
+      "label": "explicit_pinned_copy_non_blocking",
+      "destination_is_pinned": true,
+      "event_query_before_stream_sync": false,
+      "event_query_after_stream_sync": true,
+      "event_elapsed_ms": 0.691103994846344,
+      "checksum": 45932523552768.0
+    }
+  ],
+  "interpretation": {
+    "existing_path_pinned": true,
+    "event_used_for_completion": true,
+    "actual_overlap_claim": "NOT_PROVEN_BY_THIS_TEST"
+  }
+}

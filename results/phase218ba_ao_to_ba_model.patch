@@ -1,0 +1,73 @@
+--- /data/zxl/LongLive-RAG-group11_1-w1-phase218ao/wan/modules/causal_model_latentmem.py	2026-10-04 14:58:27.514284726 +0800
++++ wan/modules/causal_model_latentmem.py	2026-10-04 19:35:32.036710222 +0800
+@@ -731,9 +731,11 @@
+                 # === causal online RoPE Application ===
+                 # For query: use relative indices based on position in window
+                 # Query frames are at the end of the window: [local_attn_size - num_new_frames, ..., local_attn_size - 1]
++                logical_end_frame = min(
++                    int(current_end // frame_seqlen), int(self.local_attn_size))
+                 query_relative_indices = torch.arange(
+-                    self.local_attn_size - num_new_frames, 
+-                    self.local_attn_size, 
++                    logical_end_frame - num_new_frames,
++                    logical_end_frame,
+                     device=q.device
+                 )
+                 rope_start = time.perf_counter()
+@@ -747,7 +749,16 @@
+                 # Sink frames: [0, 1, ..., sink_size - 1]
+                 # Rolling window frames: [sink_size, sink_size + 1, ..., local_end_index/frame_seqlen - 1]
+                 num_cache_frames = local_end_index // frame_seqlen
+-                cache_relative_indices = torch.arange(0, num_cache_frames, device=k.device)
++                # The physical cache may retain only Sink + the current local
++                # frames.  Preserve AO's logical W20 RoPE positions rather than
++                # renumbering those resident local frames from zero.
++                local_frame_count = max(0, num_cache_frames - self.sink_size)
++                local_start_frame = max(
++                    self.sink_size, logical_end_frame - local_frame_count)
++                cache_relative_indices = torch.cat([
++                    torch.arange(0, self.sink_size, device=k.device),
++                    torch.arange(local_start_frame, logical_end_frame, device=k.device),
++                ])
+                 
+                 # Create a grid_sizes for the cached K
+                 cache_grid_sizes = grid_sizes.clone()
+@@ -1679,9 +1690,35 @@
+                                 cache.setdefault("compressed_history_entries", []).append(rec)
+                                 cache["evicted_compressed_entries"] = int(cache.get("evicted_compressed_entries", 0)) + 1
+                         else:
+-                            cache.setdefault("cpu_k_frames", []).extend(update_info["evicted_k_frames"])
+-                            cache.setdefault("cpu_v_frames", []).extend(update_info["evicted_v_frames"])
+-                        cache.setdefault("gpu_draft_k_frames", []).extend(update_info.get("evicted_draft_k_frames", []))
++                            # A smaller physical cache can evict frames before the
++                            # original logical W20 boundary. Keep those frames on
++                            # CPU, but do not expose them to retrieval until they
++                            # would have been logically evicted by the AO cache.
++                            cache.setdefault("logical_history_pending_k_frames", []).extend(
++                                update_info["evicted_k_frames"])
++                            cache.setdefault("logical_history_pending_v_frames", []).extend(
++                                update_info["evicted_v_frames"])
++                            cache.setdefault("logical_history_pending_draft_k_frames", []).extend(
++                                update_info.get("evicted_draft_k_frames", []))
++
++                            logical_cap = int(cache.get("logical_local_attn_frames", 20))
++                            total_frames = int(current_end) // 1560
++                            desired_archived = max(0, total_frames - logical_cap)
++                            visible_archived = len(cache.get("cpu_k_frames", []))
++                            promote = max(0, min(
++                                desired_archived - visible_archived,
++                                len(cache["logical_history_pending_k_frames"]),
++                            ))
++                            if promote:
++                                cache["cpu_k_frames"].extend(
++                                    cache["logical_history_pending_k_frames"][:promote])
++                                cache["cpu_v_frames"].extend(
++                                    cache["logical_history_pending_v_frames"][:promote])
++                                cache["gpu_draft_k_frames"].extend(
++                                    cache["logical_history_pending_draft_k_frames"][:promote])
++                                del cache["logical_history_pending_k_frames"][:promote]
++                                del cache["logical_history_pending_v_frames"][:promote]
++                                del cache["logical_history_pending_draft_k_frames"][:promote]
+                         
+                 elif update_info["action"] == "direct_insert":
+                     # Direct insert
