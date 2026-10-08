@@ -1,0 +1,2132 @@
+# Adopted from https://github.com/guandeh17/Self-Forcing
+# SPDX-License-Identifier: CC-BY-NC-SA-4.0
+from wan.modules.attention import attention
+from wan.modules.model import (
+    WanRMSNorm,
+    rope_apply,
+    WanLayerNorm,
+    WAN_CROSSATTENTION_CLASSES,
+    rope_params,
+    MLPProj,
+    sinusoidal_embedding_1d
+)
+from torch.nn.attention.flex_attention import create_block_mask, flex_attention
+from diffusers.configuration_utils import ConfigMixin, register_to_config
+from torch.nn.attention.flex_attention import BlockMask
+from diffusers.models.modeling_utils import ModelMixin
+import torch.nn as nn
+import torch
+from utils.compressed_history_archive import CompressedHistoryArchive
+import math
+import time
+import os
+import torch.distributed as dist
+from contextlib import nullcontext
+try:
+    from torch.profiler import record_function
+except Exception:
+    record_function = None
+from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, log_gpu_memory
+
+from utils.debug_option import DEBUG
+from utils.h200_group_runtime import prepare_attention_kv
+from utils.unified_latency_profiler import UnifiedLatencyProfiler
+
+# wan 1.3B model has a weird channel / head configurations and require max-autotune to work with flexattention
+# see https://github.com/pytorch/pytorch/issues/133254
+# change to default for other models
+flex_attention = torch.compile(
+    flex_attention, dynamic=False, mode="max-autotune-no-cudagraphs")
+
+
+def causal_online_rope(x, grid_sizes, freqs, start_frame=0, relative_frame_indices=None):
+    """
+    Apply causal RoPE (Rotary Position Embedding) to input tensor.
+    
+    Args:
+        x: Input tensor of shape [B, L, num_heads, head_dim]
+        grid_sizes: Tensor of shape [B, 3] containing (F, H, W)
+        freqs: RoPE frequencies
+        start_frame: Starting frame index for sequential RoPE (default: 0)
+        relative_frame_indices: Optional tensor of shape [F] specifying explicit frame indices
+                               for causal online RoPE. If provided, overrides start_frame.
+    """
+    n, c = x.size(2), x.size(3) // 2
+
+    # split freqs
+    freqs = freqs.split([c - 2 * (c // 3), c // 3, c // 3], dim=1)
+
+    # loop over samples
+    output = []
+
+    for i, (f, h, w) in enumerate(grid_sizes.tolist()):
+        seq_len = f * h * w
+
+        # precompute multipliers
+        x_i = torch.view_as_complex(x[i, :seq_len].to(torch.float64).reshape(
+            seq_len, n, -1, 2))
+        
+        # Use relative_frame_indices if provided (causal online RoPE),
+        # otherwise use sequential indices starting from start_frame
+        if relative_frame_indices is not None:
+            # relative_frame_indices should be a tensor of shape [f] with explicit frame indices
+            frame_indices = relative_frame_indices.long()
+            freqs_temporal = freqs[0][frame_indices].view(f, 1, 1, -1).expand(f, h, w, -1)
+        else:
+            freqs_temporal = freqs[0][start_frame:start_frame + f].view(f, 1, 1, -1).expand(f, h, w, -1)
+        
+        freqs_i = torch.cat([
+            freqs_temporal,
+            freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
+            freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1)
+        ],
+            dim=-1).reshape(seq_len, 1, -1)
+
+        # apply rotary embedding
+        x_i = torch.view_as_real(x_i * freqs_i).flatten(2)
+        x_i = torch.cat([x_i, x[i, seq_len:]])
+
+        # append to collection
+        output.append(x_i)
+    return torch.stack(output).type_as(x)
+
+
+def _draft_frame_pools(tensor, frame_tokens, block_tokens=64):
+    """Mean-pool BF16 Q/K into Anemoi-compatible per-frame blocks."""
+    frames = tensor.size(1) // frame_tokens
+    outputs = []
+    for frame in range(frames):
+        value = tensor[:, frame * frame_tokens:(frame + 1) * frame_tokens]
+        blocks = math.ceil(frame_tokens / block_tokens)
+        padded = blocks * block_tokens - frame_tokens
+        if padded:
+            value = torch.cat((value, value.new_zeros(value.size(0), padded, value.size(2), value.size(3))), dim=1)
+        counts = torch.full((blocks,), block_tokens, device=value.device, dtype=torch.float32)
+        if padded:
+            counts[-1] = frame_tokens % block_tokens
+        pooled = value.view(value.size(0), blocks, block_tokens, value.size(2), value.size(3)).float().sum(dim=2)
+        pooled = pooled.div_(counts.view(1, blocks, 1, 1))
+        outputs.append(pooled.permute(0, 2, 1, 3).to(torch.bfloat16).contiguous())
+    return outputs
+
+
+
+class CausalWanSelfAttention(nn.Module):
+
+    def __init__(self,
+                 dim,
+                 num_heads,
+                 local_attn_size=-1,
+                 sink_size=0,
+                 memory_size=0,
+                 qk_norm=True,
+                 eps=1e-6):
+        assert dim % num_heads == 0
+        super().__init__()
+        self.dim = dim
+        self.num_heads = num_heads
+        self.head_dim = dim // num_heads
+        self.local_attn_size = local_attn_size
+        self.sink_size = sink_size
+        self.memory_size = memory_size
+        self.retrieval_backend = "original"
+        self.retrieval_query_mode = "current_q"
+        self.recent_exclude = 0
+        self.draftmap_trace = []
+        self.runtime_counters = {
+            "draft_h2d_bytes": 0,
+            "draft_h2d_calls": 0,
+            "full_kv_h2d_bytes": 0,
+            "full_kv_h2d_calls": 0,
+        }
+        self.history_fetch_trace = []
+        self.current_denoising_step = None
+        self.group_runtime_mode = "baseline"
+        self.group_sparse_ratio = 0.0
+        self.group_runtime_trace = []
+        self.group11_fetch_mode = "serial_full"
+        self.group11_flash_trace = []
+        # Group11.4-only transient prefetch pointer. Group12-15 do not use it.
+        self.prefetch_kv_cache = None
+        self.group11_profile = None
+        self.unified_latency_profiler = None
+        self._group11_reuse_cache = {}
+        self.qk_norm = qk_norm
+        self.eps = eps
+        # Support list/tuple local_attn_size by converting to list first (handles OmegaConf ListConfig)
+        if not isinstance(local_attn_size, int) and hasattr(local_attn_size, "__iter__"):
+            values = list(local_attn_size)
+        else:
+            values = [int(local_attn_size)]
+        non_neg_vals = [int(v) for v in values if int(v) != -1]
+        max_local = max(non_neg_vals) if len(non_neg_vals) > 0 else -1
+        self.max_attention_size = 32760 if max_local == -1 else max_local * 1560
+        # layers
+        self.q = nn.Linear(dim, dim)
+        self.k = nn.Linear(dim, dim)
+        self.v = nn.Linear(dim, dim)
+        self.o = nn.Linear(dim, dim)
+        self.norm_q = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
+        self.norm_k = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
+
+    def _online_memory_indices(self, query, kv_cache, layer_index, frame_seqlen, current_start=0):
+        if self.retrieval_backend != "draftmap_online" or self.memory_size <= 0:
+            return None
+        compressed_entries = kv_cache.get("compressed_history_entries", [])
+        cpu_k = compressed_entries if compressed_entries else kv_cache.get("cpu_k_frames", [])
+        gpu_draft_k = kv_cache.get("gpu_draft_k_frames", [])
+        # Keep AO's logical W20 eligibility boundary even when the physical
+        # persistent cache is smaller. The CPU archive is a storage detail;
+        # recent_exclude is applied once to the committed logical prefix.
+        committed_frames = int(current_start) // frame_seqlen
+        logical_history = max(committed_frames - self.local_attn_size, 0) if self.local_attn_size != -1 else len(cpu_k)
+        eligible = min(len(cpu_k), max(logical_history - self.recent_exclude, 0))
+        if eligible <= 0 or len(gpu_draft_k) < eligible:
+            return None
+        if self.retrieval_query_mode == "previous_q":
+            kv_cache["draft_q_retrieval_started"] = True
+        retrieval_query = query
+        retrieval_query_source = "CURRENT_Q"
+        q_prev_age_steps = None
+        previous_meta = kv_cache.get("draft_q_history_meta")
+        if self.retrieval_query_mode == "previous_q":
+            previous = kv_cache.get("draft_q_history")
+            if previous is None:
+                retrieval_query_source = "BOOTSTRAP_CURRENT_Q"
+                if self.group11_profile is not None:
+                    self.group11_profile["BOOTSTRAP_CALLS"] += 1
+            else:
+                if previous_meta is None or int(previous_meta.get("layer", layer_index)) != int(layer_index):
+                    raise RuntimeError("q_history layer mismatch in previous_q retrieval")
+                retrieval_query = previous
+                retrieval_query_source = "PREVIOUS_Q"
+                if previous_meta.get("denoising_step") is not None and self.current_denoising_step is not None:
+                    q_prev_age_steps = 1
+                if self.group11_profile is not None:
+                    self.group11_profile["PREVIOUS_Q_RETRIEVAL_CALLS"] += 1
+        from utils.draftmap_retrieval import DraftChunkRecord, DraftMapChunkIndex
+        score_start = time.perf_counter()
+        pool_start = time.perf_counter()
+        records = [
+            DraftChunkRecord(str(i), gpu_draft_k[i], tuple(range(gpu_draft_k[i].size(2))))
+            for i in range(eligible)
+        ]
+        pool_ms = (time.perf_counter() - pool_start) * 1000.0
+        if len(records) != eligible:
+            return None
+        index = DraftMapChunkIndex(block_tokens=64)
+        if any(r.draft_k.device != retrieval_query.device for r in records):
+            raise RuntimeError("persistent Draft-K must remain GPU-resident")
+        device_records = records
+        scores = index.score_history(retrieval_query, device_records)
+        draft_ms = (time.perf_counter() - score_start) * 1000.0
+        topk_start = time.perf_counter()
+        topk_scores, selected = index.select_topk(scores, self.memory_size)
+        topk_ms = (time.perf_counter() - topk_start) * 1000.0
+        if self.group11_profile is not None:
+            p = self.group11_profile
+            p["NUM_DRAFTMAP_CALLS"] += 1
+            p["NUM_DRAFT_Q_POOL_CALLS"] += 1
+            p["NUM_DRAFT_K_SCORE_CALLS"] += 1
+            p["NUM_TOPK_CALLS"] += 1
+            p["draftmap_rows"].append({
+                "layer": int(layer_index), "denoising_step": self.current_denoising_step,
+                "current_chunk_id": int(kv_cache.get("global_end_index", torch.zeros(1)).item() // frame_seqlen),
+                "num_historical_chunks": int(len(cpu_k)), "num_candidate_chunks": int(eligible),
+                "num_selected_chunks": int(selected.shape[-1]),
+                "draft_q_shape": list(query.shape), "draft_k_shape": list(gpu_draft_k[0].shape) if gpu_draft_k else [],
+                "draft_score_elements": int(scores.numel()), "time_draft_q_pool_ms": pool_ms,
+                "time_score_ms": draft_ms, "time_aggregate_ms": 0.0, "time_topk_ms": topk_ms,
+            })
+        self.draftmap_trace.append({
+            "generation_unit": int(kv_cache.get("global_end_index", torch.zeros(1)).item() // frame_seqlen),
+            "layer": int(layer_index),
+            "candidate_count": int(eligible),
+            "candidate_history_ids": list(range(eligible)),
+            "selected_history_ids": selected[0].detach().cpu().tolist(),
+            "selected_scores": [float(v) for v in topk_scores[0].detach().cpu()],
+            "retrieval_budget": int(self.memory_size),
+            "retrieval_query_mode": self.retrieval_query_mode,
+            "wrapper_impl": "original_group11_custom",
+            "current_q_logical_id": {"layer": int(layer_index), "chunk": int(current_start // frame_seqlen), "denoise_step": self.current_denoising_step},
+            "retrieval_q_logical_id": ({"layer": int(layer_index), "chunk": int(previous_meta.get("chunk", -1)), "denoise_step": previous_meta.get("denoising_step")} if retrieval_query_source == "PREVIOUS_Q" and previous_meta is not None else {"layer": int(layer_index), "chunk": int(current_start // frame_seqlen), "denoise_step": self.current_denoising_step}),
+            "retrieval_query_source": retrieval_query_source,
+            "q_prev_age_steps": q_prev_age_steps,
+            "recent_history_ids": list(range(eligible, len(cpu_k))),
+            "draft_score_ms": draft_ms,
+            "topk_ms": topk_ms,
+            "cpu_gather_ms": 0.0,
+            "h2d_ms": 0.0,
+            "denoising_step": self.current_denoising_step,
+        })
+        return selected
+
+    def _prefetch_state(self, kv_cache):
+        """Shared transient state; never a persistent KV owner."""
+        all_cache = getattr(self, "prefetch_kv_cache", None)
+        owner = all_cache[0] if isinstance(all_cache, list) and all_cache else kv_cache
+        state = owner.setdefault("next_layer_prefetch", {})
+        owner.setdefault("next_layer_prefetch_trace", [])
+        owner.setdefault("prefetch_buffer_peak_bytes", 0)
+        return owner, state
+
+    def _reconcile_prefetch(self, kv_cache, layer_index, true_ids):
+        """Drop stale predictions before attention and account for waste."""
+        owner, state = self._prefetch_state(kv_cache)
+        true_set = {int(x) for x in true_ids}
+        wasted = []
+        for key in list(state):
+            if key[0] == int(layer_index) and key[1] not in true_set:
+                wasted.append(state.pop(key))
+        owner["prefetch_wasted_bytes"] = int(owner.get("prefetch_wasted_bytes", 0)) + sum(int(v.get("bytes", 0)) for v in wasted)
+        owner["prefetch_wasted_chunks"] = int(owner.get("prefetch_wasted_chunks", 0)) + len(wasted)
+        return wasted
+
+    def _schedule_next_layer_prefetch(self, kv_cache, layer_index, selected, device):
+        """Schedule (layer+1, I_l) from the next layer's CPU BF16 archive."""
+        all_cache = getattr(self, "prefetch_kv_cache", None)
+        if selected is None or not isinstance(all_cache, list) or layer_index + 1 >= len(all_cache):
+            return
+        owner, state = self._prefetch_state(kv_cache)
+        stream = owner.get("prefetch_stream")
+        if stream is None or stream.device != device:
+            stream = torch.cuda.Stream(device=device)
+            owner["prefetch_stream"] = stream
+        next_cache = all_cache[layer_index + 1]
+        cpu_k, cpu_v = next_cache.get("cpu_k_frames", []), next_cache.get("cpu_v_frames", [])
+        ids = [int(v) for v in selected[0].detach().cpu().tolist()]
+        requested = 0
+        copied_bytes = 0
+        with torch.cuda.stream(stream):
+            for history_id in ids:
+                key = (int(layer_index + 1), history_id)
+                if key in state or history_id >= len(cpu_k) or history_id >= len(cpu_v):
+                    continue
+                src_k, src_v = cpu_k[history_id], cpu_v[history_id]
+                if not src_k.is_pinned():
+                    src_k = src_k.contiguous().pin_memory()
+                if not src_v.is_pinned():
+                    src_v = src_v.contiguous().pin_memory()
+                dst_k, dst_v = src_k.to(device, non_blocking=True), src_v.to(device, non_blocking=True)
+                event = torch.cuda.Event()
+                event.record(stream)
+                nbytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                state[key] = {"k": dst_k, "v": dst_v, "event": event, "bytes": nbytes}
+                requested += 1
+                copied_bytes += nbytes
+        owner["prefetch_requested_chunks"] = int(owner.get("prefetch_requested_chunks", 0)) + requested
+        owner["prefetch_scheduled_bytes"] = int(owner.get("prefetch_scheduled_bytes", 0)) + copied_bytes
+        owner["prefetch_buffer_peak_bytes"] = max(int(owner.get("prefetch_buffer_peak_bytes", 0)), sum(int(v.get("bytes", 0)) for v in state.values()))
+        owner["next_layer_prefetch_trace"].append({"layer_id": int(layer_index), "next_layer_id": int(layer_index + 1), "predicted_ids": ids, "requested_chunks": requested, "prefetch_bytes": copied_bytes})
+
+    def _consume_prefetch_or_fetch(self, kv_cache, layer_index, history_id, batch_index, device):
+        """Consume only exact current-Q hits; None requests a correction fetch."""
+        owner, state = self._prefetch_state(kv_cache)
+        entry = state.pop((int(layer_index), int(history_id)), None)
+        if entry is None:
+            return None
+        torch.cuda.current_stream(device).wait_event(entry["event"])
+        owner["prefetch_hit_chunks"] = int(owner.get("prefetch_hit_chunks", 0)) + 1
+        owner["prefetch_hit_bytes"] = int(owner.get("prefetch_hit_bytes", 0)) + int(entry["bytes"])
+        return entry["k"][batch_index, 0], entry["v"][batch_index, 0]
+
+    def _queue_draft_q_history(self, query, kv_cache, layer_index, current_start, frame_seqlen):
+        if self.retrieval_query_mode != "previous_q" or kv_cache is None:
+            return
+        kv_cache["draft_q_pending"] = (
+            query.detach().clone(),
+            {"layer": int(layer_index), "chunk": int(current_start // frame_seqlen), "denoising_step": self.current_denoising_step},
+        )
+
+    def _commit_draft_q_history(self, kv_cache):
+        if self.retrieval_query_mode != "previous_q" or kv_cache is None:
+            return
+        pending = kv_cache.pop("draft_q_pending", None)
+        if pending is not None and kv_cache.get("draft_q_retrieval_started", False):
+            kv_cache["draft_q_history"], kv_cache["draft_q_history_meta"] = pending
+            if self.group11_profile is not None:
+                self.group11_profile["Q_HISTORY_PERSISTED_CALLS"] += 1
+
+    def _flashfetch_online_attention(self, query, sink_k, sink_v, local_k, local_v,
+                                     kv_cache, memory_indices, grid_sizes, freqs,
+                                     layer_index):
+        """Serial full-chunk Flash Fetch correctness path.
+
+        Each selected history chunk is one 1560-token partition.  The online
+        softmax merge is mathematically equivalent to one dense unmasked
+        attention over resident + selected history tokens.  This first phase
+        intentionally uses blocking H2D; async double buffering is enabled
+        only after this path passes the numerical gate.
+        """
+        if query.size(0) != 1:
+            raise RuntimeError("flashfetch prototype currently requires batch_size=1")
+        if memory_indices is None:
+            return attention(query, torch.cat([sink_k, local_k], dim=1),
+                             torch.cat([sink_v, local_v], dim=1)), {"mode": "no_history"}
+        cpu_k = kv_cache.get("cpu_k_frames", [])
+        cpu_v = kv_cache.get("cpu_v_frames", [])
+        ids = [int(v) for v in memory_indices[0].detach().cpu().tolist()]
+        frame_seq = int(grid_sizes[0, 1].item() * grid_sizes[0, 2].item())
+        h, w = int(grid_sizes[0, 1].item()), int(grid_sizes[0, 2].item())
+        one_frame_grid = grid_sizes.new_tensor([[1, h, w]])
+        scale = query.shape[-1] ** -0.5
+        M = None
+        L = None
+        O = None
+        timeline = []
+
+        def merge(k_part, v_part, partition_name, history_id=None):
+            nonlocal M, L, O
+            start = time.perf_counter()
+            scores = torch.einsum("bqhd,bkhd->bqhk", query.float(), k_part.float()) * scale
+            m = scores.amax(dim=-1)
+            exp_scores = torch.exp(scores - m.unsqueeze(-1))
+            l = exp_scores.sum(dim=-1)
+            o = torch.einsum("bqhk,bkhd->bqhd", exp_scores, v_part.float())
+            if M is None:
+                M, L, O = m, l, o
+            else:
+                new_m = torch.maximum(M, m)
+                alpha = torch.exp(M - new_m)
+                beta = torch.exp(m - new_m)
+                O = alpha.unsqueeze(-1) * O + beta.unsqueeze(-1) * o
+                L = alpha * L + beta * l
+                M = new_m
+            end = time.perf_counter()
+            timeline.append({"partition": partition_name, "history_id": history_id,
+                             "compute_ms": (end - start) * 1000.0,
+                             "tokens": int(k_part.shape[1])})
+
+        resident_k = torch.cat([sink_k, local_k], dim=1)
+        resident_v = torch.cat([sink_v, local_v], dim=1)
+        merge(resident_k, resident_v, "resident", None)
+        total_h2d = 0.0
+        for rank, history_id in enumerate(ids):
+            if history_id >= len(cpu_k) or history_id >= len(cpu_v):
+                raise IndexError(f"history id {history_id} unavailable")
+            h2d_start = time.perf_counter()
+            src_k = cpu_k[history_id][0, 0].to(query.device, non_blocking=True)
+            src_v = cpu_v[history_id][0, 0].to(query.device, non_blocking=True)
+            h2d_ms = (time.perf_counter() - h2d_start) * 1000.0
+            total_h2d += h2d_ms
+            rope_start = time.perf_counter()
+            k_part = causal_online_rope(src_k.unsqueeze(0), one_frame_grid, freqs,
+                                        relative_frame_indices=torch.zeros(1, dtype=torch.long, device=query.device))
+            k_part = k_part[0:1].type_as(query)
+            v_part = src_v.unsqueeze(0).type_as(query)
+            rope_ms = (time.perf_counter() - rope_start) * 1000.0
+            compute_start = time.perf_counter()
+            merge(k_part, v_part, "history", history_id)
+            compute_ms = (time.perf_counter() - compute_start) * 1000.0
+            timeline[-1].update({"chunk_rank": rank, "h2d_ms": h2d_ms,
+                                 "rope_ms": rope_ms, "compute_start_ms": compute_start,
+                                 "compute_end_ms": time.perf_counter(), "bytes": int(src_k.numel() * src_k.element_size() * 2)})
+        output = (O / L.unsqueeze(-1)).type_as(query)
+        self.group11_flash_trace.append({
+            "layer_id": int(layer_index), "history_ids": ids,
+            "tile_tokens": frame_seq, "h2d_ms": total_h2d,
+            "timeline": timeline,
+            "cpu_pinned": bool(all(x.is_pinned() for x in cpu_k[:len(ids)])) if ids else True,
+            "async_overlap": False,
+        })
+        return output, {"mode": "flashfetch_serial", "history_ids": ids,
+                        "h2d_ms": total_h2d, "tile_tokens": frame_seq}
+
+    def _w1_progressive_final_buffer(self, *, memory_indices, cpu_k_list, cpu_v_list,
+                                      sink_k, sink_v, local_k, local_v,
+                                      q, v_dtype, frame_tokens, freqs, grid_sizes):
+        """Exploratory W1: warmup first reverse-consumed source, then publish rest.
+
+        This intentionally launches stock attention after only the first source
+        dependency. It is UNSYNCHRONIZED_EXPLORATORY: later writes may race the
+        stock FA consumer and therefore require explicit correctness validation.
+        """
+        device = q.device
+        b = int(memory_indices.shape[0])
+        k_sel = int(memory_indices.shape[1])
+        sink_tokens = int(sink_k.shape[1]) if sink_k is not None else 0
+        local_tokens = int(local_k.shape[1])
+        total_tokens = sink_tokens + k_sel * int(frame_tokens) + local_tokens
+        final_k = torch.empty((b, total_tokens, q.shape[2], q.shape[3]), device=device, dtype=v_dtype)
+        final_v = torch.empty_like(final_k)
+        if sink_k is not None:
+            final_k[:, :sink_tokens].copy_(sink_k)
+            final_v[:, :sink_tokens].copy_(sink_v)
+        local_base = sink_tokens + k_sel * int(frame_tokens)
+        final_k[:, local_base:local_base + local_tokens].copy_(local_k)
+        final_v[:, local_base:local_base + local_tokens].copy_(local_v)
+
+        fetch_stream = torch.cuda.Stream(device=device)
+        keepalive = []
+        reverse_ranks = list(range(k_sel - 1, -1, -1))
+        warmup_ranks = reverse_ranks[:1]
+        remaining_ranks = reverse_ranks[1:]
+        frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
+
+        def submit_rank(rank):
+            logical_ids = []
+            with torch.cuda.stream(fetch_stream):
+                for bi in range(b):
+                    logical_id = int(memory_indices[bi, rank].item())
+                    sk = cpu_k_list[logical_id][bi, 0]
+                    sv = cpu_v_list[logical_id][bi, 0]
+                    if sk.device.type == 'cpu' and not sk.is_pinned():
+                        sk = sk.contiguous().pin_memory()
+                    if sv.device.type == 'cpu' and not sv.is_pinned():
+                        sv = sv.contiguous().pin_memory()
+                    raw_k = sk.to(device, non_blocking=True)
+                    raw_v = sv.to(device, non_blocking=True)
+                    copied_bytes = int(sk.numel() * sk.element_size() + sv.numel() * sv.element_size())
+                    if self.group11_profile is not None:
+                        self.group11_profile["NUM_CPU_KV_FETCH_CALLS"] = int(self.group11_profile.get("NUM_CPU_KV_FETCH_CALLS", 0)) + 1
+                        self.group11_profile["NUM_H2D_COPY_CALLS"] = int(self.group11_profile.get("NUM_H2D_COPY_CALLS", 0)) + 2
+                        self.group11_profile["TOTAL_FULL_KV_H2D_BYTES"] = int(self.group11_profile.get("TOTAL_FULL_KV_H2D_BYTES", 0)) + copied_bytes
+                        self.group11_profile.setdefault("h2d_rows", []).append({
+                            "source_chunk_id": logical_id, "layer": int(getattr(self, "_current_layer_index", -1)),
+                            "bytes_K": int(sk.numel() * sk.element_size()),
+                            "bytes_V": int(sv.numel() * sv.element_size()),
+                            "total_bytes": copied_bytes, "copy_stream": "w1_fetch",
+                            "non_blocking": True, "source_pinned_memory": bool(sk.is_pinned() and sv.is_pinned()),
+                        })
+                    roped_k = causal_online_rope(
+                        raw_k.unsqueeze(0), frame_grid, freqs,
+                        relative_frame_indices=torch.zeros(1, dtype=torch.long, device=device),
+                    ).type_as(q)
+                    offset = sink_tokens + rank * int(frame_tokens)
+                    final_k[bi, offset:offset + int(frame_tokens)].copy_(roped_k[0])
+                    final_v[bi, offset:offset + int(frame_tokens)].copy_(raw_v)
+                    keepalive.extend([raw_k, raw_v, roped_k])
+                    logical_ids.append(logical_id)
+            return logical_ids
+
+        warmup_ids = []
+        for rank in warmup_ranks:
+            warmup_ids.extend(submit_rank(rank))
+        warmup_event = torch.cuda.Event()
+        with torch.cuda.stream(fetch_stream):
+            warmup_event.record(fetch_stream)
+        torch.cuda.current_stream(device).wait_event(warmup_event)
+        remaining_ids = []
+        for rank in remaining_ranks:
+            remaining_ids.extend(submit_rank(rank))
+        all_event = torch.cuda.Event()
+        with torch.cuda.stream(fetch_stream):
+            all_event.record(fetch_stream)
+        self._w1_pending_fetch_event = all_event
+        self._w1_pending_fetch_stream = fetch_stream
+        self._w1_fetch_keepalive = keepalive
+        return final_k, final_v, {
+            'mode': 'W1_STREAMING_UNSYNCHRONIZED_EXPLORATORY',
+            'warmup_source_ids': warmup_ids,
+            'remaining_source_ids': remaining_ids,
+            'submitted_source_count': len(warmup_ids) + len(remaining_ids),
+            'warmup_source_count': len(warmup_ids),
+            'remaining_source_count': len(remaining_ids),
+            'reverse_rank_order': reverse_ranks,
+            'warmup_event_recorded': True,
+            'full_producer_wait_before_attention': False,
+            'final_buffer_tokens': total_tokens,
+            'fetch_stream': int(fetch_stream.cuda_stream),
+            'compute_stream': int(torch.cuda.current_stream(device).cuda_stream),
+        }
+
+    def forward(
+        self,
+        x,
+        seq_lens,
+        grid_sizes,
+        freqs,
+        block_mask,
+        kv_cache=None,
+        current_start=0,
+        cache_start=None,
+        sink_recache_after_switch=False,
+        memory_indices=None,
+        layer_index=0
+    ):
+        r"""
+        Args:
+            x(Tensor): Shape [B, L, num_heads, C / num_heads]
+            seq_lens(Tensor): Shape [B]
+            grid_sizes(Tensor): Shape [B, 3], the second dimension contains (F, H, W)
+            freqs(Tensor): Rope freqs, shape [1024, C / num_heads / 2]
+            block_mask (BlockMask)
+        """
+        self._current_layer_index = int(layer_index)
+        b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
+        v5_active = False
+        if os.environ.get("GROUP11_V5_PROFILE", "0") == "1":
+            try:
+                block_frames = int(os.environ.get("GROUP11_V5_BLOCK_FRAMES", "3"))
+                block_index = int(current_start) // max(1, block_frames * int(grid_sizes[0, 1].item() * grid_sizes[0, 2].item()))
+                v5_active = (int(os.environ.get("GROUP11_V5_START_BLOCK", "6")) <= block_index < int(os.environ.get("GROUP11_V5_END_BLOCK", "8")))
+            except Exception:
+                v5_active = False
+        self._v5_active = v5_active
+        if cache_start is None:
+            cache_start = current_start
+
+        # query, key, value function
+        qkv_start = time.perf_counter()
+        def qkv_fn(x):
+            q = self.norm_q(self.q(x)).view(b, s, n, d)
+            k = self.norm_k(self.k(x)).view(b, s, n, d)
+            v = self.v(x).view(b, s, n, d)
+            return q, k, v
+
+        qkv_ctx = record_function("G11_QKV_PROJECTION") if (v5_active and record_function is not None) else nullcontext()
+        with qkv_ctx:
+            q, k, v = qkv_fn(x)
+        if self.group11_profile is not None:
+            self.group11_profile["model_phase_ms"]["QKV_projection"] += (time.perf_counter() - qkv_start) * 1000.0
+        frame_seqlen = int(grid_sizes[0, 1].item() * grid_sizes[0, 2].item())
+        self._queue_draft_q_history(q, kv_cache, layer_index, current_start, frame_seqlen)
+        online_memory_indices = self._online_memory_indices(q, kv_cache, layer_index, frame_seqlen, current_start=current_start)
+        if online_memory_indices is not None:
+            memory_indices = online_memory_indices
+            if self.group11_fetch_mode == "next_layer_prefetch" and kv_cache is not None:
+                true_ids = [int(v) for v in memory_indices[0].detach().cpu().tolist()]
+                wasted = self._reconcile_prefetch(kv_cache, layer_index, true_ids)
+                self._schedule_next_layer_prefetch(kv_cache, layer_index, memory_indices, q.device)
+                if self.draftmap_trace:
+                    self.draftmap_trace[-1]["prefetch_true_ids"] = true_ids
+                    self.draftmap_trace[-1]["prefetch_wasted_count"] = len(wasted)
+        draft_k_frames = _draft_frame_pools(k, frame_seqlen)
+
+        if kv_cache is None:
+            # if it is teacher forcing training?
+            is_tf = (s == seq_lens[0].item() * 2)
+            if is_tf:
+                q_chunk = torch.chunk(q, 2, dim=1)
+                k_chunk = torch.chunk(k, 2, dim=1)
+                roped_query = []
+                roped_key = []
+                # rope should be same for clean and noisy parts
+                for ii in range(2):
+                    rq = rope_apply(q_chunk[ii], grid_sizes, freqs).type_as(v)
+                    rk = rope_apply(k_chunk[ii], grid_sizes, freqs).type_as(v)
+                    roped_query.append(rq)
+                    roped_key.append(rk)
+
+                roped_query = torch.cat(roped_query, dim=1)
+                roped_key = torch.cat(roped_key, dim=1)
+
+                padded_length = math.ceil(q.shape[1] / 128) * 128 - q.shape[1]
+                padded_roped_query = torch.cat(
+                    [roped_query,
+                     torch.zeros([q.shape[0], padded_length, q.shape[2], q.shape[3]],
+                                 device=q.device, dtype=v.dtype)],
+                    dim=1
+                )
+
+                padded_roped_key = torch.cat(
+                    [roped_key, torch.zeros([k.shape[0], padded_length, k.shape[2], k.shape[3]],
+                                            device=k.device, dtype=v.dtype)],
+                    dim=1
+                )
+
+                padded_v = torch.cat(
+                    [v, torch.zeros([v.shape[0], padded_length, v.shape[2], v.shape[3]],
+                                    device=v.device, dtype=v.dtype)],
+                    dim=1
+                )
+
+                x = flex_attention(
+                    query=padded_roped_query.transpose(2, 1),
+                    key=padded_roped_key.transpose(2, 1),
+                    value=padded_v.transpose(2, 1),
+                    block_mask=block_mask
+                )[:, :, :-padded_length].transpose(2, 1)
+
+            else:
+                roped_query = rope_apply(q, grid_sizes, freqs).type_as(v)
+                roped_key = rope_apply(k, grid_sizes, freqs).type_as(v)
+
+                padded_length = math.ceil(q.shape[1] / 128) * 128 - q.shape[1]
+                padded_roped_query = torch.cat(
+                    [roped_query,
+                     torch.zeros([q.shape[0], padded_length, q.shape[2], q.shape[3]],
+                                 device=q.device, dtype=v.dtype)],
+                    dim=1
+                )
+
+                padded_roped_key = torch.cat(
+                    [roped_key, torch.zeros([k.shape[0], padded_length, k.shape[2], k.shape[3]],
+                                            device=k.device, dtype=v.dtype)],
+                    dim=1
+                )
+
+                padded_v = torch.cat(
+                    [v, torch.zeros([v.shape[0], padded_length, v.shape[2], v.shape[3]],
+                                    device=v.device, dtype=v.dtype)],
+                    dim=1
+                )
+
+                x = flex_attention(
+                    query=padded_roped_query.transpose(2, 1),
+                    key=padded_roped_key.transpose(2, 1),
+                    value=padded_v.transpose(2, 1),
+                    block_mask=block_mask
+                )[:, :, :-padded_length].transpose(2, 1)
+        else:
+            frame_seqlen = math.prod(grid_sizes[0][1:]).item()
+            num_new_frames = grid_sizes[0][0].item()  # F from grid_sizes
+            
+            current_end = current_start + q.shape[1]
+            sink_tokens = self.sink_size * frame_seqlen
+            kv_cache_size = kv_cache["k"].shape[1]
+            num_new_tokens = q.shape[1]
+            
+            # Compute cache update parameters without modifying kv_cache directly
+            cache_update_info = None
+            is_recompute = current_end <= kv_cache["global_end_index"].item() and current_start > 0
+            
+            if self.local_attn_size != -1 and (current_end > kv_cache["global_end_index"].item()) and (
+                    num_new_tokens + kv_cache["local_end_index"].item() > kv_cache_size):
+                # === causal online RoPE ===
+                # Calculate the number of new tokens added in this step
+                # Shift existing cache content left to discard oldest tokens
+                num_evicted_tokens = num_new_tokens + kv_cache["local_end_index"].item() - kv_cache_size
+                num_rolled_tokens = kv_cache["local_end_index"].item() - num_evicted_tokens - sink_tokens
+
+                # Compute updated local indices
+                local_end_index = kv_cache["local_end_index"].item() + current_end - \
+                    kv_cache["global_end_index"].item() - num_evicted_tokens
+                local_start_index = local_end_index - num_new_tokens
+
+                # Construct full k, v for attention computation (without modifying the original cache)
+                # Create temporary k, v for computation - store UN-ROPED K
+                temp_k = kv_cache["k"].clone()  # These are un-roped K values
+                temp_v = kv_cache["v"].clone()
+                
+                # --- CPU OFFLOAD DUMP LOGIC ---
+                evicted_k_frames = []
+                evicted_v_frames = []
+                ev_k_split = []
+                ev_v_split = []
+                num_evicted_frames = 0
+                if self.memory_size > 0 and num_evicted_tokens > 0:
+                    num_evicted_frames = num_evicted_tokens // frame_seqlen
+                    ev_k = temp_k[:, sink_tokens:sink_tokens + num_evicted_tokens]
+                    ev_v = temp_v[:, sink_tokens:sink_tokens + num_evicted_tokens]
+                    
+                    ev_k_split = ev_k.view(b, num_evicted_frames, frame_seqlen, n, d).split(1, dim=1)
+                    ev_v_split = ev_v.view(b, num_evicted_frames, frame_seqlen, n, d).split(1, dim=1)
+                    
+                    evicted_k_frames = [f.to("cpu", non_blocking=True) for f in ev_k_split]
+                    evicted_v_frames = [f.to("cpu", non_blocking=True) for f in ev_v_split]
+                evicted_draft_k_frames = kv_cache.get("local_draft_k_frames", [])[sink_tokens // frame_seqlen:sink_tokens // frame_seqlen + num_evicted_frames]
+
+                # Apply rolling update to the temporary cache
+                temp_k[:, sink_tokens:sink_tokens + num_rolled_tokens] = \
+                    temp_k[:, sink_tokens + num_evicted_tokens:sink_tokens + num_evicted_tokens + num_rolled_tokens].clone()
+                temp_v[:, sink_tokens:sink_tokens + num_rolled_tokens] = \
+                    temp_v[:, sink_tokens + num_evicted_tokens:sink_tokens + num_evicted_tokens + num_rolled_tokens].clone()
+                
+                # Insert new key/value into the temporary cache (UN-ROPED K!)
+                # Protect sink_tokens only during recomputation
+                write_start_index = max(local_start_index, sink_tokens) if is_recompute else local_start_index
+                roped_offset = max(0, write_start_index - local_start_index)
+                write_len = max(0, local_end_index - write_start_index)
+                if write_len > 0:
+                    # Store UN-ROPED K in cache
+                    temp_k[:, write_start_index:local_end_index] = k[:, roped_offset:roped_offset + write_len]
+                    temp_v[:, write_start_index:local_end_index] = v[:, roped_offset:roped_offset + write_len]
+
+                # === causal online RoPE Application ===
+                # For query: use relative indices based on position in window
+                # Query frames are at the end of the window: [local_attn_size - num_new_frames, ..., local_attn_size - 1]
+                logical_end_frames = current_end // frame_seqlen
+                logical_window_end = min(logical_end_frames, self.local_attn_size)
+                query_relative_indices = torch.arange(
+                    logical_window_end - num_new_frames,
+                    logical_window_end,
+                    device=q.device, dtype=torch.long
+                )
+                rope_start = time.perf_counter()
+                roped_query = causal_online_rope(
+                    q, grid_sizes, freqs, relative_frame_indices=query_relative_indices
+                ).type_as(v)
+                if self.group11_profile is not None:
+                    self.group11_profile["model_phase_ms"]["norm_rope"] += (time.perf_counter() - rope_start) * 1000.0
+                
+                # For cached K: apply RoPE dynamically based on current position in window
+                # Sink frames: [0, 1, ..., sink_size - 1]
+                # Rolling window frames: [sink_size, sink_size + 1, ..., local_end_index/frame_seqlen - 1]
+                num_cache_frames = local_end_index // frame_seqlen
+                physical_cache_frames = kv_cache_size // frame_seqlen
+                if physical_cache_frames < self.local_attn_size:
+                    retained_local = max(num_cache_frames - self.sink_size, 0)
+                    logical_local_start = max(logical_window_end - retained_local, self.sink_size)
+                    sink_indices = torch.arange(self.sink_size, device=k.device, dtype=torch.long)
+                    local_indices = torch.arange(
+                        logical_local_start, logical_local_start + retained_local,
+                        device=k.device, dtype=torch.long
+                    )
+                    cache_relative_indices = torch.cat([sink_indices, local_indices])
+                else:
+                    cache_relative_indices = torch.arange(0, num_cache_frames, device=k.device, dtype=torch.long)
+                
+                # Create a grid_sizes for the cached K
+                cache_grid_sizes = grid_sizes.clone()
+                cache_grid_sizes[0, 0] = num_cache_frames
+                
+                # Apply RoPE to cached K using relative indices
+                roped_temp_k = causal_online_rope(
+                    temp_k[:, :local_end_index].view(b, num_cache_frames, frame_seqlen, n, d).flatten(1, 2),
+                    cache_grid_sizes, freqs, relative_frame_indices=cache_relative_indices
+                ).type_as(v)
+
+                # Save cache update info for later use - store UN-ROPED K!
+                cache_update_info = {
+                    "action": "roll_and_insert",
+                    "sink_tokens": sink_tokens,
+                    "num_rolled_tokens": num_rolled_tokens,
+                    "num_evicted_tokens": num_evicted_tokens,
+                    "local_start_index": local_start_index,
+                    "local_end_index": local_end_index,
+                    "write_start_index": write_start_index,
+                    "write_end_index": local_end_index,
+                    "new_k": k[:, roped_offset:roped_offset + write_len],  # UN-ROPED K!
+                    "new_v": v[:, roped_offset:roped_offset + write_len],
+                    "current_end": current_end,
+                    "is_recompute": is_recompute,
+                    "evicted_k_frames": evicted_k_frames,
+                    "evicted_v_frames": evicted_v_frames,
+                    "evicted_draft_k_frames": evicted_draft_k_frames,
+                    "new_draft_k_frames": draft_k_frames,
+                    "frame_seqlen": frame_seqlen,
+                }
+            else:
+                # === DIRECT INSERT MODE ===
+                # Before cache is full, we can still use relative indices that grow sequentially
+                local_end_index = kv_cache["local_end_index"].item() + current_end - kv_cache["global_end_index"].item()
+                local_start_index = local_end_index - num_new_tokens
+
+                # Construct full k, v for attention computation
+                temp_k = kv_cache["k"].clone()  # UN-ROPED K
+                temp_v = kv_cache["v"].clone()
+                
+                # Protect sink_tokens only during recomputation
+                write_start_index = max(local_start_index, sink_tokens) if is_recompute else local_start_index
+                if sink_recache_after_switch:
+                    write_start_index = local_start_index
+                roped_offset = max(0, write_start_index - local_start_index)
+                write_len = max(0, local_end_index - write_start_index)
+                if write_len > 0:
+                    # Store UN-ROPED K in cache
+                    temp_k[:, write_start_index:local_end_index] = k[:, roped_offset:roped_offset + write_len]
+                    temp_v[:, write_start_index:local_end_index] = v[:, roped_offset:roped_offset + write_len]
+
+                # === RoPE Application with Relative Indices ===
+                # Current frame position in the window
+                logical_end_frames = current_end // frame_seqlen
+                logical_window_end = min(logical_end_frames, self.local_attn_size)
+                current_frame_in_window = logical_window_end - num_new_frames
+                
+                # Query: apply RoPE with relative frame indices
+                query_relative_indices = torch.arange(
+                    current_frame_in_window,
+                    current_frame_in_window + num_new_frames,
+                    device=q.device
+                )
+                roped_query = causal_online_rope(
+                    q, grid_sizes, freqs, relative_frame_indices=query_relative_indices
+                ).type_as(v)
+                
+                # Cached K: apply RoPE dynamically
+                num_cache_frames = local_end_index // frame_seqlen
+                physical_cache_frames = kv_cache_size // frame_seqlen
+                if physical_cache_frames < self.local_attn_size:
+                    retained_local = max(num_cache_frames - self.sink_size, 0)
+                    logical_local_start = max(logical_window_end - retained_local, self.sink_size)
+                    sink_indices = torch.arange(self.sink_size, device=k.device, dtype=torch.long)
+                    local_indices = torch.arange(
+                        logical_local_start, logical_local_start + retained_local,
+                        device=k.device, dtype=torch.long
+                    )
+                    cache_relative_indices = torch.cat([sink_indices, local_indices])
+                else:
+                    cache_relative_indices = torch.arange(0, num_cache_frames, device=k.device, dtype=torch.long)
+                
+                cache_grid_sizes = grid_sizes.clone()
+                cache_grid_sizes[0, 0] = num_cache_frames
+                
+                roped_temp_k = causal_online_rope(
+                    temp_k[:, :local_end_index].view(b, num_cache_frames, frame_seqlen, n, d).flatten(1, 2),
+                    cache_grid_sizes, freqs, relative_frame_indices=cache_relative_indices
+                ).type_as(v)
+
+                # Save cache update info - store UN-ROPED K!
+                cache_update_info = {
+                    "action": "direct_insert",
+                    "local_start_index": local_start_index,
+                    "local_end_index": local_end_index,
+                    "write_start_index": write_start_index,
+                    "write_end_index": local_end_index,
+                    "new_k": k[:, roped_offset:roped_offset + write_len],  # UN-ROPED K!
+                    "new_v": v[:, roped_offset:roped_offset + write_len],
+                    "current_end": current_end,
+                    "is_recompute": is_recompute,
+                    "new_draft_k_frames": draft_k_frames,
+                    "frame_seqlen": frame_seqlen,
+                }
+
+            # Use roped K for attention computation
+            if sink_tokens > 0 or self.memory_size > 0:
+                # Concatenate sink tokens and local window tokens
+                local_budget = self.max_attention_size - sink_tokens - (self.memory_size * frame_seqlen)
+                k_sink = roped_temp_k[:, :sink_tokens]
+                v_sink = temp_v[:, :sink_tokens]
+                
+                local_start_for_window = max(sink_tokens, local_end_index - local_budget)
+                
+                if self.group11_fetch_mode in {"flashfetch_serial", "flashfetch_chunk"}:
+                    if local_budget > 0 and local_start_for_window < local_end_index:
+                        flash_local_k = roped_temp_k[:, local_start_for_window:local_end_index]
+                        flash_local_v = temp_v[:, local_start_for_window:local_end_index]
+                    else:
+                        flash_local_k = roped_temp_k[:, :0]
+                        flash_local_v = temp_v[:, :0]
+                    x, flash_meta = self._flashfetch_online_attention(
+                        roped_query, k_sink, v_sink, flash_local_k, flash_local_v,
+                        kv_cache, memory_indices, grid_sizes, freqs, layer_index)
+                    self.group_runtime_trace.append({
+                        "FLASH_FETCH_ACTIVE": "YES",
+                        "FLASH_FETCH_TILE_TOKENS": int(frame_seqlen),
+                        "FINAL_ATTENTION_DTYPE": str(x.dtype).replace("torch.", ""),
+                        **flash_meta,
+                    })
+                    x = x.flatten(2)
+                    x = self.o(x)
+                    if kv_cache is not None:
+                        return x, (current_end, local_end_index, cache_update_info)
+                    return x
+                
+                # --- MEMORY TOKEN RETRIEVAL (using pre-computed indices) ---
+                k_mem = None
+                w1_final_k = None
+                w1_final_v = None
+                w1_meta = None
+                v_mem = None
+                
+                if self.memory_size > 0 and memory_indices is not None:
+                    fetch_start = time.perf_counter()
+                    lookup_start = time.perf_counter()
+                    compressed_entries = kv_cache.get("compressed_history_entries", [])
+                    cpu_k_list = compressed_entries if compressed_entries else kv_cache.get("cpu_k_frames", [])
+                    cpu_v_list = kv_cache.get("cpu_v_frames", [])
+                    archive = kv_cache.get("compressed_history_archive")
+                    lookup_ms = (time.perf_counter() - lookup_start) * 1000.0
+                    
+                    if len(cpu_k_list) > 0:
+                        k_sel = memory_indices.shape[1]  # [B, k_sel]
+                        device = q.device
+                        w1_zero_acquire = self.group11_fetch_mode == "w1_zero_acquire"
+                        w1_final_k = None
+                        w1_final_v = None
+                        w1_meta = None
+                        if w1_zero_acquire:
+                            w1_final_k, w1_final_v, w1_meta = self._w1_progressive_final_buffer(
+                                memory_indices=memory_indices,
+                                cpu_k_list=cpu_k_list,
+                                cpu_v_list=cpu_v_list,
+                                sink_k=k_sink,
+                                sink_v=v_sink,
+                                local_k=(roped_temp_k[:, local_start_for_window:local_end_index]
+                                         if local_budget > 0 and local_start_for_window < local_end_index
+                                         else roped_temp_k[:, :0]),
+                                local_v=(temp_v[:, local_start_for_window:local_end_index]
+                                         if local_budget > 0 and local_start_for_window < local_end_index
+                                         else temp_v[:, :0]),
+                                q=q,
+                                v_dtype=v.dtype,
+                                frame_tokens=frame_seqlen,
+                                freqs=freqs,
+                                grid_sizes=grid_sizes,
+                            )
+                            k_mem = w1_final_k[:, sink_tokens:sink_tokens + k_sel * frame_seqlen]
+                            v_mem = w1_final_v[:, sink_tokens:sink_tokens + k_sel * frame_seqlen]
+                            fetch_end_to_end_ms = (time.perf_counter() - fetch_start) * 1000.0
+                            if self.group11_profile is not None:
+                                self.group11_profile.setdefault('w1_zero_acquire', {}).update(w1_meta)
+                                self.group11_profile['fetch_phase_rows'].append({
+                                    'layer': int(layer_index), 'lookup_ms': lookup_ms,
+                                    'k_to_device_ms': 0.0, 'v_to_device_ms': 0.0,
+                                    'gather_ms': 0.0, 'cat_ms': 0.0,
+                                    'end_to_end_ms': fetch_end_to_end_ms,
+                                    'selected_chunks': int(k_sel),
+                                    'selected_ids': [int(x) for x in memory_indices[0].detach().cpu().tolist()],
+                                    'fetch_mode': 'W1_STREAMING',
+                                })
+                        else:
+                            k_sel = memory_indices.shape[1]  # [B, k_sel]
+                            device = q.device
+                            gather_start = time.perf_counter()
+
+                            k_mem_unroped_list = []
+                            v_mem_list = []
+                            k_host_ms = 0.0
+                            v_host_ms = 0.0
+                            for bi in range(b):
+                                indices = memory_indices[bi]
+                                for k_idx in indices:
+                                    prefetched = None
+                                    cache_hit = False
+                                    if archive is not None:
+                                        rec = compressed_entries[int(k_idx)]
+                                        src_k, src_v = archive.fetch(rec, device)
+                                        if self.group11_profile is not None:
+                                            self.group11_profile["EXPOSED_H2D_MS"] = float(self.group11_profile.get("EXPOSED_H2D_MS", 0.0)) + float(getattr(archive, "last_h2d_ms", 0.0))
+                                            self.group11_profile["EXPOSED_H2D_CALLS"] = int(self.group11_profile.get("EXPOSED_H2D_CALLS", 0)) + int(getattr(archive, "last_h2d_calls", 0))
+                                        src_k = src_k[bi]
+                                        src_v = src_v[bi]
+                                        kv_cache["retrieved_archived_entries"] = int(kv_cache.get("retrieved_archived_entries", 0)) + 1
+                                        deq_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                        kv_cache["transient_dequant_gpu_bytes"] = int(kv_cache.get("transient_dequant_gpu_bytes", 0)) + deq_bytes
+                                        kv_cache["transient_dequant_gpu_peak_bytes"] = max(int(kv_cache.get("transient_dequant_gpu_peak_bytes", 0)), deq_bytes)
+                                        cache_key = None
+                                    else:
+                                        prefetched = None
+                                        if self.group11_fetch_mode == "next_layer_prefetch":
+                                            prefetched = self._consume_prefetch_or_fetch(kv_cache, layer_index, int(k_idx), bi, device)
+                                        if prefetched is not None:
+                                            dst_k, dst_v = prefetched
+                                            src_k, src_v = dst_k, dst_v
+                                            cache_key = None
+                                            cache_hit = True
+                                            k_ms = v_ms = 0.0
+                                        else:
+                                            src_k = cpu_k_list[k_idx][bi, 0]
+                                            src_v = cpu_v_list[k_idx][bi, 0]
+                                            cache_key = (int(getattr(self, "_current_layer_index", -1)), int(k_idx), int(bi))
+                                    reuse = os.environ.get("GROUP11_REUSE_CACHE", "0") == "1"
+                                    cache_hit = bool(locals().get("cache_hit", False) or (reuse and cache_key in getattr(self, "_group11_reuse_cache", {})))
+                                    if archive is not None:
+                                        dst_k, dst_v = src_k, src_v
+                                        k_ms = 0.0
+                                        v_ms = 0.0
+                                    elif cache_hit and prefetched is None:
+                                        dst_k, dst_v = self._group11_reuse_cache[cache_key]
+                                        k_ms = 0.0
+                                        v_ms = 0.0
+                                        if self.group11_profile is not None:
+                                            self.group11_profile["CACHE_HITS"] += 1
+                                            self.group11_profile["AVOIDED_H2D_CALLS"] += 2
+                                            self.group11_profile["AVOIDED_H2D_BYTES"] += int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                    else:
+                                        if self.group11_fetch_mode == "next_layer_prefetch":
+                                            owner, _ = self._prefetch_state(kv_cache)
+                                            owner["prefetch_correction_chunks"] = int(owner.get("prefetch_correction_chunks", 0)) + 1
+                                            owner["prefetch_correction_bytes"] = int(owner.get("prefetch_correction_bytes", 0)) + int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                        k_start = time.perf_counter()
+                                        dst_k = src_k.to(device, non_blocking=True)
+                                        k_ms = (time.perf_counter() - k_start) * 1000.0
+                                        v_start = time.perf_counter()
+                                        dst_v = src_v.to(device, non_blocking=True)
+                                        v_ms = (time.perf_counter() - v_start) * 1000.0
+                                        if reuse:
+                                            self._group11_reuse_cache[cache_key] = (dst_k, dst_v)
+                                        if self.group11_profile is not None:
+                                            self.group11_profile["CACHE_MISSES"] += 1
+                                            if reuse:
+                                                cache_bytes = sum(int(k.numel() * k.element_size() + vv.numel() * vv.element_size()) for k, vv in self._group11_reuse_cache.values())
+                                                self.group11_profile["GPU_CACHE_PEAK_BYTES"] = max(int(self.group11_profile.get("GPU_CACHE_PEAK_BYTES", 0)), cache_bytes)
+                                    copy_ms = k_ms + v_ms
+                                    k_host_ms += k_ms
+                                    v_host_ms += v_ms
+                                    copied_bytes = int(src_k.numel() * src_k.element_size() + src_v.numel() * src_v.element_size())
+                                    if prefetched is None:
+                                        self.runtime_counters["full_kv_h2d_bytes"] += copied_bytes
+                                        self.runtime_counters["full_kv_h2d_calls"] += 2
+                                    self.history_fetch_trace.append({
+                                        "history_id": int(k_idx), "batch": int(bi),
+                                        "source_k_device": str(src_k.device),
+                                        "source_v_device": str(src_v.device),
+                                        "source_k_ptr": int(src_k.untyped_storage().data_ptr()),
+                                        "source_v_ptr": int(src_v.untyped_storage().data_ptr()),
+                                        "destination_k_ptr": int(dst_k.untyped_storage().data_ptr()),
+                                        "destination_v_ptr": int(dst_v.untyped_storage().data_ptr()),
+                                        "copied_bytes": copied_bytes,
+                                        "layer": int(getattr(self, "_current_layer_index", -1)),
+                                        "copy_time_ms": copy_ms,
+                                        "source_pinned_memory": bool(src_k.is_pinned() and src_v.is_pinned()),
+                                        "non_blocking": True,
+                                        "cache_hit": cache_hit,
+                                    })
+                                    if self.group11_profile is not None:
+                                        self.group11_profile["NUM_CPU_KV_FETCH_CALLS"] += 1
+                                        self.group11_profile["NUM_H2D_COPY_CALLS"] += 2
+                                        self.group11_profile["TOTAL_FULL_KV_H2D_BYTES"] += copied_bytes
+                                        self.group11_profile["EXPOSED_H2D_MS"] = float(self.group11_profile.get("EXPOSED_H2D_MS", 0.0)) + float(copy_ms)
+                                        self.group11_profile["EXPOSED_H2D_CALLS"] = int(self.group11_profile.get("EXPOSED_H2D_CALLS", 0)) + 2
+                                        self.group11_profile["h2d_rows"].append({"source_chunk_id": int(k_idx), "layer": int(getattr(self, "_current_layer_index", -1)), "bytes_K": int(src_k.numel()*src_k.element_size()), "bytes_V": int(src_v.numel()*src_v.element_size()), "total_bytes": copied_bytes, "copy_time_ms": copy_ms, "k_host_ms": k_ms, "v_host_ms": v_ms, "source_pinned_memory": bool(src_k.is_pinned() and src_v.is_pinned()), "non_blocking": True, "copy_stream": "default", "cache_hit": cache_hit})
+                                    k_mem_unroped_list.append(dst_k)
+                                    v_mem_list.append(dst_v)
+
+                            gather_start = time.perf_counter()
+                            k_mem_unroped = torch.stack(k_mem_unroped_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
+                            v_mem = torch.stack(v_mem_list, dim=0).view(b, k_sel * frame_seqlen, n, d)
+                            gather_ms = (time.perf_counter() - gather_start) * 1000.0
+
+                            mem_grid_sizes = grid_sizes.clone()
+                            mem_grid_sizes[:, 0] = k_sel
+
+                            k_mem = causal_online_rope(
+                                k_mem_unroped,
+                                mem_grid_sizes, freqs, relative_frame_indices=torch.zeros(k_sel, dtype=torch.long, device=device)
+                            ).type_as(v)
+                            fetch_end_to_end_ms = (time.perf_counter() - fetch_start) * 1000.0
+                            if self.group11_profile is not None:
+                                self.group11_profile["fetch_phase_rows"].append({"layer": int(layer_index), "lookup_ms": lookup_ms, "k_to_device_ms": k_host_ms, "v_to_device_ms": v_host_ms, "gather_ms": gather_ms, "cat_ms": 0.0, "end_to_end_ms": fetch_end_to_end_ms, "selected_chunks": int(k_sel), "selected_ids": [int(x) for x in memory_indices[0].detach().cpu().tolist()]})
+                            if self.retrieval_backend == "draftmap_online" and self.draftmap_trace:
+                                self.draftmap_trace[-1]["cpu_gather_ms"] = (time.perf_counter() - gather_start) * 1000.0
+                                self.draftmap_trace[-1]["h2d_ms"] = 0.0
+
+
+                if w1_final_k is not None:
+                    k_cat = w1_final_k
+                    v_cat = w1_final_v
+                    cat_ms = 0.0
+                else:
+                    k_parts = [k_sink]
+                    v_parts = [v_sink]
+                    if k_mem is not None:
+                        k_parts.append(k_mem)
+                        v_parts.append(v_mem)
+                    if local_budget > 0 and local_start_for_window < local_end_index:
+                        k_local = roped_temp_k[:, local_start_for_window:local_end_index]
+                        v_local = temp_v[:, local_start_for_window:local_end_index]
+                        k_parts.append(k_local)
+                        v_parts.append(v_local)
+                    cat_start = time.perf_counter()
+                    k_cat = torch.cat(k_parts, dim=1)
+                    v_cat = torch.cat(v_parts, dim=1)
+                    cat_ms = (time.perf_counter() - cat_start) * 1000.0
+                if self.group11_profile is not None and self.group11_profile["fetch_phase_rows"]:
+                    self.group11_profile["fetch_phase_rows"][-1]["cat_ms"] += cat_ms
+                persistent_owner = (
+                    kv_cache.get("compressed_history_archive") is not None
+                    and self.group_runtime_mode in {
+                        "group12_corrected", "group13_corrected",
+                        "group14_corrected", "group15_corrected",
+                    }
+                )
+                k_cat, v_cat, runtime_meta = prepare_attention_kv(
+                    roped_query, k_cat, v_cat,
+                    self.group_runtime_mode, self.group_sparse_ratio,
+                    persistent_owner_already_dequantized=persistent_owner)
+                runtime_meta["TRACE_LAYER"] = int(layer_index)
+                runtime_meta["TRACE_DENOISING_STEP"] = self.current_denoising_step
+                self.group_runtime_trace.append(runtime_meta)
+
+                original_k_tokens = int(k_cat.shape[1])
+                attn_start = time.perf_counter()
+                attn_ctx = record_function("G11_BF16_ATTN") if (v5_active and record_function is not None) else nullcontext()
+                cuda_attn_token = None
+                if self.unified_latency_profiler is not None:
+                    cuda_attn_token = self.unified_latency_profiler.begin_cuda("ATTENTION_KERNEL")
+                with attn_ctx:
+                    x = attention(roped_query, k_cat, v_cat)
+                if self.group11_fetch_mode == "w1_zero_acquire" and getattr(self, "_w1_pending_fetch_event", None) is not None:
+                    torch.cuda.current_stream(q.device).wait_event(self._w1_pending_fetch_event)
+                    self._w1_pending_fetch_event = None
+                    self._w1_pending_fetch_stream = None
+                    self._w1_fetch_keepalive = []
+                if self.unified_latency_profiler is not None:
+                    self.unified_latency_profiler.end_cuda(cuda_attn_token, {
+                        "call_id": len(self.unified_latency_profiler._events),
+                        "generation_unit": int(current_start // max(1, 3 * frame_seqlen)),
+                        "denoising_step": self.current_denoising_step,
+                        "layer_id": int(layer_index),
+                        "q_shape": list(roped_query.shape),
+                        "k_shape": list(k_cat.shape),
+                        "v_shape": list(v_cat.shape),
+                        "dtype": str(k_cat.dtype),
+                        "q_len": int(roped_query.shape[1]),
+                        "original_k_len": original_k_tokens,
+                        "actual_k_len": int(k_cat.shape[1]),
+                        "qk_elements_original": int(roped_query.shape[1] * original_k_tokens * k_cat.shape[2]),
+                        "qk_elements_actual": int(roped_query.shape[1] * k_cat.shape[1] * k_cat.shape[2]),
+                        "retained_ratio": float(k_cat.shape[1] / max(1, original_k_tokens)),
+                    })
+                if self.group11_profile is not None:
+                    self.group11_profile["NUM_ATTENTION_CALLS"] += 1
+                    self.group11_profile["attention_rows"].append({"layer": int(layer_index), "q_tokens": int(roped_query.shape[1]), "kv_tokens": int(k_cat.shape[1]), "heads": int(k_cat.shape[2]), "dtype": str(k_cat.dtype), "cpu_wall_ms": (time.perf_counter()-attn_start)*1000.0})
+            else:
+                window_start = max(0, local_end_index - self.max_attention_size)
+                roped_temp_k, temp_v, runtime_meta = prepare_attention_kv(
+                    roped_query, roped_temp_k[:, window_start:local_end_index],
+                    temp_v[:, window_start:local_end_index],
+                    self.group_runtime_mode, self.group_sparse_ratio,
+                    apply_storage_quant=False)
+                runtime_meta["TRACE_LAYER"] = int(layer_index)
+                runtime_meta["TRACE_DENOISING_STEP"] = self.current_denoising_step
+                self.group_runtime_trace.append(runtime_meta)
+                attn_start = time.perf_counter()
+                attn_ctx = record_function("G11_BF16_ATTN") if (v5_active and record_function is not None) else nullcontext()
+                cuda_attn_token = None
+                if self.unified_latency_profiler is not None:
+                    cuda_attn_token = self.unified_latency_profiler.begin_cuda("ATTENTION_KERNEL")
+                with attn_ctx:
+                    x = attention(roped_query, roped_temp_k, temp_v)
+                if self.unified_latency_profiler is not None:
+                    self.unified_latency_profiler.end_cuda(cuda_attn_token, {
+                        "call_id": len(self.unified_latency_profiler._events),
+                        "generation_unit": int(current_start // max(1, 3 * frame_seqlen)),
+                        "denoising_step": self.current_denoising_step,
+                        "layer_id": int(layer_index),
+                        "q_shape": list(roped_query.shape),
+                        "k_shape": list(roped_temp_k.shape),
+                        "v_shape": list(temp_v.shape),
+                        "dtype": str(roped_temp_k.dtype),
+                        "q_len": int(roped_query.shape[1]),
+                        "original_k_len": int(roped_temp_k.shape[1]),
+                        "actual_k_len": int(roped_temp_k.shape[1]),
+                        "qk_elements_original": int(roped_query.shape[1] * roped_temp_k.shape[1] * roped_temp_k.shape[2]),
+                        "qk_elements_actual": int(roped_query.shape[1] * roped_temp_k.shape[1] * roped_temp_k.shape[2]),
+                        "retained_ratio": 1.0,
+                    })
+                if self.group11_profile is not None:
+                    self.group11_profile["NUM_ATTENTION_CALLS"] += 1
+                    self.group11_profile["attention_rows"].append({"layer": int(layer_index), "q_tokens": int(roped_query.shape[1]), "kv_tokens": int(roped_temp_k.shape[1]), "heads": int(roped_temp_k.shape[2]), "dtype": str(roped_temp_k.dtype), "cpu_wall_ms": (time.perf_counter()-attn_start)*1000.0})
+
+        # output
+        self._commit_draft_q_history(kv_cache)
+        output_start = time.perf_counter()
+        x = x.flatten(2)
+        output_ctx = record_function("G11_ATTN_OUTPUT_PROJECTION") if (v5_active and record_function is not None) else nullcontext()
+        with output_ctx:
+            x = self.o(x)
+        if self.group11_profile is not None:
+            self.group11_profile["model_phase_ms"]["attention_output_projection"] += (time.perf_counter() - output_start) * 1000.0
+        
+        # Return both output and cache update info
+        if kv_cache is not None:
+            return x, (current_end, local_end_index, cache_update_info)
+        else:
+            return x
+
+
+class CausalWanAttentionBlock(nn.Module):
+
+    def __init__(self,
+                 cross_attn_type,
+                 dim,
+                 ffn_dim,
+                 num_heads,
+                 local_attn_size=-1,
+                 sink_size=0,
+                 memory_size=0,
+                 qk_norm=True,
+                 cross_attn_norm=False,
+                 eps=1e-6):
+        super().__init__()
+        self.dim = dim
+        self.ffn_dim = ffn_dim
+        self.num_heads = num_heads
+        self.local_attn_size = local_attn_size
+        self.qk_norm = qk_norm
+        self.cross_attn_norm = cross_attn_norm
+        self.eps = eps
+
+        # layers
+        self.norm1 = WanLayerNorm(dim, eps)
+        self.self_attn = CausalWanSelfAttention(dim, num_heads, local_attn_size, sink_size, memory_size, qk_norm, eps)
+        self.norm3 = WanLayerNorm(
+            dim, eps,
+            elementwise_affine=True) if cross_attn_norm else nn.Identity()
+        self.cross_attn = WAN_CROSSATTENTION_CLASSES[cross_attn_type](dim,
+                                                                      num_heads,
+                                                                      (-1, -1),
+                                                                      qk_norm,
+                                                                      eps)
+        self.norm2 = WanLayerNorm(dim, eps)
+        self.ffn = nn.Sequential(
+            nn.Linear(dim, ffn_dim), nn.GELU(approximate='tanh'),
+            nn.Linear(ffn_dim, dim))
+
+        # modulation
+        self.modulation = nn.Parameter(torch.randn(1, 6, dim) / dim**0.5)
+
+    def forward(
+        self,
+        x,
+        e,
+        seq_lens,
+        grid_sizes,
+        freqs,
+        context,
+        context_lens,
+        block_mask,
+        kv_cache=None,
+        crossattn_cache=None,
+        current_start=0,
+        cache_start=None,
+        sink_recache_after_switch=False,
+        memory_indices=None,
+        layer_index=0,
+    ):
+        r"""
+        Args:
+            x(Tensor): Shape [B, L, C]
+            e(Tensor): Shape [B, F, 6, C]
+            seq_lens(Tensor): Shape [B], length of each sequence in batch
+            grid_sizes(Tensor): Shape [B, 3], the second dimension contains (F, H, W)
+            freqs(Tensor): Rope freqs, shape [1024, C / num_heads / 2]
+        """
+        num_frames, frame_seqlen = e.shape[1], x.shape[1] // e.shape[1]
+        # assert e.dtype == torch.float32
+        # with amp.autocast(dtype=torch.float32):
+        e = (self.modulation.unsqueeze(1) + e).chunk(6, dim=2)
+        # assert e[0].dtype == torch.float32
+
+        # self-attention
+        block_attn_start = time.perf_counter()
+        wrapper_ctx = record_function("G11_WRAPPER") if (getattr(self.self_attn, "_v5_active", False) and record_function is not None) else nullcontext()
+        with wrapper_ctx:
+            self_attn_result = self.self_attn(
+                (self.norm1(x).unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * (1 + e[1]) + e[0]).flatten(1, 2),
+                seq_lens, grid_sizes, freqs, block_mask, kv_cache, current_start, cache_start, sink_recache_after_switch,
+                memory_indices=memory_indices, layer_index=layer_index)
+        
+        if kv_cache is not None:
+            y, cache_update_info = self_attn_result
+        else:
+            y = self_attn_result
+            cache_update_info = None
+        if self.self_attn.group11_profile is not None:
+            self.self_attn.group11_profile["model_phase_ms"]["attention_wrapper"] += (time.perf_counter() - block_attn_start) * 1000.0
+
+        # with amp.autocast(dtype=torch.float32):
+        x = x + (y.unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * e[2]).flatten(1, 2)
+
+        # cross-attention & ffn function
+        def cross_attn_ffn(x, context, context_lens, e, crossattn_cache=None):
+            x = x + self.cross_attn(self.norm3(x), context,
+                                    context_lens, crossattn_cache=crossattn_cache)
+            y = self.ffn(
+                (self.norm2(x).unflatten(dim=1, sizes=(num_frames,
+                 frame_seqlen)) * (1 + e[4]) + e[3]).flatten(1, 2)
+            )
+            # with amp.autocast(dtype=torch.float32):
+            x = x + (y.unflatten(dim=1, sizes=(num_frames,
+                     frame_seqlen)) * e[5]).flatten(1, 2)
+            return x
+
+        ffn_start = time.perf_counter()
+        x = cross_attn_ffn(x, context, context_lens, e, crossattn_cache)
+        if self.self_attn.group11_profile is not None:
+            self.self_attn.group11_profile["model_phase_ms"]["FFN_MLP_and_cross_attention"] += (time.perf_counter() - ffn_start) * 1000.0
+        
+        if cache_update_info is not None:
+            # cache_update_info is already in the format (current_end, local_end_index, cache_update_info)
+            return x, cache_update_info
+        else:
+            return x
+
+
+class CausalHead(nn.Module):
+
+    def __init__(self, dim, out_dim, patch_size, eps=1e-6):
+        super().__init__()
+        self.dim = dim
+        self.out_dim = out_dim
+        self.patch_size = patch_size
+        self.eps = eps
+
+        # layers
+        out_dim = math.prod(patch_size) * out_dim
+        self.norm = WanLayerNorm(dim, eps)
+        self.head = nn.Linear(dim, out_dim)
+
+        # modulation
+        self.modulation = nn.Parameter(torch.randn(1, 2, dim) / dim**0.5)
+
+    def forward(self, x, e):
+        r"""
+        Args:
+            x(Tensor): Shape [B, L1, C]
+            e(Tensor): Shape [B, F, 1, C]
+        """
+        # assert e.dtype == torch.float32
+        # with amp.autocast(dtype=torch.float32):
+        num_frames, frame_seqlen = e.shape[1], x.shape[1] // e.shape[1]
+        e = (self.modulation.unsqueeze(1) + e).chunk(2, dim=2)
+        x = (self.head(self.norm(x).unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * (1 + e[1]) + e[0]))
+        return x
+
+
+class CausalWanModel(ModelMixin, ConfigMixin):
+    r"""
+    Wan diffusion backbone supporting both text-to-video and image-to-video.
+    """
+
+    ignore_for_config = [
+        'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim'
+    ]
+    _no_split_modules = ['WanAttentionBlock']
+    _supports_gradient_checkpointing = True
+
+    @register_to_config
+    def __init__(self,
+                 model_type='t2v',
+                 patch_size=(1, 2, 2),
+                 text_len=512,
+                 in_dim=16,
+                 dim=2048,
+                 ffn_dim=8192,
+                 freq_dim=256,
+                 text_dim=4096,
+                 out_dim=16,
+                 num_heads=16,
+                 num_layers=32,
+                 local_attn_size=-1,
+                 sink_size=0,
+                 memory_size=0,
+                 qk_norm=True,
+                 cross_attn_norm=True,
+                 eps=1e-6):
+        r"""
+        Initialize the diffusion model backbone.
+
+        Args:
+            model_type (`str`, *optional*, defaults to 't2v'):
+                Model variant - 't2v' (text-to-video) or 'i2v' (image-to-video)
+            patch_size (`tuple`, *optional*, defaults to (1, 2, 2)):
+                3D patch dimensions for video embedding (t_patch, h_patch, w_patch)
+            text_len (`int`, *optional*, defaults to 512):
+                Fixed length for text embeddings
+            in_dim (`int`, *optional*, defaults to 16):
+                Input video channels (C_in)
+            dim (`int`, *optional*, defaults to 2048):
+                Hidden dimension of the transformer
+            ffn_dim (`int`, *optional*, defaults to 8192):
+                Intermediate dimension in feed-forward network
+            freq_dim (`int`, *optional*, defaults to 256):
+                Dimension for sinusoidal time embeddings
+            text_dim (`int`, *optional*, defaults to 4096):
+                Input dimension for text embeddings
+            out_dim (`int`, *optional*, defaults to 16):
+                Output video channels (C_out)
+            num_heads (`int`, *optional*, defaults to 16):
+                Number of attention heads
+            num_layers (`int`, *optional*, defaults to 32):
+                Number of transformer blocks
+            local_attn_size (`int`, *optional*, defaults to -1):
+                Window size for temporal local attention (-1 indicates global attention)
+            sink_size (`int`, *optional*, defaults to 0):
+                Size of the attention sink, we keep the first `sink_size` frames unchanged when rolling the KV cache
+            memory_size (`int`, *optional*, defaults to 0):
+                Size of the memory pool (number of recent frames to use as top-k context)
+            qk_norm (`bool`, *optional*, defaults to True):
+                Enable query/key normalization
+            cross_attn_norm (`bool`, *optional*, defaults to False):
+                Enable cross-attention normalization
+            eps (`float`, *optional*, defaults to 1e-6):
+                Epsilon value for normalization layers
+        """
+
+        super().__init__()
+
+        assert model_type in ['t2v', 'i2v']
+        self.model_type = model_type
+
+        self.patch_size = patch_size
+        self.text_len = text_len
+        self.in_dim = in_dim
+        self.dim = dim
+        self.ffn_dim = ffn_dim
+        self.freq_dim = freq_dim
+        self.text_dim = text_dim
+        self.out_dim = out_dim
+        self.num_heads = num_heads
+        self.num_layers = num_layers
+        self.local_attn_size = local_attn_size
+        self.qk_norm = qk_norm
+        self.cross_attn_norm = cross_attn_norm
+        self.eps = eps
+
+        # embeddings
+        self.patch_embedding = nn.Conv3d(
+            in_dim, dim, kernel_size=patch_size, stride=patch_size)
+        self.text_embedding = nn.Sequential(
+            nn.Linear(text_dim, dim), nn.GELU(approximate='tanh'),
+            nn.Linear(dim, dim))
+
+        self.time_embedding = nn.Sequential(
+            nn.Linear(freq_dim, dim), nn.SiLU(), nn.Linear(dim, dim))
+        self.time_projection = nn.Sequential(
+            nn.SiLU(), nn.Linear(dim, dim * 6))
+
+        # blocks
+        cross_attn_type = 't2v_cross_attn' if model_type == 't2v' else 'i2v_cross_attn'
+        self.blocks = nn.ModuleList([
+            CausalWanAttentionBlock(cross_attn_type, dim, ffn_dim, num_heads,
+                                    local_attn_size, sink_size, memory_size, qk_norm, cross_attn_norm, eps)
+            for _ in range(num_layers)
+        ])
+
+        # head
+        self.head = CausalHead(dim, out_dim, patch_size, eps)
+
+        # buffers (don't use register_buffer otherwise dtype will be changed in to())
+        assert (dim % num_heads) == 0 and (dim // num_heads) % 2 == 0
+        d = dim // num_heads
+        self.freqs = torch.cat([
+            rope_params(1024, d - 4 * (d // 6)),
+            rope_params(1024, 2 * (d // 6)),
+            rope_params(1024, 2 * (d // 6))
+        ],
+            dim=1)
+
+        if model_type == 'i2v':
+            self.img_emb = MLPProj(1280, dim)
+
+        # initialize weights
+        self.init_weights()
+
+        self.gradient_checkpointing = False
+
+        self.block_mask = None
+
+        self.num_frame_per_block = 1
+        self.independent_first_frame = False
+
+    def _set_gradient_checkpointing(self, module, value=False):
+        self.gradient_checkpointing = value
+
+    @staticmethod
+    def _prepare_blockwise_causal_attn_mask(
+        device: torch.device | str, num_frames: int = 21,
+        frame_seqlen: int = 1560, num_frame_per_block=1, local_attn_size=-1
+    ) -> BlockMask:
+        """
+        we will divide the token sequence into the following format
+        [1 latent frame] [1 latent frame] ... [1 latent frame]
+        We use flexattention to construct the attention mask
+        """
+        total_length = num_frames * frame_seqlen
+
+        # we do right padding to get to a multiple of 128
+        padded_length = math.ceil(total_length / 128) * 128 - total_length
+
+        ends = torch.zeros(total_length + padded_length,
+                           device=device, dtype=torch.long)
+
+        # Block-wise causal mask will attend to all elements that are before the end of the current chunk
+        frame_indices = torch.arange(
+            start=0,
+            end=total_length,
+            step=frame_seqlen * num_frame_per_block,
+            device=device
+        )
+
+        for tmp in frame_indices:
+            ends[tmp:tmp + frame_seqlen * num_frame_per_block] = tmp + \
+                frame_seqlen * num_frame_per_block
+
+        def attention_mask(b, h, q_idx, kv_idx):
+            if local_attn_size == -1:
+                return (kv_idx < ends[q_idx]) | (q_idx == kv_idx)
+            else:
+                return ((kv_idx < ends[q_idx]) & (kv_idx >= (ends[q_idx] - local_attn_size * frame_seqlen))) | (q_idx == kv_idx)
+            # return ((kv_idx < total_length) & (q_idx < total_length))  | (q_idx == kv_idx) # bidirectional mask
+
+        block_mask = create_block_mask(attention_mask, B=None, H=None, Q_LEN=total_length + padded_length,
+                                       KV_LEN=total_length + padded_length, _compile=False, device=device)
+
+        return block_mask
+
+    @staticmethod
+    def _prepare_teacher_forcing_mask(
+        device: torch.device | str, num_frames: int = 21,
+        frame_seqlen: int = 1560, num_frame_per_block=1
+    ) -> BlockMask:
+        """
+        we will divide the token sequence into the following format
+        [1 latent frame] [1 latent frame] ... [1 latent frame]
+        We use flexattention to construct the attention mask
+        """
+        total_length = num_frames * frame_seqlen * 2
+
+        # we do right padding to get to a multiple of 128
+        padded_length = math.ceil(total_length / 128) * 128 - total_length
+
+        clean_ends = num_frames * frame_seqlen
+        # for clean context frames, we can construct their flex attention mask based on a [start, end] interval
+        context_ends = torch.zeros(total_length + padded_length, device=device, dtype=torch.long)
+        # for noisy frames, we need two intervals to construct the flex attention mask [context_start, context_end] [noisy_start, noisy_end]
+        noise_context_starts = torch.zeros(total_length + padded_length, device=device, dtype=torch.long)
+        noise_context_ends = torch.zeros(total_length + padded_length, device=device, dtype=torch.long)
+        noise_noise_starts = torch.zeros(total_length + padded_length, device=device, dtype=torch.long)
+        noise_noise_ends = torch.zeros(total_length + padded_length, device=device, dtype=torch.long)
+
+        # Block-wise causal mask will attend to all elements that are before the end of the current chunk
+        attention_block_size = frame_seqlen * num_frame_per_block
+        frame_indices = torch.arange(
+            start=0,
+            end=num_frames * frame_seqlen,
+            step=attention_block_size,
+            device=device, dtype=torch.long
+        )
+
+        # attention for clean context frames
+        for start in frame_indices:
+            context_ends[start:start + attention_block_size] = start + attention_block_size
+
+        noisy_image_start_list = torch.arange(
+            num_frames * frame_seqlen, total_length,
+            step=attention_block_size,
+            device=device, dtype=torch.long
+        )
+        noisy_image_end_list = noisy_image_start_list + attention_block_size
+
+        # attention for noisy frames
+        for block_index, (start, end) in enumerate(zip(noisy_image_start_list, noisy_image_end_list)):
+            # attend to noisy tokens within the same block
+            noise_noise_starts[start:end] = start
+            noise_noise_ends[start:end] = end
+            # attend to context tokens in previous blocks
+            # noise_context_starts[start:end] = 0
+            noise_context_ends[start:end] = block_index * attention_block_size
+
+        def attention_mask(b, h, q_idx, kv_idx):
+            # first design the mask for clean frames
+            clean_mask = (q_idx < clean_ends) & (kv_idx < context_ends[q_idx])
+            # then design the mask for noisy frames
+            # noisy frames will attend to all clean preceeding clean frames + itself
+            C1 = (kv_idx < noise_noise_ends[q_idx]) & (kv_idx >= noise_noise_starts[q_idx])
+            C2 = (kv_idx < noise_context_ends[q_idx]) & (kv_idx >= noise_context_starts[q_idx])
+            noise_mask = (q_idx >= clean_ends) & (C1 | C2)
+
+            eye_mask = q_idx == kv_idx
+            return eye_mask | clean_mask | noise_mask
+
+        block_mask = create_block_mask(attention_mask, B=None, H=None, Q_LEN=total_length + padded_length,
+                                       KV_LEN=total_length + padded_length, _compile=False, device=device)
+
+        if DEBUG:
+            import imageio
+            import numpy as np
+            from torch.nn.attention.flex_attention import create_mask
+
+            mask = create_mask(attention_mask, B=None, H=None, Q_LEN=total_length +
+                               padded_length, KV_LEN=total_length + padded_length, device=device)
+            import cv2
+            mask = cv2.resize(mask[0, 0].cpu().float().numpy(), (1024, 1024))
+            imageio.imwrite("mask_%d.jpg" % (0), np.uint8(255. * mask))
+
+        return block_mask
+
+    @staticmethod
+    def _prepare_blockwise_causal_attn_mask_i2v(
+        device: torch.device | str, num_frames: int = 21,
+        frame_seqlen: int = 1560, num_frame_per_block=4, local_attn_size=-1
+    ) -> BlockMask:
+        """
+        we will divide the token sequence into the following format
+        [1 latent frame] [N latent frame] ... [N latent frame]
+        The first frame is separated out to support I2V generation
+        We use flexattention to construct the attention mask
+        """
+        total_length = num_frames * frame_seqlen
+
+        # we do right padding to get to a multiple of 128
+        padded_length = math.ceil(total_length / 128) * 128 - total_length
+
+        ends = torch.zeros(total_length + padded_length,
+                           device=device, dtype=torch.long)
+
+        # special handling for the first frame
+        ends[:frame_seqlen] = frame_seqlen
+
+        # Block-wise causal mask will attend to all elements that are before the end of the current chunk
+        frame_indices = torch.arange(
+            start=frame_seqlen,
+            end=total_length,
+            step=frame_seqlen * num_frame_per_block,
+            device=device
+        )
+
+        for idx, tmp in enumerate(frame_indices):
+            ends[tmp:tmp + frame_seqlen * num_frame_per_block] = tmp + \
+                frame_seqlen * num_frame_per_block
+
+        def attention_mask(b, h, q_idx, kv_idx):
+            if local_attn_size == -1:
+                return (kv_idx < ends[q_idx]) | (q_idx == kv_idx)
+            else:
+                return ((kv_idx < ends[q_idx]) & (kv_idx >= (ends[q_idx] - local_attn_size * frame_seqlen))) | \
+                    (q_idx == kv_idx)
+
+        block_mask = create_block_mask(attention_mask, B=None, H=None, Q_LEN=total_length + padded_length,
+                                       KV_LEN=total_length + padded_length, _compile=False, device=device)
+
+        return block_mask
+
+    def _apply_cache_updates(self, kv_cache, cache_update_infos):
+        """
+        Applies cache updates collected from multiple blocks.
+        
+        For causal online RoPE, this stores UN-ROPED K values in the cache.
+        RoPE is applied dynamically during attention based on the token's current
+        relative position in the sliding window.
+        
+        Args:
+            kv_cache: List of cache dictionaries for each block
+            cache_update_infos: List of (block_index, cache_update_info) tuples
+        """
+        for block_index, (current_end, local_end_index, update_info) in cache_update_infos:
+            if update_info is not None:
+                cache = kv_cache[block_index]
+                
+                if update_info["action"] == "roll_and_insert":
+                    # Apply rolling update
+                    sink_tokens = update_info["sink_tokens"]
+                    num_rolled_tokens = update_info["num_rolled_tokens"]
+                    num_evicted_tokens = update_info["num_evicted_tokens"]
+                    local_start_index = update_info["local_start_index"]
+                    local_end_index = update_info["local_end_index"]
+                    write_start_index = update_info.get("write_start_index", local_start_index)
+                    write_end_index = update_info.get("write_end_index", local_end_index)
+                    new_k = update_info["new_k"]
+                    new_v = update_info["new_v"]
+                    
+                    # Perform the rolling operation
+                    cache["k"][:, sink_tokens:sink_tokens + num_rolled_tokens] = \
+                        cache["k"][:, sink_tokens + num_evicted_tokens:sink_tokens + num_evicted_tokens + num_rolled_tokens].clone()
+                    cache["v"][:, sink_tokens:sink_tokens + num_rolled_tokens] = \
+                        cache["v"][:, sink_tokens + num_evicted_tokens:sink_tokens + num_evicted_tokens + num_rolled_tokens].clone()
+                    
+                    # Insert new key/value
+                    if write_end_index > write_start_index and new_k.shape[1] == (write_end_index - write_start_index):
+                        cache["k"][:, write_start_index:write_end_index] = new_k
+                        cache["v"][:, write_start_index:write_end_index] = new_v
+                    
+                    if "evicted_k_frames" in update_info and update_info["evicted_k_frames"]:
+                        archive = cache.get("compressed_history_archive")
+                        if archive is not None:
+                            for kf, vf in zip(update_info["evicted_k_frames"], update_info["evicted_v_frames"]):
+                                rec = archive.append(kf[:, 0].to(torch.bfloat16), vf[:, 0].to(torch.bfloat16), layer_id=int(block_index), chunk_id=len(cache.get("compressed_history_entries", [])), history_id=len(cache.get("compressed_history_entries", [])), valid_tokens=int(kf.shape[2]))
+                                cache.setdefault("compressed_history_entries", []).append(rec)
+                                cache["evicted_compressed_entries"] = int(cache.get("evicted_compressed_entries", 0)) + 1
+                        else:
+                            cache.setdefault("cpu_k_frames", []).extend(update_info["evicted_k_frames"])
+                            cache.setdefault("cpu_v_frames", []).extend(update_info["evicted_v_frames"])
+                        cache.setdefault("gpu_draft_k_frames", []).extend(update_info.get("evicted_draft_k_frames", []))
+                        
+                elif update_info["action"] == "direct_insert":
+                    # Direct insert
+                    local_start_index = update_info["local_start_index"]
+                    local_end_index = update_info["local_end_index"]
+                    write_start_index = update_info.get("write_start_index", local_start_index)
+                    write_end_index = update_info.get("write_end_index", local_end_index)
+                    new_k = update_info["new_k"]
+                    new_v = update_info["new_v"]
+                    
+                    # Insert new key/value
+                    if write_end_index > write_start_index and new_k.shape[1] == (write_end_index - write_start_index):
+                        cache["k"][:, write_start_index:write_end_index] = new_k
+                        cache["v"][:, write_start_index:write_end_index] = new_v
+
+                new_k_frames = update_info.get("new_draft_k_frames", [])
+                if update_info["action"] == "roll_and_insert":
+                    frame_seqlen = int(update_info["frame_seqlen"])
+                    sink_frames = update_info["sink_tokens"] // frame_seqlen
+                    evicted_frames = update_info["num_evicted_tokens"] // frame_seqlen
+                    rolled_frames = update_info["num_rolled_tokens"] // frame_seqlen
+                    old_k = cache.get("local_draft_k_frames", [])
+                    start = sink_frames + evicted_frames
+                    cache["local_draft_k_frames"] = old_k[:sink_frames] + old_k[start:start + rolled_frames] + list(new_k_frames)
+                else:
+                    start = update_info.get("write_start_index", 0) // int(update_info["frame_seqlen"])
+                    old_k = list(cache.get("local_draft_k_frames", []))
+                    while len(old_k) < start:
+                        old_k.append(None)
+                    old_k[start:start + len(new_k_frames)] = list(new_k_frames)
+                    cache["local_draft_k_frames"] = old_k
+            
+            # Update indices: do not roll back pointers during recomputation
+            is_recompute = False if update_info is None else update_info.get("is_recompute", False)
+            if not is_recompute:
+                kv_cache[block_index]["global_end_index"].fill_(current_end)
+                kv_cache[block_index]["local_end_index"].fill_(local_end_index)
+
+    def _forward_inference(
+        self,
+        x,
+        t,
+        context,
+        seq_len,
+        clip_fea=None,
+        y=None,
+        kv_cache: dict = None,
+        crossattn_cache: dict = None,
+        current_start: int = 0,
+        cache_start: int = 0,
+        sink_recache_after_switch=False,
+        memory_indices=None
+    ):
+        r"""
+        Run the diffusion model with kv caching.
+        See Algorithm 2 of CausVid paper https://arxiv.org/abs/2412.07772 for details.
+        This function will be run for num_frame times.
+        Process the latent frames one by one (1560 tokens each)
+
+        Args:
+            x (List[Tensor]):
+                List of input video tensors, each with shape [C_in, F, H, W]
+            t (Tensor):
+                Diffusion timesteps tensor of shape [B]
+            context (List[Tensor]):
+                List of text embeddings each with shape [L, C]
+            seq_len (`int`):
+                Maximum sequence length for positional encoding
+            clip_fea (Tensor, *optional*):
+                CLIP image features for image-to-video mode
+            y (List[Tensor], *optional*):
+                Conditional video inputs for image-to-video mode, same shape as x
+
+        Returns:
+            List[Tensor]:
+                List of denoised video tensors with original input shapes [C_out, F, H / 8, W / 8]
+        """
+
+        if self.model_type == 'i2v':
+            assert clip_fea is not None and y is not None
+        # params
+        device = self.patch_embedding.weight.device
+        if self.freqs.device != device:
+            self.freqs = self.freqs.to(device)
+
+        if y is not None:
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+        
+
+        # embeddings
+        x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
+        grid_sizes = torch.stack(
+            [torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
+        x = [u.flatten(2).transpose(1, 2) for u in x]
+        seq_lens = torch.tensor([u.size(1) for u in x], dtype=torch.long)
+        assert seq_lens.max() <= seq_len
+        x = torch.cat(x)
+        """
+        torch.cat([
+            torch.cat([u, u.new_zeros(1, seq_len - u.size(1), u.size(2))],
+                      dim=1) for u in x
+        ])
+        """
+
+        # time embeddings
+        # with amp.autocast(dtype=torch.float32):
+        e = self.time_embedding(
+            sinusoidal_embedding_1d(self.freq_dim, t.flatten()).type_as(x))
+        e0 = self.time_projection(e).unflatten(
+            1, (6, self.dim)).unflatten(dim=0, sizes=t.shape)
+        # assert e.dtype == torch.float32 and e0.dtype == torch.float32
+        # context
+        context_lens = None
+        context = self.text_embedding(
+            torch.stack([
+                torch.cat(
+                    [u, u.new_zeros(self.text_len - u.size(0), u.size(1))])
+                for u in context
+            ]))
+        if clip_fea is not None:
+            context_clip = self.img_emb(clip_fea)  # bs x 257 x dim
+            context = torch.concat([context_clip, context], dim=1)
+
+        # arguments
+        kwargs = dict(
+            e=e0,
+            seq_lens=seq_lens,
+            grid_sizes=grid_sizes,
+            freqs=self.freqs,
+            context=context,
+            context_lens=context_lens,
+            block_mask=self.block_mask,
+            sink_recache_after_switch=sink_recache_after_switch,
+            memory_indices=memory_indices
+        )
+        def create_custom_forward(module):
+            def custom_forward(*inputs, **kwargs):
+                return module(*inputs, **kwargs)
+            return custom_forward
+
+        cache_update_info = None
+        cache_update_infos = []  # Collect cache update info for all blocks
+        for block_index, block in enumerate(self.blocks):
+            if torch.is_grad_enabled() and self.gradient_checkpointing:
+                kwargs.update(
+                    {
+                        "kv_cache": kv_cache[block_index],
+                        "current_start": current_start,
+                        "cache_start": cache_start,
+                        "layer_index": block_index
+                    }
+                )
+                result = torch.utils.checkpoint.checkpoint(
+                    create_custom_forward(block),
+                    x, **kwargs,
+                    use_reentrant=False,
+                )
+                # Handle the result
+                if kv_cache is not None and isinstance(result, tuple):
+                    x, block_cache_update_info = result
+                    cache_update_infos.append((block_index, block_cache_update_info))
+                    # Extract base info for subsequent blocks (without concrete cache update details)
+                    cache_update_info = block_cache_update_info[:2]  # (current_end, local_end_index)
+                else:
+                    x = result
+            else:
+                kwargs.update(
+                    {
+                        "kv_cache": kv_cache[block_index],
+                        "crossattn_cache": crossattn_cache[block_index],
+                        "current_start": current_start,
+                        "cache_start": cache_start,
+                        "layer_index": block_index
+                    }
+                )
+                result = block(x, **kwargs)
+                # Handle the result
+                if kv_cache is not None and isinstance(result, tuple):
+                    x, block_cache_update_info = result
+                    cache_update_infos.append((block_index, block_cache_update_info))
+                    # Extract base info for subsequent blocks (without concrete cache update details)
+                    cache_update_info = block_cache_update_info[:2]  # (current_end, local_end_index)
+                else:
+                    x = result
+        # log_gpu_memory(f"in _forward_inference: {x[0].device}")
+        # After all blocks are processed, apply cache updates in a single pass
+        if kv_cache is not None and cache_update_infos:
+            self._apply_cache_updates(kv_cache, cache_update_infos)
+
+        # head
+        x = self.head(x, e.unflatten(dim=0, sizes=t.shape).unsqueeze(2))
+        # unpatchify
+        x = self.unpatchify(x, grid_sizes)
+        return torch.stack(x)
+
+    def _forward_train(
+        self,
+        x,
+        t,
+        context,
+        seq_len,
+        clean_x=None,
+        aug_t=None,
+        clip_fea=None,
+        y=None,
+    ):
+        r"""
+        Forward pass through the diffusion model
+
+        Args:
+            x (List[Tensor]):
+                List of input video tensors, each with shape [C_in, F, H, W]
+            t (Tensor):
+                Diffusion timesteps tensor of shape [B]
+            context (List[Tensor]):
+                List of text embeddings each with shape [L, C]
+            seq_len (`int`):
+                Maximum sequence length for positional encoding
+            clip_fea (Tensor, *optional*):
+                CLIP image features for image-to-video mode
+            y (List[Tensor], *optional*):
+                Conditional video inputs for image-to-video mode, same shape as x
+
+        Returns:
+            List[Tensor]:
+                List of denoised video tensors with original input shapes [C_out, F, H / 8, W / 8]
+        """
+        pass
+        raise NotImplementedError()
+    
+        if self.model_type == 'i2v':
+            assert clip_fea is not None and y is not None
+        # params
+        device = self.patch_embedding.weight.device
+        if self.freqs.device != device:
+            self.freqs = self.freqs.to(device)
+
+        # Construct blockwise causal attn mask
+        if self.block_mask is None:
+            if clean_x is not None:
+                if self.independent_first_frame:
+                    raise NotImplementedError()
+                else:
+                    self.block_mask = self._prepare_teacher_forcing_mask(
+                        device, num_frames=x.shape[2],
+                        frame_seqlen=x.shape[-2] * x.shape[-1] // (self.patch_size[1] * self.patch_size[2]),
+                        num_frame_per_block=self.num_frame_per_block
+                    )
+            else:
+                if self.independent_first_frame:
+                    self.block_mask = self._prepare_blockwise_causal_attn_mask_i2v(
+                        device, num_frames=x.shape[2],
+                        frame_seqlen=x.shape[-2] * x.shape[-1] // (self.patch_size[1] * self.patch_size[2]),
+                        num_frame_per_block=self.num_frame_per_block,
+                        local_attn_size=self.local_attn_size
+                    )
+                else:
+                    self.block_mask = self._prepare_blockwise_causal_attn_mask(
+                        device, num_frames=x.shape[2],
+                        frame_seqlen=x.shape[-2] * x.shape[-1] // (self.patch_size[1] * self.patch_size[2]),
+                        num_frame_per_block=self.num_frame_per_block,
+                        local_attn_size=self.local_attn_size
+                    )
+
+        if y is not None:
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+
+        # embeddings
+        x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
+
+        grid_sizes = torch.stack(
+            [torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
+        x = [u.flatten(2).transpose(1, 2) for u in x]
+
+        seq_lens = torch.tensor([u.size(1) for u in x], dtype=torch.long)
+        assert seq_lens.max() <= seq_len
+        x = torch.cat([
+            torch.cat([u, u.new_zeros(1, seq_lens[0] - u.size(1), u.size(2))],
+                      dim=1) for u in x
+        ])
+
+        # time embeddings
+        # with amp.autocast(dtype=torch.float32):
+        e = self.time_embedding(
+            sinusoidal_embedding_1d(self.freq_dim, t.flatten()).type_as(x))
+        e0 = self.time_projection(e).unflatten(
+            1, (6, self.dim)).unflatten(dim=0, sizes=t.shape)
+        # assert e.dtype == torch.float32 and e0.dtype == torch.float32
+
+        # context
+        context_lens = None
+        context = self.text_embedding(
+            torch.stack([
+                torch.cat(
+                    [u, u.new_zeros(self.text_len - u.size(0), u.size(1))])
+                for u in context
+            ]))
+
+        if clip_fea is not None:
+            context_clip = self.img_emb(clip_fea)  # bs x 257 x dim
+            context = torch.concat([context_clip, context], dim=1)
+
+        if clean_x is not None:
+            clean_x = [self.patch_embedding(u.unsqueeze(0)) for u in clean_x]
+            clean_x = [u.flatten(2).transpose(1, 2) for u in clean_x]
+
+            seq_lens_clean = torch.tensor([u.size(1) for u in clean_x], dtype=torch.long)
+            assert seq_lens_clean.max() <= seq_len
+            clean_x = torch.cat([
+                torch.cat([u, u.new_zeros(1, seq_lens_clean[0] - u.size(1), u.size(2))], dim=1) for u in clean_x
+            ])
+
+            x = torch.cat([clean_x, x], dim=1)
+            if aug_t is None:
+                aug_t = torch.zeros_like(t)
+            e_clean = self.time_embedding(
+                sinusoidal_embedding_1d(self.freq_dim, aug_t.flatten()).type_as(x))
+            e0_clean = self.time_projection(e_clean).unflatten(
+                1, (6, self.dim)).unflatten(dim=0, sizes=t.shape)
+            e0 = torch.cat([e0_clean, e0], dim=1)
+
+        # arguments
+        kwargs = dict(
+            e=e0,
+            seq_lens=seq_lens,
+            grid_sizes=grid_sizes,
+            freqs=self.freqs,
+            context=context,
+            context_lens=context_lens,
+            block_mask=self.block_mask)
+
+        def create_custom_forward(module):
+            def custom_forward(*inputs, **kwargs):
+                return module(*inputs, **kwargs)
+            return custom_forward
+
+        for block in self.blocks:
+            if torch.is_grad_enabled() and self.gradient_checkpointing:
+                x = torch.utils.checkpoint.checkpoint(
+                    create_custom_forward(block),
+                    x, **kwargs,
+                    use_reentrant=False,
+                )
+            else:
+                x = block(x, **kwargs)
+        if clean_x is not None:
+            x = x[:, x.shape[1] // 2:]
+
+        # head
+        x = self.head(x, e.unflatten(dim=0, sizes=t.shape).unsqueeze(2))
+
+        # unpatchify
+        x = self.unpatchify(x, grid_sizes)
+        return torch.stack(x)
+
+    def forward(
+        self,
+        *args,
+        **kwargs
+    ):
+        if kwargs.get('kv_cache', None) is not None:
+            # memory_indices is only used in inference, remove for train
+            return self._forward_inference(*args, **kwargs)
+        else:
+            kwargs.pop('memory_indices', None)
+            return self._forward_train(*args, **kwargs)
+
+    def unpatchify(self, x, grid_sizes):
+        r"""
+        Reconstruct video tensors from patch embeddings.
+
+        Args:
+            x (List[Tensor]):
+                List of patchified features, each with shape [L, C_out * prod(patch_size)]
+            grid_sizes (Tensor):
+                Original spatial-temporal grid dimensions before patching,
+                    shape [B, 3] (3 dimensions correspond to F_patches, H_patches, W_patches)
+
+        Returns:
+            List[Tensor]:
+                Reconstructed video tensors with shape [C_out, F, H / 8, W / 8]
+        """
+
+        c = self.out_dim
+        out = []
+        for u, v in zip(x, grid_sizes.tolist()):
+            u = u[:math.prod(v)].view(*v, *self.patch_size, c)
+            u = torch.einsum('fhwpqrc->cfphqwr', u)
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            out.append(u)
+        return out
+
+    def init_weights(self):
+        r"""
+        Initialize model parameters using Xavier initialization.
+        """
+
+        # basic init
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+
+        # init embeddings
+        nn.init.xavier_uniform_(self.patch_embedding.weight.flatten(1))
+        for m in self.text_embedding.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, std=.02)
+        for m in self.time_embedding.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, std=.02)
+
+        # init output layer
+        nn.init.zeros_(self.head.head.weight)
