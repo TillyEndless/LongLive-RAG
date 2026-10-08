@@ -1,0 +1,57 @@
+denoising_step_list:
+- 1000
+- 750
+- 500
+- 250
+warp_denoising_step: true
+num_frame_per_block: 3
+model_name: Wan2.1-T2V-1.3B
+group_id: 11
+model_kwargs:
+  local_attn_size: 18
+  timestep_shift: 5.0
+  sink_size: 1
+  memory_size: 14
+  recent_exclude: 5
+  use_latentmem: true
+  compression_method: avg_pool
+  ae_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/ae_latent_mem.pt
+  retrieval_backend: draftmap_online
+  group_runtime_mode: baseline
+  group_sparse_ratio: 0.0
+  group11_fetch_mode: w1_zero_acquire
+generator_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_base.pt
+lora_ckpt: /data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_lora.pt
+adapter:
+  type: lora
+  rank: 256
+  alpha: 256
+  dropout: 0.0
+  dtype: bfloat16
+  verbose: false
+data_path: /data/zxl/LongLive-RAG-profile/prompts10.txt
+output_folder: /data/zxl/b01_b04_fetch_hotpath_20261006/optimized/outputs/B01
+inference_iter: 0
+skip_existing: false
+num_output_frames: 120
+use_ema: false
+seed: 0
+num_samples: 1
+save_with_index: true
+global_sink: true
+context_noise: 0
+frozen_window_contract:
+  contract_version: 2026-10-06-final
+  S: 1
+  R: 14
+  P: 0
+  C: 3
+  final: 18
+  composition: S1+R14+P0+C3=18
+  recent_exclude: 5
+  final_fa2_calls: 1
+  pipeline: BB-AO-v1.0
+smoke_12block: false
+smoke_10block: false
+smoke_1block: false
+unified_latency_profile: true
