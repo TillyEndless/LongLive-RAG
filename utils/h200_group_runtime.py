@@ -13,6 +13,7 @@ from utils.persistent_kv_storage import PersistentHistoryQuantizer
 from utils.quant import quantize_kv
 from utils.persistent_draftmap import route_draftmap
 from fouroversix.quantize import QuantizationConfig
+import utils.critical_path_trace as cpt
 
 
 def fake_quantize_kv(k: torch.Tensor, v: torch.Tensor, mode: str):
@@ -117,6 +118,42 @@ def sparse_retain(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, ratio: floa
     }
 
 
+
+def select_q_sparse_history(selected_ids, selected_scores, retained_ratio):
+    """Select retained history chunks using the existing CURRENT_Q DraftMap scores.
+
+    The score/order provenance is inherited from the current-Q retrieval call;
+    this operation only removes history chunks for Group14/15 and does not
+    alter the retrieval candidate IDs or their order.
+    """
+    ids = [int(x) for x in selected_ids]
+    ratio = float(retained_ratio)
+    if not 0.0 < ratio < 1.0:
+        return ids, [], {
+            "Q_SPARSE_ENABLED": "NO",
+            "Q_SPARSE_RETAINED_IDS": ids,
+            "Q_SPARSE_REMOVED_IDS": [],
+            "Q_SPARSE_RETAINED_COUNT": len(ids),
+            "Q_SPARSE_TOTAL_COUNT": len(ids),
+        }
+    score_map = {int(k): float(v) for k, v in selected_scores.items()}
+    keep = min(len(ids), max(1, int(math.ceil(len(ids) * ratio))))
+    ranked = sorted(ids, key=lambda x: (-score_map.get(x, 0.0), x))
+    retained_set = set(ranked[:keep])
+    retained = [x for x in ids if x in retained_set]
+    removed = [x for x in ids if x not in retained_set]
+    return retained, removed, {
+        "Q_SPARSE_ENABLED": "YES",
+        "Q_SPARSE_RETAINED_RATIO": float(len(retained) / max(1, len(ids))),
+        "Q_SPARSE_REQUESTED_RATIO": ratio,
+        "Q_SPARSE_RETAINED_IDS": retained,
+        "Q_SPARSE_REMOVED_IDS": removed,
+        "Q_SPARSE_RETAINED_COUNT": len(retained),
+        "Q_SPARSE_TOTAL_COUNT": len(ids),
+        "Q_SPARSE_REMOVED_COUNT": len(removed),
+        "Q_SPARSE_SCORE_SOURCE": "CURRENT_Q_DRAFTMAP_SELECTED_SCORES",
+    }
+
 def prepare_attention_kv(q, k, v, mode="baseline", sparse_ratio=0.0,
                          persistent_owner_already_dequantized=False,
                          apply_storage_quant=True):
@@ -153,7 +190,14 @@ def prepare_attention_kv(q, k, v, mode="baseline", sparse_ratio=0.0,
         k, v, meta = fake_quantize_kv(k, v, mode)
     if sparse_ratio:
         if mode in {"group14_corrected", "group15_corrected"}:
-            k, v, sparse = route_draftmap(q, k, v, sparse_ratio)
+            trace = cpt.ACTIVE_TRACE
+            if trace:
+                k, v, sparse = trace.measure(
+                    "DRAFTMAP_ROUTE_PARENT",
+                    lambda: route_draftmap(q, k, v, sparse_ratio),
+                )
+            else:
+                k, v, sparse = route_draftmap(q, k, v, sparse_ratio)
         else:
             k, v, sparse = sparse_retain(q, k, v, sparse_ratio)
         meta.update(sparse)

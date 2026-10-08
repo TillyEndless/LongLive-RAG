@@ -1,0 +1,16 @@
+{
+  "experiment_id": "native_w12_case01_reuse",
+  "method": "Native local window", "window": 12, "case_id": "case_01", "group": "baseline",
+  "case_protocol": "case_01; 120 latent / 474 decoded frames; 16 FPS; 832x480",
+  "quality_source": "canonical10", "latency_source": "matched_case_01", "memory_source": "matched_case_01",
+  "quality": {"DINO": 0.7914137989282608, "SSIM": 0.33470661431094184, "PSNR": 10.029504634828326, "LPIPS": "NOT_AVAILABLE"},
+  "profile_json": "/data/zxl/LongLive-RAG-group11_15_h200/results/native_w6_w12_case01_profile/w12_v2/native_case01_profile.json",
+  "runtime_json": "/data/zxl/LongLive-RAG-group11_15_h200/results/native_w6_w12_case01_profile/w12/rank0-0-0_lora_runtime.json",
+  "memory_json": "/data/zxl/LongLive-RAG-group11_15_h200/results/native_w6_w12_case01_profile/w12/rank0-0-0_lora_memory_measurement.json",
+  "manifest_path": "/data/zxl/LongLive-RAG/results/canonical_quality_evaluator_bundle/native_case_manifest.json",
+  "seed": 0, "checkpoint": "/data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_base.pt",
+  "lora": "/data/zxl/LongLive-RAG-assets/models/LongLive-RAG/checkpoints/longlive_lora.pt",
+  "git_commit": "f519727eb2a9e6d9b748220ce1f6bb1144406446", "gpu_model": "H200", "gpu_id": "0",
+  "kv_storage_policy": "BF16 local window", "attention_precision": "BF16", "evaluator_version": "canonical10_existing",
+  "output_dir": "/data/zxl/LongLive-RAG-group11_15_h200/results/evaluation/native_w12_case01_reuse"
+}
