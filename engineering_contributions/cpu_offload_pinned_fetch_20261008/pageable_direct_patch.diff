@@ -1,0 +1,35 @@
+--- /data/zxl/offload_alignment_h200_20261008/control/wan/modules/causal_model_latentmem.py	2026-09-29 16:06:57.710682911 +0800
++++ /data/zxl/offload_alignment_h200_20261008/pageable_direct/wan/modules/causal_model_latentmem.py	2026-10-08 22:24:15.585769655 +0800
+@@ -1019,10 +1019,8 @@
+         for history_id in ids:
+             if history_id >= len(cpu_k) or history_id >= len(cpu_v):
+                 raise IndexError(f"history id {history_id} unavailable")
+-            sk, ms, new = self._flashfetch_pinned_source(
+-                cpu_k[history_id][0, 0], "k", history_id)
+-            sv, ms_v, new_v = self._flashfetch_pinned_source(
+-                cpu_v[history_id][0, 0], "v", history_id)
++            sk, ms, new = cpu_k[history_id][0, 0], 0.0, False
++            sv, ms_v, new_v = cpu_v[history_id][0, 0], 0.0, False
+             staged_k.append(sk)
+             staged_v.append(sv)
+             host_stage_ms += ms + ms_v
+@@ -1034,7 +1032,7 @@
+             return attention(query, resident_k, resident_v), {
+                 "mode": "flashfetch_async", "history_ids": ids,
+                 "h2d_ms": 0.0, "tile_tokens": frame_seq,
+-                "host_stage_ms": host_stage_ms, "cpu_pinned": True,
++                "host_stage_ms": host_stage_ms, "cpu_pinned": False,
+                 "async_overlap": True,
+             }
+ 
+@@ -1436,8 +1434,8 @@
+                     # Pin once at archive creation, outside the prefetch
+                     # critical path. Prefetch only copies from these
+                     # already-pinned immutable sources.
+-                    evicted_k_frames = [f.to("cpu", non_blocking=True).contiguous().pin_memory() for f in ev_k_split]
+-                    evicted_v_frames = [f.to("cpu", non_blocking=True).contiguous().pin_memory() for f in ev_v_split]
++                    evicted_k_frames = [f.to("cpu", non_blocking=True) for f in ev_k_split]
++                    evicted_v_frames = [f.to("cpu", non_blocking=True) for f in ev_v_split]
+                 evicted_draft_k_frames = kv_cache.get("local_draft_k_frames", [])[sink_tokens // frame_seqlen:sink_tokens // frame_seqlen + num_evicted_frames]
+ 
+                 # Apply rolling update to the temporary cache

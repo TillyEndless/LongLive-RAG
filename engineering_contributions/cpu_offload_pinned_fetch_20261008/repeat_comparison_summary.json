@@ -1,0 +1,35 @@
+{
+  "control": {
+    "n": 3,
+    "samples_s": [
+      22.736050938256085,
+      20.843198998831213,
+      20.511320589110255
+    ],
+    "median_s": 20.843198998831213,
+    "mean_s": 21.363523508732516
+  },
+  "longlive_archive": {
+    "n": 3,
+    "samples_s": [
+      21.148693416267633,
+      23.691276021301746,
+      21.36499009374529
+    ],
+    "median_s": 21.36499009374529,
+    "mean_s": 22.068319843771558
+  },
+  "pageable_direct": {
+    "n": 3,
+    "samples_s": [
+      21.954002033919096,
+      21.424552066251636,
+      21.42973226774484
+    ],
+    "median_s": 21.42973226774484,
+    "mean_s": 21.602762122638524
+  },
+  "status": "FULL_THREE_PAIRS",
+  "fastest_by_median": "control",
+  "decision": "PROVISIONAL_PERFORMANCE_WINNER_ONLY__DO_NOT_MERGE_UNTIL_KV_EXACTNESS_PINNED_LIFETIME_TESTS"
+}
