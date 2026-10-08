@@ -1,0 +1,14 @@
+contract_only: true
+contract_version: 2026-10-06-final
+pipeline: BB-AO v1.0 streaming
+model_family: LongLive-RAG/Wan2.1
+sink_frames: 1
+retrieved_frames: 13
+previous_local_frames: 1
+current_frames: 3
+final_attended_frames: 18
+composition: S1+R13+P1+C3=18
+final_fa2_calls: 1
+all_final_frames_participate_in_fa2: true
+recent_exclude: 5
+recent_exclude_policy: ALWAYS_5_FOR_ALL_GROUPS

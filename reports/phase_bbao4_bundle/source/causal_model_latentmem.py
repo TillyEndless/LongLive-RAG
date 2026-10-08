@@ -20,8 +20,6 @@ from utils.compressed_history_archive import CompressedHistoryArchive
 import math
 import time
 import os
-import sys
-import ctypes
 import torch.distributed as dist
 from contextlib import nullcontext
 try:
@@ -33,57 +31,6 @@ from utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller, log
 from utils.debug_option import DEBUG
 from utils.h200_group_runtime import prepare_attention_kv
 from utils.unified_latency_profiler import UnifiedLatencyProfiler
-
-_GROUPED_FA2_RUNTIME = None
-_FRONTIER_PUBLISH_LIB = None
-_STREAM_MEMOP_LIB = None
-
-def _load_grouped_fa2_runtime():
-    global _GROUPED_FA2_RUNTIME, _FRONTIER_PUBLISH_LIB, _STREAM_MEMOP_LIB
-    if _GROUPED_FA2_RUNTIME is None:
-        runtime_dir = os.environ.get(
-            "LONGLIVE_GROUPED_FA2_RUNTIME",
-            "/data/zxl/longlive_grouped_frontier_integration_20261007/runtime",
-        )
-        if runtime_dir not in sys.path:
-            sys.path.insert(0, runtime_dir)
-        import fa2_streaming_consumer_ext as grouped_ext
-        _GROUPED_FA2_RUNTIME = grouped_ext
-        lib = ctypes.CDLL(os.path.join(runtime_dir, "libfrontier_publish.so"))
-        lib.ll_publish_frontier.argtypes = [
-            ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p
-        ]
-        lib.ll_publish_frontier.restype = ctypes.c_int
-        _FRONTIER_PUBLISH_LIB = lib
-        memop = ctypes.CDLL(os.path.join(runtime_dir, "libstream_memop.so"))
-        memop.ll_stream_write_u32.argtypes = [
-            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint32
-        ]
-        memop.ll_stream_write_u32.restype = ctypes.c_int
-        _STREAM_MEMOP_LIB = memop
-    return _GROUPED_FA2_RUNTIME, _FRONTIER_PUBLISH_LIB
-
-
-def _publish_frontier_release(frontier, value, stream):
-    _, lib = _load_grouped_fa2_runtime()
-    err = lib.ll_publish_frontier(
-        ctypes.c_void_p(frontier.data_ptr()),
-        int(value),
-        ctypes.c_void_p(stream.cuda_stream),
-    )
-    if err != 0:
-        raise RuntimeError(f"frontier publish kernel launch failed: cudaError={err}")
-
-
-def _publish_frontier_stream_memop(frontier, value, stream):
-    _load_grouped_fa2_runtime()
-    err = _STREAM_MEMOP_LIB.ll_stream_write_u32(
-        ctypes.c_void_p(stream.cuda_stream),
-        ctypes.c_void_p(frontier.data_ptr()),
-        ctypes.c_uint32(int(value)),
-    )
-    if err != 0:
-        raise RuntimeError(f"cuStreamWriteValue32 failed: CUresult={err}")
 
 # wan 1.3B model has a weird channel / head configurations and require max-autotune to work with flexattention
 # see https://github.com/pytorch/pytorch/issues/133254
@@ -271,33 +218,11 @@ class CausalWanSelfAttention(nn.Module):
         if any(r.draft_k.device != retrieval_query.device for r in records):
             raise RuntimeError("persistent Draft-K must remain GPU-resident")
         device_records = records
-        draft_cuda_start = None
-        draft_cuda_end = None
-        dynamic_draft_profile = bool(
-            self.group11_profile is not None
-            and getattr(self, "unified_latency_profiler", None) is not None
-            and self.unified_latency_profiler.enabled
-            and int(layer_index) in {0, 15, 29}
-        )
-        if dynamic_draft_profile:
-            draft_cuda_start = torch.cuda.Event(enable_timing=True)
-            draft_cuda_end = torch.cuda.Event(enable_timing=True)
-            draft_cuda_start.record(torch.cuda.current_stream(retrieval_query.device))
         scores = index.score_history(retrieval_query, device_records)
         draft_ms = (time.perf_counter() - score_start) * 1000.0
         topk_start = time.perf_counter()
         topk_scores, selected = index.select_topk(scores, self.memory_size)
         topk_ms = (time.perf_counter() - topk_start) * 1000.0
-        if dynamic_draft_profile:
-            draft_cuda_end.record(torch.cuda.current_stream(retrieval_query.device))
-            self.group11_profile.setdefault("_draft_dynamic_cuda_events", []).append({
-                "start": draft_cuda_start,
-                "end": draft_cuda_end,
-                "layer": int(layer_index),
-                "denoising_step": self.current_denoising_step,
-                "candidate_chunks": int(eligible),
-                "selected_chunks": int(selected.shape[-1]),
-            })
         if self.group11_profile is not None:
             p = self.group11_profile
             p["NUM_DRAFTMAP_CALLS"] += 1
@@ -510,7 +435,12 @@ class CausalWanSelfAttention(nn.Module):
     def _w1_progressive_final_buffer(self, *, memory_indices, cpu_k_list, cpu_v_list,
                                       sink_k, sink_v, local_k, local_v,
                                       q, v_dtype, frame_tokens, freqs, grid_sizes):
-        """Hot-path optimized W1 producer; retrieval semantics unchanged."""
+        """Exploratory W1: warmup first reverse-consumed source, then publish rest.
+
+        This intentionally launches stock attention after only the first source
+        dependency. It is UNSYNCHRONIZED_EXPLORATORY: later writes may race the
+        stock FA consumer and therefore require explicit correctness validation.
+        """
         device = q.device
         b = int(memory_indices.shape[0])
         k_sel = int(memory_indices.shape[1])
@@ -526,65 +456,38 @@ class CausalWanSelfAttention(nn.Module):
         final_k[:, local_base:local_base + local_tokens].copy_(local_k)
         final_v[:, local_base:local_base + local_tokens].copy_(local_v)
 
-        fetch_stream = getattr(self, "_w1_reused_fetch_stream", None)
-        if fetch_stream is None:
-            fetch_stream = torch.cuda.Stream(device=device)
-            self._w1_reused_fetch_stream = fetch_stream
-
-        dynamic_overlap_profile = bool(
-            self.group11_profile is not None
-            and getattr(self, "unified_latency_profiler", None) is not None
-            and self.unified_latency_profiler.enabled
-            and int(getattr(self, "_current_layer_index", -1)) in {0, 15, 29}
-        )
-        producer_start_event = None
-        if dynamic_overlap_profile:
-            producer_start_event = torch.cuda.Event(enable_timing=True)
-            with torch.cuda.stream(fetch_stream):
-                producer_start_event.record(fetch_stream)
-
-        selected_ids = memory_indices.detach().cpu().tolist()
+        fetch_stream = torch.cuda.Stream(device=device)
         keepalive = []
         reverse_ranks = list(range(k_sel - 1, -1, -1))
         warmup_ranks = reverse_ranks[:1]
         remaining_ranks = reverse_ranks[1:]
         frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
 
-        def _src(logical_id, bi):
-            sk = cpu_k_list[logical_id][bi, 0]
-            sv = cpu_v_list[logical_id][bi, 0]
-            if sk.device.type == "cpu" and not sk.is_pinned():
-                sk = sk.contiguous().pin_memory()
-            if sv.device.type == "cpu" and not sv.is_pinned():
-                sv = sv.contiguous().pin_memory()
-            return sk, sv
-
-        def _account(logical_id, sk, sv):
-            copied_bytes = int(sk.numel() * sk.element_size() + sv.numel() * sv.element_size())
-            if self.group11_profile is not None:
-                self.group11_profile["NUM_CPU_KV_FETCH_CALLS"] = int(self.group11_profile.get("NUM_CPU_KV_FETCH_CALLS", 0)) + 1
-                self.group11_profile["NUM_H2D_COPY_CALLS"] = int(self.group11_profile.get("NUM_H2D_COPY_CALLS", 0)) + 2
-                self.group11_profile["TOTAL_FULL_KV_H2D_BYTES"] = int(self.group11_profile.get("TOTAL_FULL_KV_H2D_BYTES", 0)) + copied_bytes
-                self.group11_profile.setdefault("h2d_rows", []).append({
-                    "source_chunk_id": int(logical_id),
-                    "layer": int(getattr(self, "_current_layer_index", -1)),
-                    "bytes_K": int(sk.numel() * sk.element_size()),
-                    "bytes_V": int(sv.numel() * sv.element_size()),
-                    "total_bytes": copied_bytes,
-                    "copy_stream": "w1_fetch_hotpath",
-                    "non_blocking": True,
-                    "source_pinned_memory": bool(sk.is_pinned() and sv.is_pinned()),
-                })
-
-        warmup_ids = []
-        with torch.cuda.stream(fetch_stream):
-            for rank in warmup_ranks:
+        def submit_rank(rank):
+            logical_ids = []
+            with torch.cuda.stream(fetch_stream):
                 for bi in range(b):
-                    logical_id = int(selected_ids[bi][rank])
-                    sk, sv = _src(logical_id, bi)
+                    logical_id = int(memory_indices[bi, rank].item())
+                    sk = cpu_k_list[logical_id][bi, 0]
+                    sv = cpu_v_list[logical_id][bi, 0]
+                    if sk.device.type == 'cpu' and not sk.is_pinned():
+                        sk = sk.contiguous().pin_memory()
+                    if sv.device.type == 'cpu' and not sv.is_pinned():
+                        sv = sv.contiguous().pin_memory()
                     raw_k = sk.to(device, non_blocking=True)
                     raw_v = sv.to(device, non_blocking=True)
-                    _account(logical_id, sk, sv)
+                    copied_bytes = int(sk.numel() * sk.element_size() + sv.numel() * sv.element_size())
+                    if self.group11_profile is not None:
+                        self.group11_profile["NUM_CPU_KV_FETCH_CALLS"] = int(self.group11_profile.get("NUM_CPU_KV_FETCH_CALLS", 0)) + 1
+                        self.group11_profile["NUM_H2D_COPY_CALLS"] = int(self.group11_profile.get("NUM_H2D_COPY_CALLS", 0)) + 2
+                        self.group11_profile["TOTAL_FULL_KV_H2D_BYTES"] = int(self.group11_profile.get("TOTAL_FULL_KV_H2D_BYTES", 0)) + copied_bytes
+                        self.group11_profile.setdefault("h2d_rows", []).append({
+                            "source_chunk_id": logical_id, "layer": int(getattr(self, "_current_layer_index", -1)),
+                            "bytes_K": int(sk.numel() * sk.element_size()),
+                            "bytes_V": int(sv.numel() * sv.element_size()),
+                            "total_bytes": copied_bytes, "copy_stream": "w1_fetch",
+                            "non_blocking": True, "source_pinned_memory": bool(sk.is_pinned() and sv.is_pinned()),
+                        })
                     roped_k = causal_online_rope(
                         raw_k.unsqueeze(0), frame_grid, freqs,
                         relative_frame_indices=torch.zeros(1, dtype=torch.long, device=device),
@@ -593,250 +496,39 @@ class CausalWanSelfAttention(nn.Module):
                     final_k[bi, offset:offset + int(frame_tokens)].copy_(roped_k[0])
                     final_v[bi, offset:offset + int(frame_tokens)].copy_(raw_v)
                     keepalive.extend([raw_k, raw_v, roped_k])
-                    warmup_ids.append(logical_id)
+                    logical_ids.append(logical_id)
+            return logical_ids
 
-        warmup_event = torch.cuda.Event(enable_timing=dynamic_overlap_profile)
+        warmup_ids = []
+        for rank in warmup_ranks:
+            warmup_ids.extend(submit_rank(rank))
+        warmup_event = torch.cuda.Event()
         with torch.cuda.stream(fetch_stream):
             warmup_event.record(fetch_stream)
         torch.cuda.current_stream(device).wait_event(warmup_event)
-
         remaining_ids = []
-        rem_count = len(remaining_ranks)
-        if rem_count:
-            with torch.cuda.stream(fetch_stream):
-                raw_k_batch = torch.empty(
-                    (b, rem_count, int(frame_tokens), q.shape[2], q.shape[3]),
-                    device=device, dtype=v_dtype
-                )
-                raw_v_batch = torch.empty_like(raw_k_batch)
-                for rank in remaining_ranks:
-                    batch_rank = rank
-                    for bi in range(b):
-                        logical_id = int(selected_ids[bi][rank])
-                        sk, sv = _src(logical_id, bi)
-                        raw_k_batch[bi, batch_rank].copy_(sk, non_blocking=True)
-                        raw_v_batch[bi, batch_rank].copy_(sv, non_blocking=True)
-                        _account(logical_id, sk, sv)
-                        remaining_ids.append(logical_id)
-
-                rem_grid = grid_sizes.clone()
-                rem_grid[:, 0] = rem_count
-                rel = torch.zeros(rem_count, dtype=torch.long, device=device)
-                flat_k = raw_k_batch.reshape(
-                    b, rem_count * int(frame_tokens), q.shape[2], q.shape[3]
-                )
-                roped_batch = causal_online_rope(
-                    flat_k, rem_grid, freqs, relative_frame_indices=rel
-                ).type_as(q)
-                retrieved_end = sink_tokens + rem_count * int(frame_tokens)
-                final_k[:, sink_tokens:retrieved_end].copy_(roped_batch)
-                final_v[:, sink_tokens:retrieved_end].copy_(
-                    raw_v_batch.reshape(
-                        b, rem_count * int(frame_tokens), q.shape[2], q.shape[3]
-                    )
-                )
-                keepalive.extend([raw_k_batch, raw_v_batch, roped_batch])
-
-        all_event = torch.cuda.Event(enable_timing=dynamic_overlap_profile)
+        for rank in remaining_ranks:
+            remaining_ids.extend(submit_rank(rank))
+        all_event = torch.cuda.Event()
         with torch.cuda.stream(fetch_stream):
             all_event.record(fetch_stream)
         self._w1_pending_fetch_event = all_event
         self._w1_pending_fetch_stream = fetch_stream
         self._w1_fetch_keepalive = keepalive
-        self._w1_pending_dynamic_events = (
-            {
-                "producer_start": producer_start_event,
-                "warmup_ready": warmup_event,
-                "producer_end": all_event,
-                "selected_chunks": int(k_sel),
-                "layer": int(getattr(self, "_current_layer_index", -1)),
-                "denoising_step": self.current_denoising_step,
-                "warmup_source_count": len(warmup_ids),
-                "remaining_source_count": len(remaining_ids),
-            }
-            if dynamic_overlap_profile else None
-        )
         return final_k, final_v, {
-            "mode": "W1_STREAMING_HOTPATH_BATCHED",
-            "warmup_source_ids": warmup_ids,
-            "remaining_source_ids": remaining_ids,
-            "submitted_source_count": len(warmup_ids) + len(remaining_ids),
-            "warmup_source_count": len(warmup_ids),
-            "remaining_source_count": len(remaining_ids),
-            "reverse_rank_order": reverse_ranks,
-            "warmup_event_recorded": True,
-            "full_producer_wait_before_attention": False,
-            "producer_batch_remaining": True,
-            "bulk_selected_ids": True,
-            "reused_fetch_stream": True,
-            "final_buffer_tokens": total_tokens,
-            "fetch_stream": int(fetch_stream.cuda_stream),
-            "compute_stream": int(torch.cuda.current_stream(device).cuda_stream),
+            'mode': 'W1_STREAMING_UNSYNCHRONIZED_EXPLORATORY',
+            'warmup_source_ids': warmup_ids,
+            'remaining_source_ids': remaining_ids,
+            'submitted_source_count': len(warmup_ids) + len(remaining_ids),
+            'warmup_source_count': len(warmup_ids),
+            'remaining_source_count': len(remaining_ids),
+            'reverse_rank_order': reverse_ranks,
+            'warmup_event_recorded': True,
+            'full_producer_wait_before_attention': False,
+            'final_buffer_tokens': total_tokens,
+            'fetch_stream': int(fetch_stream.cuda_stream),
+            'compute_stream': int(torch.cuda.current_stream(device).cuda_stream),
         }
-
-    def _w1_grouped_frontier_final_buffer(self, *, memory_indices, cpu_k_list, cpu_v_list,
-                                           sink_k, sink_v, local_k, local_v,
-                                           q, v_dtype, frame_tokens, freqs, grid_sizes):
-        """Safe real-path producer: H2D -> RoPE -> final-buffer write -> release frontier."""
-        device = q.device
-        b = int(memory_indices.shape[0])
-        if b != 1:
-            raise RuntimeError("grouped-frontier prototype currently supports batch=1 only")
-        k_sel = int(memory_indices.shape[1])
-        sink_tokens = int(sink_k.shape[1]) if sink_k is not None else 0
-        local_tokens = int(local_k.shape[1])
-        total_tokens = sink_tokens + k_sel * int(frame_tokens) + local_tokens
-
-        final_k = torch.empty((b, total_tokens, q.shape[2], q.shape[3]),
-                              device=device, dtype=v_dtype)
-        final_v = torch.empty_like(final_k)
-        if sink_k is not None:
-            final_k[:, :sink_tokens].copy_(sink_k)
-            final_v[:, :sink_tokens].copy_(sink_v)
-        local_base = sink_tokens + k_sel * int(frame_tokens)
-        final_k[:, local_base:local_base + local_tokens].copy_(local_k)
-        final_v[:, local_base:local_base + local_tokens].copy_(local_v)
-
-        tile_tokens = 64
-        history_begin = sink_tokens
-        history_end = sink_tokens + k_sel * int(frame_tokens)
-        first_tile = history_begin // tile_tokens
-        last_tile = (history_end - 1) // tile_tokens
-        frontier = torch.full((1,), last_tile + 1, device=device, dtype=torch.int32)
-
-        fetch_stream = getattr(self, "_w1_reused_fetch_stream", None)
-        if fetch_stream is None:
-            fetch_stream = torch.cuda.Stream(device=device)
-            self._w1_reused_fetch_stream = fetch_stream
-
-        # Frontier initialization and resident sink/local copies are issued on
-        # the compute stream.  Producer must not publish before those are ordered.
-        init_event = torch.cuda.Event(enable_timing=False)
-        init_event.record(torch.cuda.current_stream(device))
-        fetch_stream.wait_event(init_event)
-
-        dynamic_overlap_profile = bool(
-            self.group11_profile is not None
-            and getattr(self, "unified_latency_profiler", None) is not None
-            and self.unified_latency_profiler.enabled
-            and int(getattr(self, "_current_layer_index", -1)) in {0, 15, 29}
-        )
-        producer_start_event = torch.cuda.Event(enable_timing=True) if dynamic_overlap_profile else None
-        prerope_cpu_history = os.environ.get("W1_PREROPE_CPU_HISTORY", "0") == "1"
-        if prerope_cpu_history:
-            warmup_frames = max(0, min(k_sel, int(os.environ.get("W1_GROUPED_WARMUP_FRAMES", "0"))))
-        else:
-            warmup_frames = max(1, min(k_sel, int(os.environ.get("W1_GROUPED_WARMUP_FRAMES", "1"))))
-        launch_ready_event = torch.cuda.Event(enable_timing=dynamic_overlap_profile)
-        producer_end_event = torch.cuda.Event(enable_timing=True) if dynamic_overlap_profile else None
-
-        selected_ids = memory_indices.detach().cpu().tolist()
-        reverse_ranks = list(range(k_sel - 1, -1, -1))
-        frame_grid = grid_sizes.new_tensor([[1, grid_sizes[0, 1], grid_sizes[0, 2]]])
-        keepalive = []
-        published = []
-        submitted_ids = []
-
-        def _src(logical_id, bi):
-            sk = cpu_k_list[logical_id][bi, 0]
-            sv = cpu_v_list[logical_id][bi, 0]
-            if sk.device.type == "cpu" and not sk.is_pinned():
-                sk = sk.contiguous().pin_memory()
-            if sv.device.type == "cpu" and not sv.is_pinned():
-                sv = sv.contiguous().pin_memory()
-            return sk, sv
-
-        with torch.cuda.stream(fetch_stream):
-            if producer_start_event is not None:
-                producer_start_event.record(fetch_stream)
-            if warmup_frames == 0:
-                launch_ready_event.record(fetch_stream)
-
-            for seq_i, rank in enumerate(reverse_ranks):
-                logical_id = int(selected_ids[0][rank])
-                sk, sv = _src(logical_id, 0)
-                offset = sink_tokens + rank * int(frame_tokens)
-                if prerope_cpu_history:
-                    # K was already transformed to retrieval-relative RoPE once
-                    # at eviction.  Runtime producer is copy-engine only.
-                    final_k[0, offset:offset + int(frame_tokens)].copy_(sk, non_blocking=True)
-                    final_v[0, offset:offset + int(frame_tokens)].copy_(sv, non_blocking=True)
-                else:
-                    raw_k = sk.to(device, non_blocking=True)
-                    raw_v = sv.to(device, non_blocking=True)
-                    roped_k = causal_online_rope(
-                        raw_k.unsqueeze(0), frame_grid, freqs,
-                        relative_frame_indices=torch.zeros(1, dtype=torch.long, device=device),
-                    ).type_as(q)
-                    final_k[0, offset:offset + int(frame_tokens)].copy_(roped_k[0])
-                    final_v[0, offset:offset + int(frame_tokens)].copy_(raw_v)
-                    keepalive.extend([raw_k, raw_v, roped_k])
-
-                # Publish only after both K/V writes preceding this stream op.
-                safe_frontier = first_tile if rank == 0 else ((offset + tile_tokens - 1) // tile_tokens)
-                if prerope_cpu_history:
-                    _publish_frontier_stream_memop(frontier, safe_frontier, fetch_stream)
-                else:
-                    _publish_frontier_release(frontier, safe_frontier, fetch_stream)
-                published.append(int(safe_frontier))
-                submitted_ids.append(logical_id)
-                if seq_i + 1 == warmup_frames:
-                    launch_ready_event.record(fetch_stream)
-
-                if self.group11_profile is not None:
-                    copied_bytes = int(sk.numel() * sk.element_size() + sv.numel() * sv.element_size())
-                    self.group11_profile["NUM_CPU_KV_FETCH_CALLS"] = int(
-                        self.group11_profile.get("NUM_CPU_KV_FETCH_CALLS", 0)) + 1
-                    self.group11_profile["NUM_H2D_COPY_CALLS"] = int(
-                        self.group11_profile.get("NUM_H2D_COPY_CALLS", 0)) + 2
-                    self.group11_profile["TOTAL_FULL_KV_H2D_BYTES"] = int(
-                        self.group11_profile.get("TOTAL_FULL_KV_H2D_BYTES", 0)) + copied_bytes
-
-            all_event = torch.cuda.Event(enable_timing=dynamic_overlap_profile)
-            all_event.record(fetch_stream)
-            if producer_end_event is not None:
-                producer_end_event = all_event
-
-        self._w1_pending_fetch_event = all_event
-        self._w1_pending_fetch_stream = fetch_stream
-        self._w1_fetch_keepalive = keepalive
-        self._w1_grouped_frontier = frontier
-        self._w1_grouped_launch_ready_event = launch_ready_event
-        self._w1_grouped_warmup_frames = int(warmup_frames)
-        self._w1_grouped_first_tile = int(first_tile)
-        self._w1_grouped_last_tile = int(last_tile)
-        self._w1_grouped_group_tiles = 4
-
-        self._w1_pending_dynamic_events = (
-            {
-                "producer_start": producer_start_event,
-                "warmup_ready": launch_ready_event,
-                "producer_end": all_event,
-                "selected_chunks": int(k_sel),
-                "layer": int(getattr(self, "_current_layer_index", -1)),
-                "denoising_step": self.current_denoising_step,
-                "warmup_source_count": int(warmup_frames),
-                "remaining_source_count": max(0, k_sel - int(warmup_frames)),
-                "published_frontiers": published,
-            }
-            if dynamic_overlap_profile else None
-        )
-        return final_k, final_v, {
-            "mode": "W1_GROUPED_FRONTIER_REAL",
-            "submitted_source_count": len(submitted_ids),
-            "reverse_rank_order": reverse_ranks,
-            "first_tile": int(first_tile),
-            "last_tile": int(last_tile),
-            "group_tiles": 4,
-            "warmup_frames": int(warmup_frames),
-            "prerope_cpu_history": bool(prerope_cpu_history),
-            "frontier_publish": "cuStreamWriteValue32" if prerope_cpu_history else "release_kernel",
-            "published_frontiers": published,
-            "final_buffer_tokens": total_tokens,
-            "fetch_stream": int(fetch_stream.cuda_stream),
-            "compute_stream": int(torch.cuda.current_stream(device).cuda_stream),
-        }
-
 
     def forward(
         self,
@@ -1018,27 +710,9 @@ class CausalWanSelfAttention(nn.Module):
                     ev_k = temp_k[:, sink_tokens:sink_tokens + num_evicted_tokens]
                     ev_v = temp_v[:, sink_tokens:sink_tokens + num_evicted_tokens]
                     
-                    prerope_cpu_history = (
-                        os.environ.get("W1_PREROPE_CPU_HISTORY", "0") == "1"
-                        and self.group11_fetch_mode in {"w1_serial_safe", "w1_grouped_frontier"}
-                    )
-                    if prerope_cpu_history:
-                        ev_grid = grid_sizes.clone()
-                        ev_grid[0, 0] = num_evicted_frames
-                        ev_rel = torch.zeros(num_evicted_frames, dtype=torch.long, device=ev_k.device)
-                        ev_k_store = causal_online_rope(
-                            ev_k, ev_grid, freqs, relative_frame_indices=ev_rel
-                        ).type_as(ev_k)
-                    else:
-                        ev_k_store = ev_k
-
-                    ev_k_split = ev_k_store.view(
-                        b, num_evicted_frames, frame_seqlen, n, d
-                    ).split(1, dim=1)
-                    ev_v_split = ev_v.view(
-                        b, num_evicted_frames, frame_seqlen, n, d
-                    ).split(1, dim=1)
-
+                    ev_k_split = ev_k.view(b, num_evicted_frames, frame_seqlen, n, d).split(1, dim=1)
+                    ev_v_split = ev_v.view(b, num_evicted_frames, frame_seqlen, n, d).split(1, dim=1)
+                    
                     evicted_k_frames = [f.to("cpu", non_blocking=True) for f in ev_k_split]
                     evicted_v_frames = [f.to("cpu", non_blocking=True) for f in ev_v_split]
                 evicted_draft_k_frames = kv_cache.get("local_draft_k_frames", [])[sink_tokens // frame_seqlen:sink_tokens // frame_seqlen + num_evicted_frames]
@@ -1249,49 +923,10 @@ class CausalWanSelfAttention(nn.Module):
                         k_sel = memory_indices.shape[1]  # [B, k_sel]
                         device = q.device
                         w1_zero_acquire = self.group11_fetch_mode == "w1_zero_acquire"
-                        w1_real_stream = self.group11_fetch_mode in {"w1_serial_safe", "w1_grouped_frontier"}
                         w1_final_k = None
                         w1_final_v = None
                         w1_meta = None
-                        if w1_real_stream:
-                            w1_final_k, w1_final_v, w1_meta = self._w1_grouped_frontier_final_buffer(
-                                memory_indices=memory_indices,
-                                cpu_k_list=cpu_k_list,
-                                cpu_v_list=cpu_v_list,
-                                sink_k=k_sink,
-                                sink_v=v_sink,
-                                local_k=(roped_temp_k[:, local_start_for_window:local_end_index]
-                                         if local_budget > 0 and local_start_for_window < local_end_index
-                                         else roped_temp_k[:, :0]),
-                                local_v=(temp_v[:, local_start_for_window:local_end_index]
-                                         if local_budget > 0 and local_start_for_window < local_end_index
-                                         else temp_v[:, :0]),
-                                q=q,
-                                v_dtype=v.dtype,
-                                frame_tokens=frame_seqlen,
-                                freqs=freqs,
-                                grid_sizes=grid_sizes,
-                            )
-                            k_mem = w1_final_k[:, sink_tokens:sink_tokens + k_sel * frame_seqlen]
-                            v_mem = w1_final_v[:, sink_tokens:sink_tokens + k_sel * frame_seqlen]
-                            fetch_end_to_end_ms = (time.perf_counter() - fetch_start) * 1000.0
-                            if getattr(self, "_w1_pending_dynamic_events", None) is not None:
-                                self._w1_pending_dynamic_events["host_submit_ms"] = float(fetch_end_to_end_ms)
-                                self._w1_pending_dynamic_events["generation_unit"] = int(
-                                    current_start // max(1, 3 * frame_seqlen)
-                                )
-                            if self.group11_profile is not None:
-                                self.group11_profile.setdefault("w1_grouped_frontier", {}).update(w1_meta)
-                                self.group11_profile["fetch_phase_rows"].append({
-                                    "layer": int(layer_index), "lookup_ms": lookup_ms,
-                                    "k_to_device_ms": 0.0, "v_to_device_ms": 0.0,
-                                    "gather_ms": 0.0, "cat_ms": 0.0,
-                                    "end_to_end_ms": fetch_end_to_end_ms,
-                                    "selected_chunks": int(k_sel),
-                                    "selected_ids": [int(x) for x in memory_indices[0].detach().cpu().tolist()],
-                                    "fetch_mode": str(self.group11_fetch_mode),
-                                })
-                        elif w1_zero_acquire:
+                        if w1_zero_acquire:
                             w1_final_k, w1_final_v, w1_meta = self._w1_progressive_final_buffer(
                                 memory_indices=memory_indices,
                                 cpu_k_list=cpu_k_list,
@@ -1313,11 +948,6 @@ class CausalWanSelfAttention(nn.Module):
                             k_mem = w1_final_k[:, sink_tokens:sink_tokens + k_sel * frame_seqlen]
                             v_mem = w1_final_v[:, sink_tokens:sink_tokens + k_sel * frame_seqlen]
                             fetch_end_to_end_ms = (time.perf_counter() - fetch_start) * 1000.0
-                            if getattr(self, "_w1_pending_dynamic_events", None) is not None:
-                                self._w1_pending_dynamic_events["host_submit_ms"] = float(fetch_end_to_end_ms)
-                                self._w1_pending_dynamic_events["generation_unit"] = int(
-                                    current_start // max(1, 3 * frame_seqlen)
-                                )
                             if self.group11_profile is not None:
                                 self.group11_profile.setdefault('w1_zero_acquire', {}).update(w1_meta)
                                 self.group11_profile['fetch_phase_rows'].append({
@@ -1491,60 +1121,18 @@ class CausalWanSelfAttention(nn.Module):
                 self.group_runtime_trace.append(runtime_meta)
 
                 original_k_tokens = int(k_cat.shape[1])
-                if self.group11_fetch_mode == "w1_serial_safe" and getattr(self, "_w1_pending_fetch_event", None) is not None:
-                    torch.cuda.current_stream(q.device).wait_event(self._w1_pending_fetch_event)
-                elif self.group11_fetch_mode == "w1_grouped_frontier" and getattr(self, "_w1_grouped_frontier", None) is not None:
-                    launch_ready = getattr(self, "_w1_grouped_launch_ready_event", None)
-                    if launch_ready is None:
-                        raise RuntimeError("missing grouped launch-ready event")
-                    torch.cuda.current_stream(q.device).wait_event(launch_ready)
                 attn_start = time.perf_counter()
                 attn_ctx = record_function("G11_BF16_ATTN") if (v5_active and record_function is not None) else nullcontext()
                 cuda_attn_token = None
-                w1_dynamic = getattr(self, "_w1_pending_dynamic_events", None)
-                w1_attn_start_event = None
-                w1_attn_end_event = None
-                w1_join_event = None
-                if w1_dynamic is not None:
-                    w1_attn_start_event = torch.cuda.Event(enable_timing=True)
-                    w1_attn_end_event = torch.cuda.Event(enable_timing=True)
-                    w1_join_event = torch.cuda.Event(enable_timing=True)
-                    w1_attn_start_event.record(torch.cuda.current_stream(q.device))
                 if self.unified_latency_profiler is not None:
                     cuda_attn_token = self.unified_latency_profiler.begin_cuda("ATTENTION_KERNEL")
                 with attn_ctx:
-                    frontier = getattr(self, "_w1_grouped_frontier", None)
-                    if self.group11_fetch_mode == "w1_grouped_frontier" and frontier is not None:
-                        grouped_ext, _ = _load_grouped_fa2_runtime()
-                        x, _ = grouped_ext.streaming_fwd(
-                            roped_query, k_cat, v_cat, frontier,
-                            float(roped_query.shape[-1] ** -0.5),
-                            int(self._w1_grouped_first_tile),
-                            int(self._w1_grouped_last_tile),
-                            int(self._w1_grouped_group_tiles),
-                        )
-                    else:
-                        x = attention(roped_query, k_cat, v_cat)
-                if w1_dynamic is not None:
-                    w1_attn_end_event.record(torch.cuda.current_stream(q.device))
-                if self.group11_fetch_mode in {"w1_zero_acquire", "w1_serial_safe", "w1_grouped_frontier"} and getattr(self, "_w1_pending_fetch_event", None) is not None:
+                    x = attention(roped_query, k_cat, v_cat)
+                if self.group11_fetch_mode == "w1_zero_acquire" and getattr(self, "_w1_pending_fetch_event", None) is not None:
                     torch.cuda.current_stream(q.device).wait_event(self._w1_pending_fetch_event)
-                    if w1_dynamic is not None:
-                        w1_join_event.record(torch.cuda.current_stream(q.device))
-                        w1_dynamic.update({
-                            "attention_start": w1_attn_start_event,
-                            "attention_end": w1_attn_end_event,
-                            "join_after_wait": w1_join_event,
-                            "q_tokens": int(roped_query.shape[1]),
-                            "kv_tokens": int(k_cat.shape[1]),
-                        })
-                        self.group11_profile.setdefault("_w1_dynamic_cuda_events", []).append(w1_dynamic)
-                    self._w1_pending_dynamic_events = None
                     self._w1_pending_fetch_event = None
                     self._w1_pending_fetch_stream = None
                     self._w1_fetch_keepalive = []
-                    self._w1_grouped_frontier = None
-                    self._w1_grouped_launch_ready_event = None
                 if self.unified_latency_profiler is not None:
                     self.unified_latency_profiler.end_cuda(cuda_attn_token, {
                         "call_id": len(self.unified_latency_profiler._events),
