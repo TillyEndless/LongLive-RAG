@@ -1,0 +1,94 @@
+[
+  {
+    "producer_blocks": 16,
+    "group_tiles": 4,
+    "serial_fetch_ms": {
+      "median": 1.5134400129318237,
+      "mean": 1.5188230419158935,
+      "p95": 1.548799991607666
+    },
+    "serial_stock_fa2_ms": {
+      "median": 2.7006880044937134,
+      "mean": 2.701887359619141,
+      "p95": 2.7139840126037598
+    },
+    "serial_total_ms": {
+      "median": 4.2150719165802,
+      "mean": 4.220710363388061,
+      "p95": 4.256800174713135
+    },
+    "parallel_fetch_end_ms": {
+      "median": 1.5202239751815796,
+      "mean": 1.526597762107849,
+      "p95": 1.5485440492630005
+    },
+    "parallel_consumer_end_ms": {
+      "median": 3.0976799726486206,
+      "mean": 3.101130237579346,
+      "p95": 3.1263039112091064
+    },
+    "parallel_joint_ms": {
+      "median": 3.0993759632110596,
+      "mean": 3.102814712524414,
+      "p95": 3.127903938293457
+    },
+    "serial_check": {
+      "max_abs": 0.0,
+      "equal": true,
+      "frontier": 24
+    },
+    "parallel_check": {
+      "max_abs": 0.0,
+      "equal": true,
+      "frontier": 24
+    },
+    "time_reduction_pct": 26.469203265085316,
+    "speedup_x": 1.3599743840735092
+  },
+  {
+    "producer_blocks": 24,
+    "group_tiles": 4,
+    "serial_fetch_ms": {
+      "median": 1.5084480047225952,
+      "mean": 1.5101631951332093,
+      "p95": 1.5249279737472534
+    },
+    "serial_stock_fa2_ms": {
+      "median": 2.7014880180358887,
+      "mean": 2.7030361557006835,
+      "p95": 2.712991952896118
+    },
+    "serial_total_ms": {
+      "median": 4.211199998855591,
+      "mean": 4.213199367523194,
+      "p95": 4.231008052825928
+    },
+    "parallel_fetch_end_ms": {
+      "median": 1.511631965637207,
+      "mean": 1.5134035229682923,
+      "p95": 1.53603196144104
+    },
+    "parallel_consumer_end_ms": {
+      "median": 3.092895984649658,
+      "mean": 3.097614722251892,
+      "p95": 3.130496025085449
+    },
+    "parallel_joint_ms": {
+      "median": 3.0945119857788086,
+      "mean": 3.09930495262146,
+      "p95": 3.1321280002593994
+    },
+    "serial_check": {
+      "max_abs": 0.0,
+      "equal": true,
+      "frontier": 24
+    },
+    "parallel_check": {
+      "max_abs": 0.0,
+      "equal": true,
+      "frontier": 24
+    },
+    "time_reduction_pct": 26.517097582167704,
+    "speedup_x": 1.3608607813473181
+  }
+]
